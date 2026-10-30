@@ -218,8 +218,8 @@ class ScaffoldTests(unittest.TestCase):
             selected_bytes(self.root)
 
     def test_fifth_model_invocable_skill_refuses(self):
-        # The core has four model-invocable skills; one more makes five.
-        for index in range(1):
+        # ia has three model-invocable skills (its lanes); two more make five.
+        for index in range(2):
             folder = self.root / f'plugins/ia/skills/extra-{index}'
             folder.mkdir()
             (folder / 'SKILL.md').write_text(f'---\nname: extra-{index}\ndescription: Synthetic. Use when testing the listing budget.\n---\n\n{BRIDGE}\n\nBody.\n', encoding='utf-8', newline='\n')
@@ -506,7 +506,7 @@ class ScaffoldTests(unittest.TestCase):
             validate(self.root)
 
     def test_entry_skill_must_be_model_invocable(self):
-        p = self.root / 'plugins/ia/skills/inventarch/SKILL.md'
+        p = self.root / 'plugins/ia/skills/work/SKILL.md'
         text = p.read_text(encoding='utf-8')
         text = re.sub(r'(?m)^description: .*$', 'description: Use when testing the entry skill.', text, count=1)
         p.write_text(text.replace('\n---\n', '\ndisable-model-invocation: true\n---\n', 1), encoding='utf-8', newline='\n')
@@ -657,7 +657,7 @@ class ScaffoldTests(unittest.TestCase):
             validate(self.root)
 
     def test_skill_without_codex_bridge_refuses(self):
-        for rel in ('plugins/ia/skills/inventarch/SKILL.md',
+        for rel in ('plugins/ia/skills/init/SKILL.md',
                     'plugins/ia/skills/delivery/SKILL.md'):
             with self.subTest(rel=rel):
                 self.tearDown(); self.setUp()
