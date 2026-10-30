@@ -7,13 +7,13 @@
       "releases": "kits/ia-authoring/releases.json",
       "latest": {
         "version": "0.1.0",
-        "archive": "2742196bc8fdf74f3a018ef90c2d6d5854a457ce5d034cc0fdec1117a99c9fd5",
+        "archive": "156bb6c7ae68e4fa1cfcea356d005894baffbb50c65dc136b7c8545dffc6a46d",
         "cli": "@inventarch/cli 3.4.1",
         "language": "inventarch/language ^3.2.0",
         "file": "kits/ia-authoring/releases/0.1.0.json",
         "source": {
           "repository": "https://github.com/inventarch/marketplace.git",
-          "commit": "8c7deb789de062bf50924bb9d5db865492451fdb"
+          "commit": "af77f916ba49f1faf6ed37b3cfc4158f0e476c7d"
         }
       },
       "versions": [
@@ -37,13 +37,13 @@
       "releases": "kits/ia-kb/releases.json",
       "latest": {
         "version": "0.9.0",
-        "archive": "383e245066c8e61b65f5492f49287cb6bacca4b2ebba21067b8670753f29db4f",
+        "archive": "c953541b41974b0ed9f78fa34ee3dc83f54ee7d7ce0e9c40cec4ca8d82507925",
         "cli": "@inventarch/cli 3.4.1",
         "language": "inventarch/language ^3.2.0",
         "file": "kits/ia-kb/releases/0.9.0.json",
         "source": {
           "repository": "https://github.com/inventarch/marketplace.git",
-          "commit": "cb56ef38b48c9890e96240da71f422d1348c82be"
+          "commit": "af77f916ba49f1faf6ed37b3cfc4158f0e476c7d"
         }
       },
       "versions": [
@@ -75,13 +75,13 @@
       "releases": "kits/ia-method/releases.json",
       "latest": {
         "version": "0.7.0",
-        "archive": "8ffd4bb52eb6f8b6607b5977c40bf082cd716309a2bfc5d371427b514d1cd1c3",
+        "archive": "08ca06248903026aa54c02922a5e7f5b7816bb7218bcfc968ea0853f124eb3af",
         "cli": "@inventarch/cli 3.4.1",
         "language": "inventarch/language ^3.2.0",
         "file": "kits/ia-method/releases/0.7.0.json",
         "source": {
           "repository": "https://github.com/inventarch/marketplace.git",
-          "commit": "cb56ef38b48c9890e96240da71f422d1348c82be"
+          "commit": "af77f916ba49f1faf6ed37b3cfc4158f0e476c7d"
         }
       },
       "versions": [

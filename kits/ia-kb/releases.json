@@ -77,15 +77,15 @@
     },
     {
       "version": "0.9.0",
-      "archive": "383e245066c8e61b65f5492f49287cb6bacca4b2ebba21067b8670753f29db4f",
-      "manifest": "a5679176bb5c1f55247c272dfc47a8d49c57e2bf306f77b8296e7e633d74840b",
-      "sources": "f987317355df7d31337da9b60a098ace4266a55eea1c1245adb66b7998459f8b",
+      "archive": "c953541b41974b0ed9f78fa34ee3dc83f54ee7d7ce0e9c40cec4ca8d82507925",
+      "manifest": "8cd71e5549472d03f607e3c3ec562346fcd567b5a6ae95760616afa7af7f9279",
+      "sources": "d34c033e766cd105439a920eefe9ac121e863ac688ec13a51f6e8b0e576f93e9",
       "language": "inventarch/language ^3.2.0",
       "cli": "@inventarch/cli 3.4.1",
       "file": "releases/0.9.0.json",
       "source": {
         "repository": "https://github.com/inventarch/marketplace.git",
-        "commit": "cb56ef38b48c9890e96240da71f422d1348c82be"
+        "commit": "af77f916ba49f1faf6ed37b3cfc4158f0e476c7d"
       }
     }
   ]
