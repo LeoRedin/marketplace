@@ -2,14 +2,14 @@
 // decisions public-account-offer and public-governance-probe): the offer
 // appears once, at startup only, never on resume, and never when an account is
 // found or the offer is turned off; the governance notice appears at startup in
-// a governed repository without the governance plugin; neither blocks, writes
-// or fetches, and the hook always exits 0.
+// a governed repository where no installed kit declares governance handlers;
+// neither blocks, writes or fetches, and the hook always exits 0.
 import assert from 'node:assert/strict';
 import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { accountFound, accountOffer, governanceNotice, MCP_URL, offerDisabled } from '../scripts/lib/account.mjs';
-import { envFor, fakeCli, makeRepo, run, sandbox } from './helpers/fixtures.mjs';
+import { envFor, fakeCli, makeKit, makeRepo, run, sandbox } from './helpers/fixtures.mjs';
 
 // An environment with its own IA home, Claude config dir and Codex home, so nothing on this machine leaks in.
 function isolated(dir, extra = {}) {
@@ -88,24 +88,26 @@ test('the hook shows the offer once at startup outside a workspace too, never on
   assert.deepEqual(readdirSync(dir).sort(), before, 'the hook writes no state');
 });
 
-test('a governed repository without the governance plugin is named once at startup, and never when the plugin is installed', t => {
+test('a governed repository is named once at startup until an installed kit declares governance handlers', t => {
   const dir = sandbox(t, 'ia-core-account-');
   const env = hookEnv(dir, { IA_NO_ACCOUNT_OFFER: '1' });
   const repo = makeRepo(join(dir, 'repo'));
-  assert.equal(governanceNotice({ env, source: 'startup', root: repo }), null, 'not governed: no notice');
+  assert.equal(governanceNotice({ source: 'startup', root: repo, kits: [] }), null, 'not governed: no notice');
   writeFileSync(join(repo, '.ia', 'governance.json'), '{}\n');
-  assert.match(governanceNotice({ env, source: 'startup', root: repo }), /is governed \(\.ia\/governance\.json\)/);
-  assert.equal(governanceNotice({ env, source: 'resume', root: repo }), null);
+  assert.match(governanceNotice({ source: 'startup', root: repo, kits: [] }), /is governed \(\.ia\/governance\.json\); add the ia-governance kit/);
+  assert.equal(governanceNotice({ source: 'resume', root: repo, kits: [] }), null);
   const out = hook(repo, env, 'startup');
   assert.equal(out.status, 0, out.stderr);
   const payload = JSON.parse(out.stdout);
-  assert.match(payload.systemMessage, /governance plugin is not installed/);
+  assert.match(payload.systemMessage, /add the ia-governance kit \(`ia kit add`\)/);
   assert.doesNotMatch(payload.systemMessage, /no account is connected/, 'the offer stays suppressed');
   assert.match(payload.hookSpecificOutput.additionalContext, /^This repository is an InventArch workspace\./);
   assert.match(payload.hookSpecificOutput.additionalContext, /never treat the repository as ungoverned/);
-  mkdirSync(join(env.CLAUDE_CONFIG_DIR, 'plugins'), { recursive: true });
-  writeFileSync(join(env.CLAUDE_CONFIG_DIR, 'plugins', 'installed_plugins.json'), JSON.stringify({ version: 2, plugins: { 'inventarch-governance@some-catalogue': [{ scope: 'user' }] } }));
-  assert.equal(governanceNotice({ env, source: 'startup', root: repo }), null);
+  // An installed kit with a tool pre handler (and its script) declares governance handlers: the notice stops.
+  const { dir: kit } = makeKit(join(dir, 'kits'), { folder: 'gov', id: 'inventarch/gov-kit' });
+  mkdirSync(join(kit, 'scripts'), { recursive: true });
+  writeFileSync(join(kit, 'scripts', 'gate.mjs'), 'process.stdout.write("{}");\n');
+  writeFileSync(join(kit, 'handlers.json'), JSON.stringify({ format: 1, tool: [{ run: 'scripts/gate.mjs', phase: 'pre' }] }));
   const installed = JSON.parse(hook(repo, env, 'startup').stdout);
   assert.equal(installed.systemMessage, undefined);
 });

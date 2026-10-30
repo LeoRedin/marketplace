@@ -8,7 +8,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ENTRIES, readBindings, writeBindings } from './binding.mjs';
-import { adopt, findKit, homeKitsDir, installedKits, KitError, kitBindings, kitChecks, kitDelivery, listKits, readDescriptor, readReleases, releaseRecords, sourcesDigest } from './kit.mjs';
+import { adopt, declaredAssets, findKit, homeKitsDir, installedKits, KitError, kitBindings, kitChecks, kitDelivery, kitDependencies, listKits, readDescriptor, readReleases, releaseRecords, sourcesDigest } from './kit.mjs';
+import { kitHandlers } from './handlers.mjs';
 import { kitUpdate, pinRootFor, readPin } from './pin.mjs';
 import { readMethodPin } from './method-pin.mjs';
 import { kitRecordNames } from './records.mjs';
@@ -73,8 +74,20 @@ export function kitProblems(kit) {
       if (undeclared.length) problems.push(`${name} names what is not a record of the kit: ${undeclared.join(', ')}`);
     } catch (error) { problems.push(error.message); }
   }
+  // Every script a handlers.json runs ships with the kit: it is a declared asset, so it is packed and digested.
+  try {
+    const handlers = kitHandlers(kit);
+    let assets = [];
+    try { assets = declaredAssets(kit.dir).map(a => a.rel); } catch { /* reported by the sources digest */ }
+    const runs = [...new Set(Object.values(handlers).flat().map(h => h.run))];
+    const undeclared = runs.filter(run => !assets.includes(run));
+    if (undeclared.length) problems.push(`handlers.json runs scripts that are not declared assets in .ia/release.json: ${undeclared.join(', ')}`);
+  } catch (error) { problems.push(error.message); }
   return problems;
 }
+
+// A kit's dependencies as rows, or a KitError naming the one that is missing.
+const dependencyRows = kit => kitDependencies(kit).map(d => ({ kit: d.id, version: d.latest.version, archive: d.latest.archive, origin: d.origin }));
 
 export function checkOp(ref) {
   const kits = ref ? [findKit(ref)] : listKits();
@@ -87,7 +100,7 @@ export function checkOp(ref) {
 function source(from) {
   const path = resolve(from);
   if (!existsSync(path)) throw new UsageError(`--from ${from} does not exist`);
-  if (statSync(path).isDirectory()) return { dir: path, cleanup: () => {} };
+  if (statSync(path).isDirectory()) return { dir: path, origin: 'source', cleanup: () => {} };
   if (!/\.(?:tgz|tar\.gz|tar)$/i.test(path)) throw new UsageError(`--from takes a kit folder or a .tgz, .tar.gz or .tar archive of one: ${from}`);
   const work = mkdtempSync(join(realpathSync(tmpdir()), 'inventarch-kit-add-'));
   const ran = spawnSync('tar', ['-xf', path, '-C', work], { encoding: 'utf8', shell: false });
@@ -95,7 +108,7 @@ function source(from) {
   const entries = readdirSync(work);
   const dir = existsSync(join(work, 'releases.json')) ? work : entries.length === 1 && existsSync(join(work, entries[0], 'releases.json')) ? join(work, entries[0]) : null;
   if (!dir) { rmSync(work, { recursive: true, force: true }); throw new KitError(`${from} holds no kit (no releases.json at its root or in its one folder)`, 'IA-CORE-KIT-ARCHIVE'); }
-  return { dir, cleanup: () => rmSync(work, { recursive: true, force: true }) };
+  return { dir, origin: 'archive', cleanup: () => rmSync(work, { recursive: true, force: true }) };
 }
 
 // Installs a kit folder into <IA home>/kits/<folder>/<version>/ once it
@@ -109,22 +122,24 @@ export function addFromOp(from, { apply = false, home = homeKitsDir() } = {}) {
     const descriptor = readDescriptor(src.dir);
     const folder = (descriptor.id ?? releases.kit).split('/').at(-1).replace(/-kit$/, '');
     if (!/^[a-z0-9][a-z0-9-]*$/.test(folder)) throw new KitError(`kit id ${descriptor.id} does not give a folder name`);
-    const kit = { folder, dir: src.dir, id: releases.kit, version: descriptor.version, latest, releases: releases.releases, origin: 'source' };
+    const kit = { folder, dir: src.dir, id: releases.kit, version: descriptor.version, latest, releases: releases.releases, origin: src.origin };
     const problems = kitProblems(kit);
     if (problems.length) throw Object.assign(new KitError(`${from} is not an installable kit: ${problems.join('; ')}`, 'IA-CORE-KIT-INVALID'), { problems });
+    // A kit that depends on other kits installs only once they are found (C3): carried, in the IA home, or next to it.
+    const dependencies = dependencyRows(kit);
     const target = join(home, folder, descriptor.version);
     if (existsSync(target)) {
       const there = sourcesDigest(target);
       if (there !== latest.sources) throw new KitError(`${target} already holds other bytes for ${kit.id} ${descriptor.version}; an installed version is never overwritten`, 'IA-CORE-KIT-CONFLICT');
-      return { kit: kit.id, version: descriptor.version, target, already: true, applied: false };
+      return { kit: kit.id, version: descriptor.version, target, dependencies, already: true, applied: false };
     }
-    if (!apply) return { kit: kit.id, version: descriptor.version, target, wouldInstall: true, applied: false };
+    if (!apply) return { kit: kit.id, version: descriptor.version, target, dependencies, wouldInstall: true, applied: false };
     mkdirSync(dirname(target), { recursive: true });
     const staging = `${target}.installing-${process.pid}`;
     rmSync(staging, { recursive: true, force: true });
     cpSync(src.dir, staging, { recursive: true, filter: p => !/[\\/](?:node_modules|\.git|\.ia[\\/](?:distributions|work))$/.test(p) });
     renameSync(staging, target);
-    return { kit: kit.id, version: descriptor.version, target, installed: true, applied: true };
+    return { kit: kit.id, version: descriptor.version, target, dependencies, installed: true, applied: true };
   } finally { src.cleanup(); }
 }
 

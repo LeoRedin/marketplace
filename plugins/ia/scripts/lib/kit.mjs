@@ -6,7 +6,12 @@
 // checks.json (the fixed argv of each @check the checker runner may run),
 // delivery.json (the capabilities the resolver delivers whole), bindings.json
 // (the bindings it recommends and the capabilities it resolves outside a
-// workspace) and onwrite.json (the checks the core's PostToolUse hook runs).
+// workspace), onwrite.json (the checks the core's PostToolUse hook runs) and
+// handlers.json (the session, prompt, tool and stop handlers the core's hooks
+// run, lib/handlers.mjs). A kit may depend on other kits: .ia/release.json
+// dependencies other than inventarch/language name a kit id and range, and
+// adopt and readRoot vendor that kit's recorded release beside it (C3,
+// kitDependencies).
 // Files that .ia/release.json declares under "assets" (documentation, scripts)
 // sit beside .ia/: they are packed with the kit, and the recorded `sources`
 // digest covers .ia/, the declared assets and those four sidecars.
@@ -86,7 +91,7 @@ export function declaredAssets(kitDir) {
 // the declared assets sorted by path, then each sidecar (SIDECARS) that exists.
 // It keys the restored read copy, and each release records it, so a plain test
 // can tell when the sources no longer are the recorded release.
-export const SIDECARS = ['checks.json', 'delivery.json', 'bindings.json', 'onwrite.json'];
+export const SIDECARS = ['checks.json', 'delivery.json', 'bindings.json', 'onwrite.json', 'handlers.json'];
 export function sourcesDigest(kitDir) {
   const hash = createHash('sha256');
   const ia = join(kitDir, '.ia');
@@ -224,6 +229,94 @@ export function findKit(ref, dir) {
   return kit;
 }
 
+// Does a version satisfy a dependency range? Exact versions, ^, ~, >= and *.
+// A caret on 0.x keeps the minor (^0.1.0 is >=0.1.0 <0.2.0).
+export function satisfies(version, range) {
+  const parse = v => (/^(\d+)\.(\d+)\.(\d+)$/.exec(String(v ?? '').trim()) ?? []).slice(1).map(Number);
+  const v = parse(version);
+  if (v.length !== 3) return false;
+  const text = String(range ?? '').trim();
+  if (text === '*' || text === '') return true;
+  const op = /^(\^|~|>=|=)?\s*(.*)$/.exec(text);
+  const r = parse(op[2]);
+  if (r.length !== 3) return false;
+  const atLeast = compareVersions(version, r.join('.')) >= 0;
+  switch (op[1]) {
+    case '^': return atLeast && (r[0] > 0 ? v[0] === r[0] : r[1] > 0 ? v[0] === 0 && v[1] === r[1] : v[0] === 0 && v[1] === 0 && v[2] === r[2]);
+    case '~': return atLeast && v[0] === r[0] && v[1] === r[1];
+    case '>=': return atLeast;
+    default: return compareVersions(version, r.join('.')) === 0;
+  }
+}
+
+// A kit's direct kit dependencies from its .ia/release.json: every entry
+// other than the language base, as [{ id, range }].
+export function declaredDependencies(kitDir) {
+  let descriptor;
+  try { descriptor = readDescriptor(kitDir); } catch { return []; }
+  return (descriptor.dependencies ?? []).filter(d => d?.id && d.id !== 'inventarch/language').map(d => ({ id: d.id, range: d.range ?? '*' }));
+}
+
+// Kits in one folder, tolerating folders that are not kits.
+function quietFolderKits(dir, origin) {
+  if (!dir || !existsSync(dir)) return [];
+  const found = [];
+  for (const folder of readdirSync(dir).sort()) {
+    if (!existsSync(join(dir, folder, 'releases.json'))) continue;
+    try { found.push(kitAt(join(dir, folder), folder, origin)); } catch { /* not a readable kit */ }
+  }
+  return found;
+}
+
+// Where a dependency is looked for (contract C3), in order: the kits this
+// plugin carries, the kits installed in the IA home (every version, newest
+// first), then the dependency's own folder next to the depending kit (a source
+// tree such as app kits/). The first whose latest release satisfies the range wins.
+export function findDependency(dep, kit) {
+  let home = [];
+  try { home = homeKits(); } catch { /* an unreadable home holds nothing */ }
+  // An archive's extracted folder has no neighbours to look in.
+  const beside = kit.origin === 'archive' ? [] : quietFolderKits(dirname(kit.dir), 'source');
+  const candidates = [...quietFolderKits(kitsDir(), 'plugin'), ...home, ...beside];
+  const named = candidates.filter(k => k.id === dep.id);
+  const match = named.find(k => k.latest && satisfies(k.latest.version, dep.range));
+  if (!match) {
+    const seen = [...new Set(named.map(k => `${k.latest?.version ?? 'unreleased'} (${k.origin})`))];
+    throw new KitError(`kit ${kit.id} depends on ${dep.id} ${dep.range}, which ${seen.length ? `is found only as ${seen.join(', ')}` : 'is not carried by this plugin, installed in the IA home or next to the kit'}. Add it first: kit.mjs add --from <its folder or archive>`, 'IA-CORE-KIT-DEPENDENCY');
+  }
+  return match;
+}
+
+// Every kit a kit depends on, transitively, dependencies first, each once.
+// A cycle, or two ranges no one release satisfies, is a KitError.
+export function kitDependencies(kit, trail = [kit.id]) {
+  const order = [];
+  for (const dep of declaredDependencies(kit.dir)) {
+    if (trail.includes(dep.id)) throw new KitError(`kit dependency cycle: ${[...trail, dep.id].join(' -> ')}`, 'IA-CORE-KIT-DEPENDENCY');
+    const found = findDependency(dep, kit);
+    for (const inner of [...kitDependencies(found, [...trail, dep.id]), found]) {
+      const prior = order.find(k => k.id === inner.id);
+      if (!prior) order.push(inner);
+      else if (prior.latest?.archive !== inner.latest?.archive) throw new KitError(`kit ${kit.id} needs two releases of ${inner.id}: ${prior.latest?.version} and ${inner.latest?.version}`, 'IA-CORE-KIT-DEPENDENCY');
+    }
+  }
+  return order;
+}
+
+// Packs every dependency of a kit (dependencies first), each with the ones
+// before it vendored, and refuses one whose sources do not pack to its
+// recorded release. Returns [{ kit, built }]; the caller cleans up.
+export function packDependencies(kit, cli) {
+  const builds = [];
+  try {
+    for (const dep of kitDependencies(kit)) builds.push({ kit: dep, built: packRelease(dep, dep.latest, cli, { vendor: vendorArchives(builds) }) });
+    return builds;
+  } catch (error) {
+    for (const { built } of builds) built.cleanup();
+    throw error;
+  }
+}
+
 // The checks a kit's checker runner may run: config/kits/<folder>/checks.json,
 // { format: 1, checks: { <name>: { argv: [...], cwd?: "workspace"|"kit"|"plugin", record?: <identity>, timeout?: <seconds, a positive integer, default 600> } } }.
 // A name must also be a @check record in the kit's sources; one that is not
@@ -335,8 +428,8 @@ export function kitOnWrite(kit) {
 // one, the artifact is really missing and the refusal is reported as it is.
 const baseUnavailable = json => json?.code === 'IA-DIST-ARTIFACT-UNAVAILABLE'
   || (json?.code === 'IA-DIST-CONFLICT' && /no longer lists the locked release: inventarch\/language@/.test(json.message ?? ''));
-function restore(work, cli, kit) {
-  const restored = runIa(work, ['restore', '--apply', '--yes'], { cli });
+function restore(work, cli, kit, catalog) {
+  const restored = runIa(work, ['restore', '--apply', '--yes', ...(catalog ? ['--catalog', catalog] : [])], { cli });
   if (restored.code === 0) return;
   const packed = /^@inventarch\/cli (\S+)$/.exec(kit.latest?.cli ?? '')?.[1];
   if (baseUnavailable(restored.json) && packed && cli.version && cli.version !== packed) {
@@ -409,6 +502,10 @@ export function readRoot(kit, { cli, base } = {}) {
     return target;
   };
   if (complete(target)) return verify();
+  // A kit that depends on other kits restores with their recorded releases
+  // vendored beside it (C3): each is packed from its own sources, which must
+  // reproduce that release, so this needs the CLI that packed them.
+  const deps = kitDependencies(kit).length ? packDependencies(kit, resolved) : [];
   const work = mkdtempSync(join(cache, 'tmp-'));
   try {
     cpSync(join(kit.dir, '.ia'), join(work, '.ia'), { recursive: true });
@@ -417,7 +514,7 @@ export function readRoot(kit, { cli, base } = {}) {
       copyFileSync(abs, join(work, rel));
     }
     normalize(work);
-    restore(work, resolved, kit);
+    restore(work, resolved, kit, vendorInto(work, vendorArchives(deps)));
     if (existsSync(target) && !complete(target)) rmSync(target, { recursive: true, force: true });
     try { renameSync(work, target); } catch (error) {
       if (complete(target)) return verify();
@@ -426,13 +523,34 @@ export function readRoot(kit, { cli, base } = {}) {
     return target;
   } finally {
     rmSync(work, { recursive: true, force: true });
+    for (const { built } of deps) built.cleanup();
   }
 }
 
+// Copies archives into <work>/vendor and lists them in vendor/catalog.json;
+// returns that catalog's path relative to work, or undefined for none.
+function vendorInto(work, archives) {
+  if (!archives.length) return undefined;
+  mkdirSync(join(work, 'vendor'), { recursive: true });
+  const names = [];
+  for (const path of archives) {
+    const name = basename(path);
+    if (names.includes(name)) continue;
+    copyFileSync(path, join(work, 'vendor', name));
+    names.push(name);
+  }
+  writeFileSync(join(work, 'vendor', 'catalog.json'), JSON.stringify(names.map(n => ({ path: `vendor/${n}`, withdrawn: false })), null, 2) + '\n');
+  return 'vendor/catalog.json';
+}
+
+// The archives a dependency build vendors: each dependency's archive and the language base it restored.
+const vendorArchives = builds => builds.flatMap(({ built }) => [built.archive, built.base.path]);
+
 // Packs a temporary copy of a kit; returns the archive path, its digest, the
 // manifest digest and version ia pack reported, the language base the restore
-// cached, and a cleanup.
-export function buildKit(kit, cli) {
+// cached, and a cleanup. vendor: archive paths the copy's restore may use (the
+// recorded releases of the kits it depends on, and their language base).
+export function buildKit(kit, cli, { vendor = [] } = {}) {
   const work = mkdtempSync(join(realpathSync(tmpdir()), 'inventarch-core-pack-'));
   const cleanup = () => rmSync(work, { recursive: true, force: true });
   try {
@@ -442,7 +560,7 @@ export function buildKit(kit, cli) {
       copyFileSync(abs, join(work, rel));
     }
     normalize(work);
-    restore(work, cli, kit);
+    restore(work, cli, kit, vendorInto(work, vendor));
     const packed = runIa(work, ['pack', '--descriptor', '.ia/release.json', '--force'], { cli });
     if (packed.json?.status !== 'packed') throw new KitError(`ia pack of the kit failed: ${JSON.stringify(packed.json ?? packed.stderr.trim())}`);
     const archive = join(work, '.ia', 'work', 'dist', `${packed.json.archive}.ia.tgz`);
@@ -458,11 +576,11 @@ export function buildKit(kit, cli) {
 }
 
 // Builds one recorded release and refuses unless the archive is that release.
-export function packRelease(kit, release, cli) {
+export function packRelease(kit, release, cli, { vendor = [] } = {}) {
   const packedWith = /^@inventarch\/cli (\S+)$/.exec(release.cli ?? '')?.[1];
   if (!packedWith) throw new KitError(`kit release ${release.version} does not name the CLI it was packed with`);
   if (cli.version !== packedWith) throw new KitError(`kit ${kit.id} ${release.version} was packed with @inventarch/cli ${packedWith}, and this repository resolves ${cli.version ?? 'an unknown version'}: the archive would not reproduce. Pin @inventarch/cli ${packedWith}, or set IA_CLI_PATH to it`);
-  const built = buildKit(kit, cli);
+  const built = buildKit(kit, cli, { vendor });
   if (built.digest !== release.archive) {
     built.cleanup();
     throw new KitError(`the ${kit.id} sources pack to ${built.digest}, but release ${release.version} is ${release.archive}: the sources in this plugin are not the released kit`);
@@ -494,7 +612,10 @@ export function installedKits(root) {
 
 // Installs a kit's latest recorded release into the IA workspace at root.
 // Writes vendor/ia/<kit>.ia.tgz, vendor/ia/<base>.ia.tgz, vendor/ia/catalog.json
-// and, through ia install, .ia/distributions.lock.json. A vendored archive
+// and, through ia install, .ia/distributions.lock.json. A kit that depends on
+// other kits (C3) has each dependency's recorded release packed, checked and
+// vendored beside it, so ia install --catalog resolves them; the result lists
+// them under dependencies. A vendored archive
 // whose bytes do not match its name is replaced. The result names the other
 // core kits a language-base move upgrades with it (upgraded) and the exact
 // install requests (requests), on a dry run too.
@@ -505,7 +626,7 @@ export function adopt(target, kit, { cli, dry = false, installTimeoutMs } = {}) 
   if (!release) throw new KitError(`this plugin build carries no release of ${kit.id}`);
   const resolved = cli ?? resolveCli(root);
   const current = installedKit(root, kit.id);
-  if (current?.archive === release.archive) return { root, kit: kit.id, version: release.version, archive: release.archive, written: [], upgraded: [], requests: [], already: true };
+  if (current?.archive === release.archive) return { root, kit: kit.id, version: release.version, archive: release.archive, written: [], upgraded: [], dependencies: [], requests: [], already: true };
   const lock = readLock(root);
   const language = (lock?.packages ?? []).find(p => p.id === 'inventarch/language');
   const baseLock = readLock(kit.dir)?.packages.find(p => p.id === 'inventarch/language');
@@ -522,6 +643,10 @@ export function adopt(target, kit, { cli, dry = false, installTimeoutMs } = {}) 
   // install repins positional requests together, preserving every other
   // direct request. There is no intermediate removal of an installed kit.
   const requests = upgrades.map(k => `${k.id}@${k.latest.version}`);
+  // The kits the upgrades depend on, each once, dependencies first.
+  const dependencies = [];
+  for (const entry of upgrades) for (const dep of kitDependencies(entry)) if (!dependencies.some(d => d.id === dep.id) && !upgrades.some(u => u.id === dep.id)) dependencies.push(dep);
+  const dependencyRows = dependencies.map(d => ({ kit: d.id, version: d.latest.version, archive: d.latest.archive, origin: d.origin }));
   if (moving) requests.push(`inventarch/language@${readDescriptor(kit.dir).dependencies.find(d => d.id === 'inventarch/language').range}`);
   const upgraded = upgrades.slice(1).map(k => ({ kit: k.id, version: k.latest.version, archive: k.latest.archive }));
   const builds = [];
@@ -532,9 +657,12 @@ export function adopt(target, kit, { cli, dry = false, installTimeoutMs } = {}) 
   const installationBefore = installationBytes();
   let installing = false, exited = false;
   try {
-    for (const entry of upgrades) builds.push({ kit: entry, built: packRelease(entry, entry.latest, resolved) });
+    const depBuilds = [];
+    for (const dep of dependencies) depBuilds.push({ kit: dep, built: packRelease(dep, dep.latest, resolved, { vendor: vendorArchives(depBuilds) }) });
+    builds.push(...depBuilds);
+    for (const entry of upgrades) builds.push({ kit: entry, built: packRelease(entry, entry.latest, resolved, { vendor: vendorArchives(depBuilds) }) });
     const { base } = builds[0].built;
-    if (builds.some(b => b.built.base.archive !== base.archive)) throw new KitError('core kit upgrades do not share one language base');
+    if (builds.some(b => b.built.base.archive !== base.archive)) throw new KitError(depBuilds.length ? 'the kit and the kits it depends on do not share one language base' : 'core kit upgrades do not share one language base');
     const vendor = join(root, 'vendor', 'ia');
     const copies = [...builds.map(({ kit: entry, built }) => [built.archive, join(vendor, `${entry.latest.archive}.ia.tgz`), entry.latest.archive]), [base.path, join(vendor, `${base.archive}.ia.tgz`), base.archive]];
     const catalogPath = join(vendor, 'catalog.json');
@@ -547,11 +675,11 @@ export function adopt(target, kit, { cli, dry = false, installTimeoutMs } = {}) 
       if (stat && (folder ? !stat.isDirectory() : !stat.isFile())) throw new KitError(`${path} is not a regular ${folder ? 'folder' : 'file'} (a link or another kind of entry); adopt writes only real folders and files under vendor/ia. Replace it, then adopt again`);
     }
     const catalog = stats.get(catalogPath) ? JSON.parse(readFileSync(catalogPath, 'utf8')) : [];
-    for (const archive of [...upgrades.map(k => k.latest.archive), base.archive]) {
+    for (const archive of [...dependencies.map(k => k.latest.archive), ...upgrades.map(k => k.latest.archive), base.archive]) {
       const path = `vendor/ia/${archive}.ia.tgz`;
       if (!catalog.some(e => e.path === path)) catalog.push({ path, withdrawn: false });
     }
-    if (dry) return { root, kit: kit.id, version: release.version, archive: release.archive, written: [...copies.map(c => c[1]), catalogPath, join(root, '.ia', 'distributions.lock.json')], upgraded, requests, dry: true };
+    if (dry) return { root, kit: kit.id, version: release.version, archive: release.archive, written: [...copies.map(c => c[1]), catalogPath, join(root, '.ia', 'distributions.lock.json')], upgraded, dependencies: dependencyRows, requests, dry: true };
     // The native installer owns lock/generation atomicity. Roll back our
     // vendor writes if resolution, admission or application refuses.
     for (const path of [...copies.map(c => c[1]), catalogPath]) before.set(path, stats.get(path) ? readFileSync(path) : undefined);
@@ -575,8 +703,9 @@ export function adopt(target, kit, { cli, dry = false, installTimeoutMs } = {}) 
       throw new KitError(`ia install refused the kit: ${JSON.stringify(ran.json?.findings?.slice(0, 3) ?? ran.json ?? ran.stderr.trim())}.${hint}`);
     }
     for (const entry of upgrades) if (installedKit(root, entry.id)?.archive !== entry.latest.archive) throw new KitError(`after install the lock does not pin ${entry.latest.archive}`);
+    for (const dep of dependencies) if (!installedKit(root, dep.id)) throw new KitError(`after install the lock does not carry ${dep.id}, which ${kit.id} depends on`);
     written.push(join(root, '.ia', 'distributions.lock.json'));
-    return { root, kit: kit.id, version: release.version, archive: release.archive, written, upgraded, requests };
+    return { root, kit: kit.id, version: release.version, archive: release.archive, written, upgraded, dependencies: dependencyRows, requests };
   } catch (error) {
     // A timeout, lost JSON or post-apply nonzero exit may follow a native
     // commit. Never delete archives beneath that generation. An unreadable

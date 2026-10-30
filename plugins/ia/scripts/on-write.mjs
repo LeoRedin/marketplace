@@ -1,8 +1,11 @@
 #!/usr/bin/env node
-// The PostToolUse hook (Write|Edit|MultiEdit, decision public-core-hooks):
-// read-only, never blocks, and silent unless a carried kit declares a check for
-// the file just written. A kit declares them in its onwrite.json (lib/kit.mjs
-// kitOnWrite): an entry matches when the file's name ends in one of its
+// The on-write checks (decisions public-core-hooks and public-kit-handlers):
+// a kit's onwrite.json, kept as tool post handlers. scripts/handlers.mjs post
+// runs them from the PostToolUse hook; run directly, this script is the same
+// check on its own. Read-only, never blocks, and silent unless an installed kit
+// (lib/kit.mjs listKits: the plugin's config/kits, then <IA home>/kits)
+// declares a check for the file just written. A kit declares them in its
+// onwrite.json (lib/kit.mjs kitOnWrite): an entry matches when the file's name ends in one of its
 // extensions and, with a marker, that file sits in the written file's folder or
 // one of the maxDepth folders above it. A match runs the entry's argv (${NODE},
 // ${KIT}, ${PLUGIN}; no shell) with the hook payload on stdin, and the
@@ -15,7 +18,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { dirname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { kitOnWrite, kitsDir } from './lib/kit.mjs';
+import { kitOnWrite, listKits } from './lib/kit.mjs';
 
 const PLUGIN = fileURLToPath(new URL('..', import.meta.url));
 export const MAX_CONTEXT = 8000;
@@ -33,15 +36,21 @@ function hasMarker(file, marker, maxDepth) {
   return false;
 }
 
-// Every declared entry that matches the written file, in kit-folder order:
+// The installed kits that ship an onwrite.json: the given list (or listKits())
+// filtered, or, given a folder, every subfolder of it that holds one.
+export function onWriteKits(kits) {
+  if (typeof kits === 'string') return existsSync(kits) ? readdirSync(kits).sort().map(folder => ({ folder, dir: join(kits, folder) })).filter(k => existsSync(join(k.dir, 'onwrite.json'))) : [];
+  let all = kits;
+  if (!all) { try { all = listKits(); } catch { all = []; } }
+  return all.filter(k => existsSync(join(k.dir, 'onwrite.json')));
+}
+
+// Every declared entry that matches the written file, in kit order:
 // [{ kit: { folder, dir }, entry }]. A kit whose onwrite.json is malformed is skipped.
-export function matches(file, dir = kitsDir()) {
-  if (!existsSync(dir)) return [];
+export function matches(file, kits = onWriteKits()) {
   const lower = file.toLowerCase();
   const found = [];
-  for (const folder of readdirSync(dir).sort()) {
-    const kit = { folder, dir: join(dir, folder) };
-    if (!existsSync(join(kit.dir, 'onwrite.json'))) continue;
+  for (const kit of typeof kits === 'string' ? onWriteKits(kits) : kits) {
     let entries;
     try { entries = kitOnWrite(kit); } catch { continue; }
     for (const entry of entries) {
@@ -54,14 +63,14 @@ export function matches(file, dir = kitsDir()) {
 }
 
 // Runs each match with the payload on stdin; returns the joined additionalContext, or ''.
-export function contextFor(payload, raw, { dir = kitsDir(), budgetMs = BUDGET_MS } = {}) {
+export function contextFor(payload, raw, { kits = onWriteKits(), budgetMs = BUDGET_MS } = {}) {
   const path = payload?.tool_input?.file_path;
   if (typeof path !== 'string' || !path) return '';
   const cwd = typeof payload.cwd === 'string' && payload.cwd && existsSync(payload.cwd) && statSync(payload.cwd).isDirectory() ? payload.cwd : process.cwd();
   const file = resolve(cwd, path);
   const started = Date.now();
   const parts = [];
-  for (const { kit, entry } of matches(file, dir)) {
+  for (const { kit, entry } of matches(file, kits)) {
     const left = budgetMs - (Date.now() - started);
     if (left <= 0) break;
     const places = { NODE: process.execPath, KIT: kit.dir, PLUGIN };
