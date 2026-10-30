@@ -31,7 +31,7 @@
   "description": "The IA methodology kit: principles, a law, conventions, a contract with cases, the operating loop and the provisional-foundation ceiling, and one method capability with a four-phase playbook for every public IA record word, plus one over the vocabulary taxonomy, for thinking and operating by the IA methodology (ia-method).",
   "source": {
     "repository": "https://github.com/inventarch/marketplace.git",
-    "commit": "af77f916ba49f1faf6ed37b3cfc4158f0e476c7d",
+    "commit": "b3f25d39b72abd2350aece52082fba0cd706aad2",
     "recipe": "ustar-v1",
     "epoch": 1793378190
   }
