@@ -1,0 +1,85 @@
+#! ia 1.0
+
+@plan marketplace-public-launch
+  meaning
+    says "Take the public catalogue from its first local cut to a published, host-qualified repository."
+  work
+    title "Public catalogue launch"
+    status open
+    source "docs/roadmap.md"
+
+@milestone marketplace-published
+  meaning
+    says "The catalogue is on GitHub as inventarch/marketplace, installs from Git in Claude Code and Codex, and its gates pass in CI on all three systems."
+  work
+    title "Published and qualified"
+    status open
+    plan @plan marketplace-public-launch
+    exit "The repository is pushed by the operator, CI passes on main, and the host smoke runs record a pass for Claude Code and Codex at exact versions."
+    source "docs/roadmap.md"
+
+@task qualify-claude-code
+  meaning
+    says "Install ia@inventarch from GitHub in Claude Code at a named version, after removing the CLI-rendered registration, and exercise it with realistic prompts: the three entry points trigger, the session hook prints the bootstrap, the account offer appears once at startup and stays silent when suppressed, the governance probe fires in a governed repository, and agents dispatch with only their allowlisted tools."
+  work
+    title "Qualify the catalogue in Claude Code"
+    status open
+    milestone @milestone marketplace-published
+    owner "Unassigned"
+    start "2026-10-30"
+    source "docs/roadmap.md"
+
+@task qualify-codex
+  meaning
+    says "Run tools/smoke-codex.mjs against a real Codex executable after every manifest, skill or CODEX.md change, and commit its report."
+  work
+    title "Qualify the catalogue in Codex"
+    status open
+    milestone @milestone marketplace-published
+    owner "Unassigned"
+    start "2026-10-30"
+    source "docs/roadmap.md"
+
+@task native-qualification-refresh
+  meaning
+    says "Run the native qualification shards (tools/run-native-tests.mjs) on Ubuntu, Windows and macOS against the 3.4.1 pins and the re-cut kits, and keep the reports."
+  work
+    title "Refresh native qualification on 3.4.1"
+    status open
+    milestone @milestone marketplace-published
+    owner "Unassigned"
+    start "2026-10-30"
+    source "docs/roadmap.md"
+
+@task account-offer-key-in-spec
+  meaning
+    says "Propose to inventarch/ia that the host-plugin-distribution spec name the accountOffer key of ~/.ia/config.json beside updateCheck, so ia doctor reports it; the core already honours it."
+  work
+    title "Name accountOffer in the IA home spec"
+    status proposed
+    milestone @milestone marketplace-published
+    owner "Unassigned"
+    start "2026-10-30"
+    source "docs/roadmap.md"
+
+@task bindings-as-records
+  meaning
+    says "Lower .ia/bindings.json, an interim sidecar, to execution-binding records once the CLI admits them for kit capabilities, so bind and rebind become ia preview and ia author."
+  work
+    title "Lower bindings to execution-binding records"
+    status proposed
+    milestone @milestone marketplace-published
+    owner "Unassigned"
+    start "2026-10-30"
+    source "docs/roadmap.md"
+
+@task authoring-method-qualification
+  meaning
+    says "Qualify the ia-authoring kit's method closure: write config/method-qualification-ia-authoring.json with a reviewed execution contract for every runner in its checks.json (the trigger evaluation needs a reviewed executor profile first), and carry it in tests/carried-method-executors.test.mjs beside ia-kb."
+  work
+    title "Qualify the ia-authoring method closure"
+    status open
+    milestone @milestone marketplace-published
+    owner "Unassigned"
+    start "2026-10-30"
+    source "docs/roadmap.md"

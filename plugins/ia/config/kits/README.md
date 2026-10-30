@@ -1,0 +1,19 @@
+# Kits
+
+Method kits are authored in the repository's `kits/` folder and bundled here, one folder per kit, as text sources only (the catalogue admits no archives). The core also finds kits installed in `<IA home>/kits/<folder>/<version>/` (`scripts/kit.mjs add --from <folder|archive>`); a kit this plugin carries wins on the same id. A kit folder holds:
+
+| File | Holds |
+| --- | --- |
+| `.ia/release.json` | the kit's id (`inventarch/ia-<name>-kit`), version, distribution and the commit its sources were packed from |
+| `.ia/src/` | the records: capabilities, playbooks, conventions, agent-profiles, checks |
+| `.ia/distributions.lock.json` | the language base the kit pins |
+| `releases.json`, `releases/<version>.json` | the release history, format 2: an index (`latest`, and per release its archive and sources digests, the CLI it was packed with, its file and source) and one immutable file per version with its record names and the binding keys it offers; the core still reads format 1 |
+| `assets` (any path `.ia/release.json` lists under `assets`, such as `assets/*.md` or `scripts/*.mjs`) | files the release carries: each is copied into the pack and covered by the sources digest |
+| `checks.json` | optional: the fixed argv of each `@check` the checker runner (`scripts/check.mjs`) may run, keyed by the check's record name; a name that is not a `@check` record is ignored; an entry may carry `timeout`, a positive integer of seconds (default 600), for long budgeted runs |
+| `delivery.json` | optional: `{ "format": 1, "whole": [<capability name>, ...] }`, the capabilities that are whole procedures: the resolver delivers every cell of their playbooks, phases in order, whatever `ia position` returns at the seat; a name that is not a `@capability` record is ignored and noted; the sources digest covers it |
+| `bindings.json` | optional: `{ "format": 1, "recommend": { "<entry>.<activity>": { "capability": <name>, "profile"?: <name> } }, "unbound"?: [<capability name>, ...] }`, the keys the kit recommends a repository bind, which `scripts/kit.mjs bind <kit> [--apply]` shows and writes only where the repository binds nothing (the core applies none by itself), and the capabilities it resolves outside an IA workspace with `--kit`/`--capability` (without `unbound`, any); a key whose capability or profile is not a record of the kit is ignored and noted |
+| `onwrite.json` | optional: `{ "format": 1, "onWrite": [ { "name", "extensions": [".md"], "marker"?, "maxDepth"?, "argv", "timeout"? } ] }`, the checks the core's PostToolUse hook (`scripts/on-write.mjs`) runs after a write to a file with one of the extensions, below a folder holding the marker file within `maxDepth` (default 12) folders; the argv takes `${NODE}`, `${KIT}` and `${PLUGIN}`, gets the hook payload on stdin and answers as a hook (`hookSpecificOutput.additionalContext`); `timeout` is 1 to 25 seconds, default 20 (decision `public-core-hooks`) |
+
+The `sources` digest in `releases.json` covers `.ia/`, the declared assets, `checks.json`, `delivery.json`, `bindings.json` and `onwrite.json`, with LF-normalized text; editing any of them needs a re-pin of an unpublished release.
+
+`scripts/kit.mjs list` enumerates the kits; `kit.mjs root <kit>` restores one into a per-user temp folder for `--root` reads; `kit.mjs add <kit> <repo> --apply` installs its latest recorded release into an IA workspace; `kit.mjs check` holds each kit's latest release equal to its sources. A folder without `releases.json` is not a kit. The implementation digest a task pin records leaves out `releases.json` and `releases/`, so recording a release never breaks a pin by itself.

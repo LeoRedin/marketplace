@@ -1,0 +1,28 @@
+#! ia 1.0
+
+@workspace ia-kb-kit
+  meaning
+    says "The workspace that composes the IA KB kit's system with the public systems it builds on."
+    answers "Which systems does the KB kit compose?"
+  composition
+    systems [@system agent-composition-system, @system agent-system, @system authoring-system, @system compliance-system, @system governance-system, @system hook-authoring-system, @system learning-system, @system session-system, @system template-system, @system work-system, @system workspace-system, @system ia-kb]
+    sources [".ia/src @authored"]
+    steward @agent ia-kb-kit
+
+@agent ia-kb-kit
+  meaning
+    says "The IDE agent operating in the KB kit's workspace, any vendor."
+    answers "Which participant acts in the KB kit's workspace?"
+  governance
+    applies []
+
+@mandate ia-kb-kit-mandate
+  meaning
+    says "The bounded authority of the participant in the KB kit's workspace."
+    answers "Which moves may the participant make in the KB kit's workspace?"
+  governance
+    requires "Claim no host permission or execution from this mandate."
+  authority
+    participant @agent ia-kb-kit
+    moves [Observation, Verification, Synthesis, Delegation, Execution]
+    scope [@workspace ia-kb-kit]

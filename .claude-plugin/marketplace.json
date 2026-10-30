@@ -1,0 +1,14 @@
+{
+  "name": "inventarch",
+  "description": "The public InventArch catalogue: the ia plugin, its Work, Knowledge and Delivery lanes, and the public method kits ia-method, ia-kb and ia-authoring.",
+  "owner": {
+    "name": "InventArch"
+  },
+  "plugins": [
+    {
+      "name": "ia",
+      "source": "./plugins/ia",
+      "description": "InventArch's one public plugin: the Work, Knowledge and Delivery lanes resolve the bound method kit as a packet, with ia-method, ia-kb and ia-authoring as defaults; Delivery also routes UX, UI, brand, typography, token and accessibility work to the hosted design service when an account is connected."
+    }
+  ]
+}

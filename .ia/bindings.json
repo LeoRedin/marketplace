@@ -1,0 +1,19 @@
+{
+  "format": 1,
+  "bindings": {
+    "work.*": {
+      "kit": "inventarch/ia-method-kit",
+      "capability": "method-operate"
+    },
+    "knowledge.*": {
+      "kit": "inventarch/ia-kb-kit",
+      "capability": "kb-knowledge"
+    },
+    "delivery.*": {
+      "kit": "inventarch/ia-authoring-kit",
+      "capability": "authoring-deliver"
+    }
+  },
+  "precedence": [],
+  "defaults": {}
+}

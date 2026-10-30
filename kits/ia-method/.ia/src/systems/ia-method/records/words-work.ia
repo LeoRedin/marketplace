@@ -1,0 +1,206 @@
+#! ia 1.0
+
+@capability task-method
+  meaning
+    says "Work with task records under the IA methodology: the task-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking a task. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for a task?"
+  composition
+    playbooks [@playbook task-method]
+  execution
+    effects [read, local-write]
+
+@playbook task-method
+  meaning
+    says "How an agent works with task records, each one owner's action toward exactly one milestone, whose readiness ia next computes and the record never stores: orient through ia position --word task and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with task records?"
+  subject
+    subject-word task
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word task at the seat the work concerns, read the task records it points at with ia read, and run ia vocabulary task --schema for the sections and fields a task carries."
+      Inference means "Find the milestone the task serves and the plan above it, and run ia next --seat <plan> to see which tasks are ready, blocked or waiting, and on what."
+      Decision means "task is a word of work-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/work-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these task records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the task must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Give the task one owner and exactly one milestone, and name what it requires (decisions, other tasks) and what it cites, so ia next can order it; a task that rests on an open decision requires that decision."
+      Decision means "Extend an existing task through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the task will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the task; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Author the task's owner, milestone and requirements, never a stored ready or done status; the work it does lands in the records and files it changes."
+      Decision means "Change task records only through ia preview task <name> <field>=<value>..., then ia author with the same form and the digest preview returned, then ia validate; use --set or --relate the same way for one field or relationship."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Run ia next again and confirm the task's verdict and basis are what the plan expected; when the task closes its milestone, reconcile the milestone."
+      Decision means "Reconcile the records that cite or depend on the task, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."
+
+@capability plan-method
+  meaning
+    says "Work with plan records under the IA methodology: the plan-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking a plan. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for a plan?"
+  composition
+    playbooks [@playbook plan-method]
+  execution
+    effects [read, local-write]
+
+@playbook plan-method
+  meaning
+    says "How an agent works with plan records, each an arrangement of milestones toward an intent, which heads the work hierarchy, has no parent and does not nest: orient through ia position --word plan and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with plan records?"
+  subject
+    subject-word plan
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word plan at the seat the work concerns, read the plan records it points at with ia read, and run ia vocabulary plan --schema for the sections and fields a plan carries."
+      Inference means "Read the plan's intent and milestones, and run ia next --seat <plan> for the delivery order of its tasks."
+      Decision means "plan is a word of work-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/work-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these plan records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the plan must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Arrange the outcome as milestones with exit criteria under one plan; when the work needs a second arrangement, author a second plan rather than nesting one."
+      Decision means "Extend an existing plan through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the plan will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the plan; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Author the plan with its intent before its milestones, and change an existing plan field by field with --set rather than rewriting it."
+      Decision means "Change plan records only through ia preview plan <name> <field>=<value>..., then ia author with the same form and the digest preview returned, then ia validate; use --set or --relate the same way for one field or relationship."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Check that every milestone belongs to this plan and every task to one milestone, and that ia next orders them as intended."
+      Decision means "Reconcile the records that cite or depend on the plan, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."
+
+@capability milestone-method
+  meaning
+    says "Work with milestone records under the IA methodology: the milestone-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking a milestone. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for a milestone?"
+  composition
+    playbooks [@playbook milestone-method]
+  execution
+    effects [read, local-write]
+
+@playbook milestone-method
+  meaning
+    says "How an agent works with milestone records, each an outcome with an exit criterion inside exactly one plan, naming a condition rather than the work toward it: orient through ia position --word milestone and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with milestone records?"
+  subject
+    subject-word milestone
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word milestone at the seat the work concerns, read the milestone records it points at with ia read, and run ia vocabulary milestone --schema for the sections and fields a milestone carries."
+      Inference means "Read the milestone's plan, its exit criterion and the tasks that point at it."
+      Decision means "milestone is a word of work-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/work-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these milestone records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the milestone must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "State the exit criterion as a condition someone can observe, not as the work toward it, and place the milestone in exactly one plan."
+      Decision means "Extend an existing milestone through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the milestone will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the milestone; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Author the milestone with its plan and exit criterion, and leave the work toward it to tasks."
+      Decision means "Change milestone records only through ia preview milestone <name> <field>=<value>..., then ia author with the same form and the digest preview returned, then ia validate; use --set or --relate the same way for one field or relationship."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Judge the milestone met only against its exit criterion and the evidence that shows it, and reconcile the tasks that remain open under it."
+      Decision means "Reconcile the records that cite or depend on the milestone, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."
+
+@capability decision-method
+  meaning
+    says "Work with decision records under the IA methodology: the decision-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking a decision. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for a decision?"
+  composition
+    playbooks [@playbook decision-method]
+  execution
+    effects [read, local-write]
+
+@playbook decision-method
+  meaning
+    says "How an agent works with decision records, each a choice that is needed or has been made: the question, options and decider, and once made, the choice and rationale: orient through ia position --word decision and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with decision records?"
+  subject
+    subject-word decision
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word decision at the seat the work concerns, read the decision records it points at with ia read, and run ia vocabulary decision --schema for the sections and fields a decision carries."
+      Inference means "Read the decision's question, options and decider, and whether it has a choice; a decision with no choice is open, and work that requires it waits."
+      Decision means "decision is a word of work-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/work-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these decision records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the decision must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Frame the question, the options with their consequences and the decider; bring it to the decider with a recommendation, and keep the independent work moving."
+      Decision means "Extend an existing decision through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the decision will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the decision; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Author an open decision with its question, options and decider; record the choice and rationale only once the decider has made it, never on their behalf."
+      Decision means "Change decision records only through ia preview decision <name> <field>=<value>..., then ia author with the same form and the digest preview returned, then ia validate; use --set or --relate the same way for one field or relationship."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Reconcile what the choice changes (the tasks that required it, the specs it grounds, any layer that rested on it), as method-reconcile-on-change describes."
+      Decision means "Reconcile the records that cite or depend on the decision, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."
+
+@capability spec-method
+  meaning
+    says "Work with spec records under the IA methodology: the spec-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking a spec. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for a spec?"
+  composition
+    playbooks [@playbook spec-method]
+  execution
+    effects [read, local-write]
+
+@playbook spec-method
+  meaning
+    says "How an agent works with spec records, each a maintained specification with an explicit status and at most one same-word successor: orient through ia position --word spec and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with spec records?"
+  subject
+    subject-word spec
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word spec at the seat the work concerns, read the spec records it points at with ia read, and run ia vocabulary spec --schema for the sections and fields a spec carries."
+      Inference means "Read the spec's status, the decisions that ground it and any successor; a spec that is not accepted is a provisional foundation, and the ceiling law applies."
+      Decision means "spec is a word of work-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/work-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these spec records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the spec must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Decide whether the change revises the spec, supersedes it with one successor or needs a decision first; work that rests on a draft goes one layer deep."
+      Decision means "Extend an existing spec through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the spec will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the spec; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Author the spec with its status and source locator, and supersede an accepted spec through its one successor rather than rewriting it in place."
+      Decision means "Change spec records only through ia preview spec <name> <field>=<value>..., then ia author with the same form and the digest preview returned, then ia validate; use --set or --relate the same way for one field or relationship."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Re-read the work that cites the spec, and reconcile it with the status and content that were ratified."
+      Decision means "Reconcile the records that cite or depend on the spec, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."

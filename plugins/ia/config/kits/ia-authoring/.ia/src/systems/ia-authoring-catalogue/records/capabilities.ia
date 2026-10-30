@@ -1,0 +1,11 @@
+#! ia 1.0
+
+@capability catalogue-author
+  meaning
+    says "Bring a new or changed plugin inside a catalogue's house rules: read the nine catalogue conventions and the catalogue's validator, plan the plugin's skills, agents, hooks and manifest within them (description length and trigger phrase, at most four model-invocable skills, the listing budget, short hidden descriptions, the Codex bridge line, qualified hooks only, a tools allowlist for every agent, the author and licence), make the change, run the catalogue's validator and have someone other than the author review it. Use it for adding a plugin to a catalogue or changing one there; qualify it on its hosts with host-qualify afterwards."
+    answers "How is a plugin brought inside a catalogue's house rules?"
+  composition
+    playbooks [@playbook catalogue-author]
+    checks [@check catalogue-validate]
+  execution
+    effects [read, local-write]

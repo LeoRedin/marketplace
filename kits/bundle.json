@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "bundles": [
+    {
+      "kit": "ia-authoring",
+      "into": "plugins/ia/config/kits/ia-authoring"
+    },
+    {
+      "kit": "ia-kb",
+      "into": "plugins/ia/config/kits/ia-kb"
+    },
+    {
+      "kit": "ia-method",
+      "into": "plugins/ia/config/kits/ia-method"
+    }
+  ],
+  "unbundled": []
+}

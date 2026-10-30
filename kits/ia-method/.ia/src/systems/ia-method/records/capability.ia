@@ -1,0 +1,10 @@
+#! ia 1.0
+
+@capability method-operate
+  meaning
+    says "Think and operate under the IA methodology: the method-operate playbook for any work in an IA workspace, and the method-provisional-foundation playbook when the work rests on a spec or decision that is not ratified. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow to work under the IA methodology?"
+  composition
+    playbooks [@playbook method-operate, @playbook method-provisional-foundation]
+  execution
+    effects [read, local-write]

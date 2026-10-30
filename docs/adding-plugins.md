@@ -1,0 +1,11 @@
+# Add or change a plugin or a kit
+
+1. **Need and owner.** Establish the need, the audience and a distinct trigger. Most additions belong as a kit (a method the core resolves) or a stage skill inside the core, not as a new plugin. Everything here is public: a method that must stay proprietary does not belong in this repository.
+2. **Plugin layout.** `plugins/<name>/.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, `CODEX.md`, `README.md`, `CHANGELOG.md` and `skills/<name>/SKILL.md` (the router, named after the plugin). Every skill opens with the Codex bridge line, `**Codex:** read [the Codex host instructions](../../CODEX.md) first.` Stage skills, `references/`, `templates/`, `examples/`, `agents/`, `config/` and node `scripts/` are allowed; hooks, `.mcp.json`, commands, settings and `bin/` are not (decision `public-plugin-components`), apart from the core's two pinned hooks (`public-core-hooks`).
+3. **Manifests.** The Codex manifest is the Claude manifest without `displayName` and `dependencies`, plus `skills` and the `interface` block (`public-codex-manifest-interface`). Every manifest says `"license": "Apache-2.0"` (`public-apache-license`). Catalog entries carry no version.
+4. **Kits.** A kit is authored under `kits/ia-<name>` (`public-kit-naming`), never inside a plugin; `kits/bundle.json` maps it into the plugin that carries it. See [the kit README](../kits/README.md) for the release workflow.
+5. **Selection.** `python tools/selection.py` proposes `export-selection.json` from the shipping rule (both catalogs and every plugin file outside `tests/`); review the diff, then `--write`.
+6. **Version.** Every change that ships bumps the plugin's version in both manifests and `sources.lock.json` `pluginVersion`, with a new top `CHANGELOG.md` entry. `python tools/consistency.py --base origin/main` enforces it.
+7. **Gates.** Run every gate in [AGENTS.md](../AGENTS.md#gates) before committing.
+
+The tools under `tools/`, the schemas under `schemas/` and the tests under `tests/` hold these rules: `validate.py` (what ships), `consistency.py` (hygiene, pins, versions, published releases), `selection.py`, `bundle-kits.mjs`, `kit.mjs` (the maintainer verbs), `pack-kit.mjs`, `check-language.mjs`, `run-native-tests.mjs`, `smoke-codex.mjs` and `package.py`.

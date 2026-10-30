@@ -1,0 +1,84 @@
+#! ia 1.0
+# authored in inventarch/ia-authoring-kit 0.1.0: assets/probe-examples/admitted.ia; an example to copy into a scratch probe, never a kit record
+
+# The refused.ia probe, corrected. Run with --requires agent-composition-system so the folder may author @capability.
+#   node probe.mjs --root <ws> --system <a domain system> --file admitted.ia --requires agent-composition-system
+# It also shows a multi-phase playbook (orient, plan with an Escalation cell, act, learn).
+# Effects are IA effect classes (read, local-write, external-write). Admission takes any word here, but the harness
+# compiler does not (rule H2).
+
+@capability probe-capability
+  meaning
+    says "Probe capability."
+    answers "Probe?"
+  composition
+    playbooks [@playbook probe-method]
+    checks [@check probe-gate]
+    operations []
+  execution
+    effects [read, local-write]
+
+@playbook probe-method
+  meaning
+    says "Probe playbook with every phase."
+    answers "Probe?"
+  cognition
+    orient
+      primary Attention
+      Attention means "Read the gap list."
+    plan
+      primary Decision
+      Decision means "Order the work."
+      Escalation means "Ask the human when only a gate decision can settle it."
+    act
+      primary Memory
+      Memory means "Write the records."
+    learn
+      primary Learning
+      Learning means "Record what admission refused and why."
+
+@contract probe-contract
+  version "0.1.0"
+  meaning
+    says "Probe contract."
+    answers "Probe?"
+  invariants
+    REQ-PROBE-01 "A probe requirement."
+  relationships
+    governs @workspace PROBE_BOUNDARY_WORKSPACE
+
+@check probe-gate
+  meaning
+    says "Probe check."
+    answers "Probe?"
+  check
+    runs COMP-COVERAGE
+    scope "probe"
+  relationships
+    enforces @contract probe-contract#REQ-PROBE-01
+
+@case probe-ok
+  meaning
+    says "Probe success case."
+    answers "Probe?"
+  scenario
+    kind success
+    given "g"
+    request "r"
+    expected "e"
+    evaluator "probe-gate | unavailable: probe"
+  relationships
+    implements @contract probe-contract#REQ-PROBE-01
+
+@case probe-refused
+  meaning
+    says "Probe failure case."
+    answers "Probe?"
+  scenario
+    kind failure
+    given "g"
+    request "r"
+    expected "e"
+    evaluator "probe-gate | unavailable: probe"
+  relationships
+    implements @contract probe-contract#REQ-PROBE-01

@@ -1,0 +1,165 @@
+#! ia 1.0
+
+@capability principle-method
+  meaning
+    says "Read and apply principle records under the IA methodology: the principle-method playbook's orient, plan, act and learn cells for finding the principle records that bear on the work and applying them to it. It reads and applies; it authors and enforces nothing, and it grants no authority."
+    answers "Which procedure does an agent follow to apply principle records?"
+  composition
+    playbooks [@playbook principle-method]
+  execution
+    effects [read]
+
+@playbook principle-method
+  meaning
+    says "How an agent reads and applies principle records, each a governing rationale in the shared governance shape: find the ones at the seat through ia position --word principle, turn them into constraints on the plan, apply them at every step and report how the work stood against them. Authoring, changing and enforcing principle records lie outside this kit."
+    answers "How does an agent read and apply principle records?"
+  subject
+    subject-word principle
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word principle at the seat the work concerns, read each principle it delivers with ia read, and run ia vocabulary principle --schema for the shape of one."
+      Inference means "Find the principles that bear on the work and their severity; a blocking principle constrains every step."
+      Decision means "principle is a word of governance-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/governance-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left about these principle records before applying them again."
+    plan
+      primary Inference
+      Attention means "List the principle records that apply, with their severity, as constraints on the plan."
+      Inference means "Turn each applicable principle into a constraint on the plan, and name the step that honours it."
+      Decision means "When a principle blocks the plan, change the plan or ask the person; never plan around a blocking rule."
+      Learning means "Say how the work will show that it applied each principle."
+    act
+      primary Decision
+      Attention means "Before each step, re-read the principle records that bear on it."
+      Inference means "Apply each principle as the step it constrains produces its output, and stop a step that would break a blocking one."
+      Decision means "This kit reads and applies principle records only. A change to one goes to its owner as a proposal, and enforcement (gates, recorded evidence, verifiers) is not part of this public kit."
+      Learning means "Record where applying a principle changed or stopped a step."
+    learn
+      primary Learning
+      Attention means "Report how the work stood against each principle that applied, citing the evidence."
+      Inference means "Say, for each principle that applied, where the work honoured it and where it fell short."
+      Decision means "Reconcile the records the work changed with the principle records that apply, and leave the handoff packet method-handoff-packet describes."
+      Learning means "When a principle was unclear or did not fit the work, propose an improvement to its owner, as method-improvement-lifecycle describes."
+
+@capability law-method
+  meaning
+    says "Read and apply law records under the IA methodology: the law-method playbook's orient, plan, act and learn cells for finding the law records that bear on the work and applying them to it. It reads and applies; it authors and enforces nothing, and it grants no authority."
+    answers "Which procedure does an agent follow to apply law records?"
+  composition
+    playbooks [@playbook law-method]
+  execution
+    effects [read]
+
+@playbook law-method
+  meaning
+    says "How an agent reads and applies law records, each a rule with a severity, whose prose structural admission cannot prove true or suitable: find the ones at the seat through ia position --word law, turn them into constraints on the plan, apply them at every step and report how the work stood against them. Authoring, changing and enforcing law records lie outside this kit."
+    answers "How does an agent read and apply law records?"
+  subject
+    subject-word law
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word law at the seat the work concerns, read each law it delivers with ia read, and run ia vocabulary law --schema for the shape of one."
+      Inference means "Read each law's severity and requires with ia inspect <identity> --json; a blocking law arrives in the packet's rules and decides before any cell."
+      Decision means "law is a word of governance-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/governance-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left about these law records before applying them again."
+    plan
+      primary Inference
+      Attention means "List the law records that apply, with their severity, as constraints on the plan."
+      Inference means "Map each requirement of a blocking law to the step it constrains, and change the plan rather than route around the law."
+      Decision means "When a law blocks the plan, change the plan or ask the person; never plan around a blocking rule."
+      Learning means "Say how the work will show that it applied each law."
+    act
+      primary Decision
+      Attention means "Before each step, re-read the law records that bear on it."
+      Inference means "Check the law's requires before each step it constrains; when a step would break it, stop and say so."
+      Decision means "This kit reads and applies law records only. A change to one goes to its owner as a proposal, and enforcement (gates, recorded evidence, verifiers) is not part of this public kit."
+      Learning means "Record where applying a law changed or stopped a step."
+    learn
+      primary Learning
+      Attention means "Report how the work stood against each law that applied, citing the evidence."
+      Inference means "Report, for each blocking law, whether the work satisfied it, the evidence that shows it, and what stayed unevaluated."
+      Decision means "Reconcile the records the work changed with the law records that apply, and leave the handoff packet method-handoff-packet describes."
+      Learning means "When a law was unclear or did not fit the work, propose an improvement to its owner, as method-improvement-lifecycle describes."
+
+@capability convention-method
+  meaning
+    says "Read and apply convention records under the IA methodology: the convention-method playbook's orient, plan, act and learn cells for finding the convention records that bear on the work and applying them to it. It reads and applies; it authors and enforces nothing, and it grants no authority."
+    answers "Which procedure does an agent follow to apply convention records?"
+  composition
+    playbooks [@playbook convention-method]
+  execution
+    effects [read]
+
+@playbook convention-method
+  meaning
+    says "How an agent reads and applies convention records, each a convention in the shared governance shape: find the ones at the seat through ia position --word convention, turn them into constraints on the plan, apply them at every step and report how the work stood against them. Authoring, changing and enforcing convention records lie outside this kit."
+    answers "How does an agent read and apply convention records?"
+  subject
+    subject-word convention
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word convention at the seat the work concerns, read each convention it delivers with ia read, and run ia vocabulary convention --schema for the shape of one."
+      Inference means "Find the conventions for the words the work touches and what each requires."
+      Decision means "convention is a word of governance-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/governance-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left about these convention records before applying them again."
+    plan
+      primary Inference
+      Attention means "List the convention records that apply, with their severity, as constraints on the plan."
+      Inference means "Follow each convention's requires in the plan, and give a reason wherever the plan departs from an advisory one."
+      Decision means "When a convention blocks the plan, change the plan or ask the person; never plan around a blocking rule."
+      Learning means "Say how the work will show that it applied each convention."
+    act
+      primary Decision
+      Attention means "Before each step, re-read the convention records that bear on it."
+      Inference means "Apply each convention as the step it governs produces its output."
+      Decision means "This kit reads and applies convention records only. A change to one goes to its owner as a proposal, and enforcement (gates, recorded evidence, verifiers) is not part of this public kit."
+      Learning means "Record where applying a convention changed or stopped a step."
+    learn
+      primary Learning
+      Attention means "Report how the work stood against each convention that applied, citing the evidence."
+      Inference means "Say where the work followed each convention and where it departed, with the reason."
+      Decision means "Reconcile the records the work changed with the convention records that apply, and leave the handoff packet method-handoff-packet describes."
+      Learning means "When a convention was unclear or did not fit the work, propose an improvement to its owner, as method-improvement-lifecycle describes."
+
+@capability playbook-method
+  meaning
+    says "Work with playbook records under the IA methodology: the playbook-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking a playbook. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for a playbook?"
+  composition
+    playbooks [@playbook playbook-method]
+  execution
+    effects [read, local-write]
+
+@playbook playbook-method
+  meaning
+    says "How an agent works with playbook records, each a procedure as phase and primitive cells, whose delivery is generic and whose method belongs to its author: orient through ia position --word playbook and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with playbook records?"
+  subject
+    subject-word playbook
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word playbook at the seat the work concerns, read the playbook records it points at with ia read, and run ia vocabulary playbook --schema for the sections and fields a playbook carries."
+      Inference means "Read the playbooks the seat delivers with ia position --phase <phase>, and each cell by its locator, <playbook>#<phase>/<Primitive>."
+      Decision means "playbook is a word of governance-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/governance-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these playbook records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the playbook must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Decide whether an existing playbook already covers the procedure; a new one names its subject word and fills orient, plan, act and learn, each phase with its primary primitive and four cells."
+      Decision means "Extend an existing playbook through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the playbook will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the playbook; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Author the playbook with its subject and cognition, each cell a concrete instruction an agent can act on, not a description of the phase."
+      Decision means "Change playbook records only through ia preview playbook <name> <field>=<value>..., then ia author with the same form and the digest preview returned, then ia validate; use --set or --relate the same way for one field or relationship."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Read the playbook back through ia position at each phase and check that every cell arrives where intended and reads as an instruction."
+      Decision means "Reconcile the records that cite or depend on the playbook, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."

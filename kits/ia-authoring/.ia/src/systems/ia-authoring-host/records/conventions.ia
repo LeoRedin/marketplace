@@ -1,0 +1,101 @@
+#! ia 1.0
+
+@convention host-trigger-cases-are-records
+  meaning
+    says "Trigger cases are records. Only skills the model can invoke need trigger evaluation. A lowered plugin gets a @contract with one requirement per model-invocable skill: it triggers on its intended requests and not on adjacent ones. @case records implement each requirement through implements @contract <name>#<requirement>: a success case is a prompt that should trigger the skill, a refusal case a prompt that should not; the prompt is the case's request, and a case without one is refused. Each skill gets ten should-trigger and ten should-not prompts, the should-not prompts including near misses aimed at the skill's nearest neighbour skills; the runner (scripts/eval-triggers.mjs) refuses a run with fewer than ten of either kind. The trigger evaluator drafts the cases from the skill's description and its neighbours."
+    answers "How are the prompts of a trigger evaluation recorded?"
+  governance
+    severity blocking
+    requires "Record each model-invocable skill's trigger prompts as ten success and ten refusal cases of one contract requirement, near misses included, each with its prompt as the request."
+  subject
+    subject-word capability
+
+@convention host-trigger-reviewer-freezes
+  meaning
+    says "A reviewer freezes the cases. A reviewer who did not draft the cases reads them and freezes them. No scored run starts before the cases are frozen, and a frozen case is never edited to make a result better. The run manifest records a digest of the case set, so a changed case set is visible."
+    answers "When may a scored trigger run start, and who decides the cases are final?"
+  governance
+    severity blocking
+    requires "Start no scored run before a reviewer who did not draft the cases has frozen them, and never edit a frozen case to improve a result."
+  subject
+    subject-word capability
+
+@convention host-trigger-capture
+  meaning
+    says "Capture the cases. Run ia capture so the cases exist as a snapshot the runner reads (.ia/work/snapshot/current.json, or the path the config names). The runner reads cases from that snapshot by the contract and requirement they implement, never from free text."
+    answers "Where does the trigger runner read its cases from?"
+  governance
+    severity blocking
+    requires "Capture the workspace before a trigger run and let the runner read the cases from the snapshot by contract and requirement, never from free text."
+  subject
+    subject-word capability
+
+@convention host-trigger-modes
+  meaning
+    says "The two modes. Dev: one run per case on a cheaper model (haiku). Gate: three runs per case on the target model (an opus model). The config's mode, model and runs must agree: dev takes runs 1, gate takes runs 3 and an opus model, and the runner refuses a config where they do not. Run dev mode first, then gate mode."
+    answers "Which modes does a trigger evaluation run in, and with which models and runs?"
+  governance
+    severity blocking
+    requires "Run dev mode (one run per case, a cheaper model) before gate mode (three runs per case, the target opus model)."
+  subject
+    subject-word capability
+
+@convention host-trigger-run-manifest
+  meaning
+    says "The run manifest. Before any session starts, the runner writes manifest.json: the mode, the model, the skill, the contract and requirement, the runs, the cap and the planned session count, a digest of the case set, the host name and version, a digest of each arm's plugin directory, a digest of the runner file itself, the disable list, and the session limits (maxTurns, allowedTools and the per-session timeoutSeconds the run used). It holds no absolute paths and no timestamps. The runner refuses a plan over the cap, and refuses an out directory that already holds a manifest, so a rerun needs a fresh out and no case is repeated selectively."
+    answers "What does a trigger run write before its first session, and what does it refuse?"
+  governance
+    severity blocking
+    requires "Write the manifest with its cap before the first session, never exceed the cap, and rerun only into a fresh out directory."
+  subject
+    subject-word capability
+
+@convention host-trigger-sessions
+  meaning
+    says "Sessions. Each session passes its prompt on stdin, runs in an empty temporary directory outside the workspace, loads the arm with --plugin-dir, and runs with --allowedTools Skill; that flag pre-approves the Skill tool and does not remove the other tools. Sessions interleave the arms: for each case, for each run, both arms, so rate limits and model drift hit both evenly. The runner rewrites results.json after every session, so a killed run leaves partial evidence with complete false. A session that exceeds sessionTimeoutSeconds (default 600) is killed and counts as incomplete. The evaluation runs in the logged-in host configuration; an isolated configuration directory has no login."
+    answers "How does each session of a trigger evaluation run?"
+  governance
+    severity blocking
+    requires "Run each session outside the workspace, on its prompt only, with the arms interleaved by case and run, and keep the partial results of a killed run."
+  subject
+    subject-word capability
+
+@convention host-trigger-complete-runs
+  meaning
+    says "Complete and incomplete runs. A session is complete when the host started, was not killed, its stream holds the init event and the final result event, and that result is not an error (is_error), except error_max_turns, which the turn limit causes and which still counts; a non-zero exit with such a result still counts. Each results row records the result subtype, isError and the skills invoked. A run is complete only when every session is complete and every session listed the target skill. Otherwise the runner writes results.json with complete false and the counts of incomplete and unlisted sessions, prints the summary and exits 1. An incomplete run is reported as incomplete, never as a pass. A complete run in which no session in either arm triggered the target skill also exits 1: detection may be blind or the skill never fires."
+    answers "When is a trigger run complete, and how is an incomplete one reported?"
+  governance
+    severity blocking
+    requires "Report a trigger run with any incomplete, unlisted or errored session, or with no trigger observed, as incomplete, never as a pass."
+  subject
+    subject-word capability
+
+@convention host-trigger-side-by-side
+  meaning
+    says "Side by side. The two arms, original and then regenerated, run the same cases. The summary reports, per arm, the counts and a Wilson 95% interval of the correct rate. Worse means worse beyond noise: the run exits 3 when the 95% Newcombe hybrid-score interval of the difference (regenerated rate minus original rate), built from the two Wilson intervals, lies entirely below zero. The summary and results.json report the difference with its estimate and interval."
+    answers "How are the original and the regenerated plugin compared?"
+  governance
+    severity blocking
+    requires "Compare the original and the regenerated plugin on the same cases and call the regenerated one worse only when the Newcombe 95% interval of the difference lies entirely below zero."
+  subject
+    subject-word capability
+
+@convention host-trigger-no-selective-reruns
+  meaning
+    says "No selective reruns. Failed cases are never repeated selectively: a rerun runs every case into a fresh out directory, and the runner refuses an out that already holds a manifest."
+    answers "May failed trigger cases be rerun on their own?"
+  governance
+    severity blocking
+    requires "Never rerun failed trigger cases selectively; rerun the whole case set into a fresh out directory."
+  subject
+    subject-word capability
+
+@convention host-trigger-results
+  meaning
+    says "Results. Per-case verdicts become @observation records with their counts and their uncertainty, not a single score; raw stream logs stay with the run. Exit codes: 0 complete, triggered somewhere and not worse beyond noise; 3 regenerated arm worse beyond noise; 1 refusal, incomplete run or no trigger observed; 2 usage. The host-trigger-eval check declares a timeout of 21600 seconds in checks.json, so a budgeted run is not cut off by the check runner's default; a gate run's wall time is bounded by that timeout, and if it is hit the partial results.json remains as evidence."
+    answers "How are trigger results recorded, and what do the runner's exit codes mean?"
+  governance
+    severity blocking
+    requires "Record per-case verdicts as observations with their counts and intervals, keep the raw stream logs, and read the runner's exit code as this convention defines it."
+  subject
+    subject-word capability

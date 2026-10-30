@@ -1,0 +1,124 @@
+#! ia 1.0
+
+@capability contract-method
+  meaning
+    says "Work with contract records under the IA methodology: the contract-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking a contract. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for a contract?"
+  composition
+    playbooks [@playbook contract-method]
+  execution
+    effects [read, local-write]
+
+@playbook contract-method
+  meaning
+    says "How an agent works with contract records, each versioned requirements other records may adopt, each needing explicit evaluation evidence: orient through ia position --word contract and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with contract records?"
+  subject
+    subject-word contract
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word contract at the seat the work concerns, read the contract records it points at with ia read, and run ia vocabulary contract --schema for the sections and fields a contract carries."
+      Inference means "Read the contract's version, its requirements, what it governs and the cases that implement each requirement."
+      Decision means "contract is a word of compliance-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/compliance-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these contract records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the contract must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Write each requirement so one case can show it holds and another that it fails, and version the contract when a requirement changes."
+      Decision means "Extend an existing contract through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the contract will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the contract; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Author the contract's version and requirements, then a success case and a failure case for each requirement."
+      Decision means "Change contract records only through ia preview contract <name> <field>=<value>..., then ia author with the same form and the digest preview returned, then ia validate; use --set or --relate the same way for one field or relationship."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Confirm every requirement has both cases and that each case's evaluator names a test that exists; a requirement without evidence stays unevaluated."
+      Decision means "Reconcile the records that cite or depend on the contract, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."
+
+@capability case-method
+  meaning
+    says "Work with case records under the IA methodology: the case-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking a case. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for a case?"
+  composition
+    playbooks [@playbook case-method]
+  execution
+    effects [read, local-write]
+
+@playbook case-method
+  meaning
+    says "How an agent works with case records, each scenario inputs, expected behaviour and evaluator attribution, a declaration rather than an observed result: orient through ia position --word case and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with case records?"
+  subject
+    subject-word case
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word case at the seat the work concerns, read the case records it points at with ia read, and run ia vocabulary case --schema for the sections and fields a case carries."
+      Inference means "Read the case's kind, given, request, expected and evaluator, and the requirement it implements."
+      Decision means "case is a word of compliance-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/compliance-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these case records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the case must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Pair a success case and a failure case for each requirement, each naming the test that runs it."
+      Decision means "Extend an existing case through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the case will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the case; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Author the case with its scenario and the requirement it implements, naming an evaluator that exists."
+      Decision means "Change case records only through ia preview case <name> <field>=<value>..., then ia author with the same form and the digest preview returned, then ia validate; use --set or --relate the same way for one field or relationship."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Run the evaluator the case names and report it verbatim; the case declares the scenario and the run is the evidence."
+      Decision means "Reconcile the records that cite or depend on the case, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."
+
+@capability check-method
+  meaning
+    says "Read and apply check records under the IA methodology: the check-method playbook's orient, plan, act and learn cells for finding the check records that bear on the work and applying them to it. It reads and applies; it authors and enforces nothing, and it grants no authority."
+    answers "Which procedure does an agent follow to apply check records?"
+  composition
+    playbooks [@playbook check-method]
+  execution
+    effects [read]
+
+@playbook check-method
+  meaning
+    says "How an agent reads and applies check records, each a check implementation and scope, which declaring neither installs nor runs: find the ones at the seat through ia position --word check, turn them into constraints on the plan, apply them at every step and report how the work stood against them. Authoring, changing and enforcing check records lie outside this kit."
+    answers "How does an agent read and apply check records?"
+  subject
+    subject-word check
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word check at the seat the work concerns, read each check it delivers with ia read, and run ia vocabulary check --schema for the shape of one."
+      Inference means "Read the checks in scope: what each runs, its scope and the contract it enforces."
+      Decision means "check is a word of compliance-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/compliance-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left about these check records before applying them again."
+    plan
+      primary Inference
+      Attention means "List the check records that apply, with their severity, as constraints on the plan."
+      Inference means "Plan the work so the checks in scope can pass, and name the ones the work will run."
+      Decision means "When a check blocks the plan, change the plan or ask the person; never plan around a blocking rule."
+      Learning means "Say how the work will show that it applied each check."
+    act
+      primary Decision
+      Attention means "Before each step, re-read the check records that bear on it."
+      Inference means "Run the checks the workspace already provides, ia validate first, and report each one verbatim."
+      Decision means "This kit reads and applies check records only. A change to one goes to its owner as a proposal, and enforcement (gates, recorded evidence, verifiers) is not part of this public kit."
+      Learning means "Record where applying a check changed or stopped a step."
+    learn
+      primary Learning
+      Attention means "Report how the work stood against each check that applied, citing the evidence."
+      Inference means "Report each check that ran and what it evidences; a declared check that nothing ran stays unevaluated."
+      Decision means "Reconcile the records the work changed with the check records that apply, and leave the handoff packet method-handoff-packet describes."
+      Learning means "When a check was unclear or did not fit the work, propose an improvement to its owner, as method-improvement-lifecycle describes."

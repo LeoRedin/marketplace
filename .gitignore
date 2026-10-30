@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.scratch/
+build/
+review-private/
+.env
+.env.*
+.ia/work/
+.ia/distributions/
+.ia/distributions.lock.json
+node_modules/
+.qualification/

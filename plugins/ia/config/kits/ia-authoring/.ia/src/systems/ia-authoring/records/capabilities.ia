@@ -1,0 +1,11 @@
+#! ia 1.0
+
+@capability authoring-deliver
+  meaning
+    says "Author with IA in the Delivery lane: records of existing public words in a workspace, probing what IA admits, a Claude, Codex or Grok plugin lowered into records and projected back, a skill's triggering measured, a plugin qualified on its hosts, or a plugin brought inside a catalogue's house rules. The entry capability the core's Delivery entry point binds (delivery.*). It includes the part capabilities and runs the authoring-deliver playbook, which understands the request, chooses the part and its capability, has the change made and reviewed, and reports what was delivered. A new word, system, workspace or kit is out of its scope. It grants no authority; the workspace's mandates and the person's word decide what may change."
+    answers "Which capability does an agent bind for authoring records, host plugins and catalogue plugins with IA?"
+  composition
+    playbooks [@playbook authoring-deliver]
+    includes [@capability authoring-workspace-authoring, @capability authoring-probing-the-ia-toolchain, @capability host-lower, @capability host-project, @capability host-evaluate, @capability host-qualify, @capability catalogue-author]
+  execution
+    effects [read, local-write]

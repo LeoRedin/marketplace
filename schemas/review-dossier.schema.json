@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Optional review interchange for the adopted development process; no enforcement or approval semantics",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "policyStanding",
+    "subject",
+    "revision",
+    "comments",
+    "remainingGates"
+  ],
+  "properties": {
+    "format": {
+      "const": 1
+    },
+    "policyStanding": {
+      "const": "adopted"
+    },
+    "subject": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "comments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "reviewer",
+          "reviewedRevision",
+          "location",
+          "finding",
+          "severity",
+          "evidenceRef",
+          "response",
+          "disposition",
+          "changeRequest",
+          "fixRevision",
+          "verification",
+          "rereview"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reviewer": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reviewedRevision": {
+            "type": "string",
+            "minLength": 1
+          },
+          "location": {
+            "type": "string",
+            "minLength": 1
+          },
+          "finding": {
+            "type": "string",
+            "minLength": 1
+          },
+          "severity": {
+            "enum": [
+              "Critical",
+              "Important",
+              "Minor",
+              "Nit"
+            ]
+          },
+          "evidenceRef": {
+            "type": "string",
+            "minLength": 1
+          },
+          "response": {
+            "type": "string",
+            "minLength": 1
+          },
+          "disposition": {
+            "enum": [
+              "open",
+              "accepted",
+              "challenged",
+              "deferred",
+              "resolved"
+            ]
+          },
+          "changeRequest": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fixRevision": {
+            "type": "string",
+            "minLength": 1
+          },
+          "verification": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rereview": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "remainingGates": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

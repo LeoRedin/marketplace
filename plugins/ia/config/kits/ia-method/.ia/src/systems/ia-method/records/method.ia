@@ -1,0 +1,65 @@
+#! ia 1.0
+
+@playbook method-operate
+  meaning
+    says "How an agent thinks and operates in an IA workspace under the IA methodology, governed or not: state the intent to ia position, ground in the owning sources, find what exists before inventing, plan the smallest coherent change through the owners of its words, stay under the ceiling of any provisional foundation, change records only through preview, author and validate, and leave an account the next agent can trust. A governed repository may add its own gates and evidence to this loop; this playbook neither requires nor replaces them."
+    answers "How does an agent think and operate in an IA workspace?"
+  subject
+    subject-word workspace
+  cognition
+    orient
+      primary Attention
+      Attention means "State the intent as shape, phase, seat and word to ia position; when it refuses, run the command it names. Read the blocking rules, mandates, cells and pointers, then read with ia read the records the question depends on. Find the capability the work belongs to and what already exists for it before considering anything new."
+      Inference means "Place each source at its level of knowledge and give its states separately, as method-claims-within-evidence lists them. Note what is provisional, contradicted or unknown, and which owner can settle it."
+      Decision means "When a word the work needs is owned by another system, re-seat at that system with ia position --seat; a steward pointer is something to read, not an invocation."
+      Learning means "Read the observations and improvements earlier work left on this seat before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the plan must satisfy: the intent, the blocking rules, the mandate's moves and scope, and the ceiling of any provisional foundation."
+      Inference means "Capture the scope and impact at the smallest useful depth, then order the smallest coherent change into steps through the owners of the words it touches, each step with what it changes and how it is verified."
+      Decision means "Bring each consequential decision to the person with a recommendation, and continue the independent work already authorised while the decision is open."
+      Learning means "Say in the plan how the outcome will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Watch for refusals from ia preview, ia author and ia validate: a refusal means the plan is wrong about the change, not that the check is in the way."
+      Inference means "When reality departs from the plan, say so and amend the plan before changing more."
+      Decision means "Change records only through ia preview, then ia author with the digest it returned, then ia validate. Keep every layer that rests on a provisional foundation on a branch, and build nothing on it."
+      Learning means "Keep failed runs and refusals on the record, with their codes; fix within the step and verify again."
+    learn
+      primary Learning
+      Attention means "Run the checks that apply and report them verbatim; say which claims they evidence and which remain unevaluated."
+      Inference means "Have a separate agent review the change against the plan, the evidence and the rules; the author does not review its own work."
+      Decision means "Reconcile the owning records, links, delivery disposition and next action, and leave the seven-part handoff packet."
+      Learning means "Turn what the work taught into improvement proposals to their owners (a kb document, a skill, a law, a record, the code), as method-improvement-lifecycle describes, or state that there is none."
+
+@playbook method-provisional-foundation
+  meaning
+    says "How an agent works when a spec or decision the work relies on is not yet ratified: find out exactly what is provisional, set the ceiling at one layer, record the dependency so ia next reports it, ask for ratification, and reconcile the layer when the foundation is ratified, changed or rejected."
+    answers "What does an agent do when the foundation under its work is provisional?"
+  subject
+    subject-word spec
+  cognition
+    orient
+      primary Attention
+      Attention means "Read the spec's status and the decisions that ground it with ia read; a spec is provisional unless it is accepted, and a decision is open until it has a choice. Self-declared work status never decides this."
+      Inference means "List what already rests on the provisional foundation, and how many layers deep it goes."
+      Decision means "If a second layer already rests on it, stop that layer and tell the person before doing anything else."
+      Learning means "Read earlier observations about this foundation: what was tried, what was refused, what changed."
+    plan
+      primary Inference
+      Attention means "Name the ceiling: one layer on a branch (design, prototype, tests against the proposed contract), and nothing built on it, lowered past draft, merged or released until ratified."
+      Inference means "Record the work's dependency on the foundation: the task requires the open decision; it cites a draft spec, and the spec is grounded by the decision that will ratify it. ia next blocks on the decision, not on a cited spec, so run the ceiling report to see each task's layer."
+      Decision means "Ask the person for the ratification the work needs, with a recommendation, and say what will stay blocked until then."
+      Learning means "Say what the first layer must show to inform the ratification: the questions it answers and the evidence it produces."
+    act
+      primary Decision
+      Attention means "Before each step, check that it stays inside the first layer: no new dependent work, no lowering past draft, no merge, no release."
+      Inference means "When the layer's evidence changes what the foundation should say, propose the change to the spec's or decision's owner instead of building around it."
+      Decision means "Build the first layer on its branch and stop at the ceiling; report what remains blocked and why."
+      Learning means "Record what the prototype and tests showed about the proposed contract, including what failed."
+    learn
+      primary Learning
+      Attention means "When the foundation is ratified, re-read it and compare it with what the first layer assumed."
+      Inference means "Reconcile the first layer with the ratified foundation, or retire it with an explicit disposition when the foundation is rejected or replaced."
+      Decision means "Only after reconciliation may the layer merge and further work build on it."
+      Learning means "Propose an improvement when the provisional period exposed a missing foundation question or a gap in the ceiling."

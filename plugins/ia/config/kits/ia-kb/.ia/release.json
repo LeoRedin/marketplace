@@ -1,0 +1,71 @@
+{
+  "formatVersion": 1,
+  "id": "inventarch/ia-kb-kit",
+  "version": "0.9.0",
+  "distribution": "workspace-system/definition/distribution/ia-kb-distribution",
+  "engine": "^0.1.1",
+  "language": [
+    "1.0"
+  ],
+  "dependencies": [
+    {
+      "id": "inventarch/language",
+      "range": "^3.2.0",
+      "systems": [
+        "agent-composition-system",
+        "agent-system",
+        "compliance-system",
+        "governance-system",
+        "learning-system",
+        "work-system",
+        "workspace-system"
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "path": "assets/examples/split-body/README.md",
+      "role": "documentation"
+    },
+    {
+      "path": "assets/examples/split-body/anchor.ia",
+      "role": "asset"
+    },
+    {
+      "path": "assets/examples/split-body/locators.json",
+      "role": "asset"
+    },
+    {
+      "path": "assets/examples/split-body/model-api.md",
+      "role": "documentation"
+    },
+    {
+      "path": "assets/kb-document-binding.md",
+      "role": "documentation"
+    },
+    {
+      "path": "assets/kb-lifecycle.md",
+      "role": "documentation"
+    },
+    {
+      "path": "assets/kb-placement.md",
+      "role": "documentation"
+    },
+    {
+      "path": "scripts/check-decisions.mjs",
+      "role": "asset"
+    },
+    {
+      "path": "scripts/check-locators.mjs",
+      "role": "asset"
+    }
+  ],
+  "license": "Apache-2.0",
+  "description": "The IA KB kit, the Knowledge lane's public default: where organisation and repository knowledge lives, where a user's workspaces are saved (~/Documents/ia/<name> by default, never inside ~/.ia), and how a @spec anchor stays bound to one exact body, current, checked and reviewed. An entry capability whose playbook is a whole orient, plan, act and learn procedure; one capability and playbook per stage (place content, bind a document, maintain a document, check, migrate) plus retrieval and review; conventions for placement, workspace location, binding and the locator manifest, lifecycle, role briefs, host adaptation, IA reads and evidence reporting; laws for the blocking rules; librarian, reviewer, curator and gate-runner profiles; declared checks for admission, the decision lifecycle and locator manifests; a contract with cases; and the references, the split-body example and both checkers as assets.",
+  "source": {
+    "repository": "https://github.com/inventarch/marketplace.git",
+    "commit": "cb56ef38b48c9890e96240da71f422d1348c82be",
+    "recipe": "ustar-v1",
+    "epoch": 1793373428
+  }
+}

@@ -1,0 +1,186 @@
+{
+  "format": "inventarch.native-inventory/1",
+  "shards": 1,
+  "cases": [
+    {
+      "id": "native-releases",
+      "file": "plugins/ia/tests/kits-release.test.mjs",
+      "name": "for every kit, packing the sources reproduces the recorded archive",
+      "mode": "native",
+      "platforms": [
+        "linux",
+        "win32",
+        "darwin"
+      ],
+      "shard": 1
+    },
+    {
+      "id": "MI-T04",
+      "file": "plugins/ia/tests/method-integrity-native.test.mjs",
+      "name": "MI-T04 native missing capability refuses without pin",
+      "mode": "native",
+      "platforms": [
+        "linux",
+        "win32",
+        "darwin"
+      ],
+      "shard": 1
+    },
+    {
+      "id": "MI-T05",
+      "file": "plugins/ia/tests/method-integrity-native.test.mjs",
+      "name": "MI-T05 native missing required runner refuses without pin",
+      "mode": "native",
+      "platforms": [
+        "linux",
+        "win32",
+        "darwin"
+      ],
+      "shard": 1
+    },
+    {
+      "id": "native-closure-ownership",
+      "file": "tests/closure-native.test.mjs",
+      "name": "native closure separates vocabulary ownership from retained authoring membership",
+      "mode": "native",
+      "platforms": [
+        "linux",
+        "win32",
+        "darwin"
+      ],
+      "shard": 1
+    },
+    {
+      "id": "native-closure-plural-workspaces",
+      "file": "tests/closure-native.test.mjs",
+      "name": "native plural workspace roots require separate explicit qualification",
+      "mode": "native",
+      "platforms": [
+        "linux",
+        "win32",
+        "darwin"
+      ],
+      "shard": 1
+    },
+    {
+      "id": "native-closure-capability-roots",
+      "file": "tests/closure-native.test.mjs",
+      "name": "native capability roots and explicit inspection-only qualification are admitted",
+      "mode": "native",
+      "platforms": [
+        "linux",
+        "win32",
+        "darwin"
+      ],
+      "shard": 1
+    },
+    {
+      "id": "native-closure-missing-dependencies",
+      "file": "tests/closure-native.test.mjs",
+      "name": "native missing references and direct vocabulary dependencies refuse",
+      "mode": "native",
+      "platforms": [
+        "linux",
+        "win32",
+        "darwin"
+      ],
+      "shard": 1
+    },
+    {
+      "id": "native-closure-retention-execution",
+      "file": "tests/method-closure.test.mjs",
+      "name": "complete native closure reproduces, reloads and refuses byte mutation",
+      "mode": "native",
+      "platforms": [
+        "linux",
+        "win32",
+        "darwin"
+      ],
+      "shard": 1
+    },
+    {
+      "id": "native-closure-executor-refusal",
+      "file": "tests/method-closure.test.mjs",
+      "name": "unqualified and ambient executors never publish a complete closure",
+      "mode": "native",
+      "platforms": [
+        "linux",
+        "win32",
+        "darwin"
+      ],
+      "shard": 1
+    },
+    {
+      "id": "native-closure-validation-before-publish",
+      "file": "tests/method-closure.test.mjs",
+      "name": "invocation validation runs before publication and cannot mutate committed bytes",
+      "mode": "native",
+      "platforms": [
+        "linux",
+        "win32",
+        "darwin"
+      ],
+      "shard": 1
+    },
+    {
+      "id": "native-closure-historical-refusal",
+      "file": "tests/method-closure.test.mjs",
+      "name": "historical source drift and missing closures refuse without fallback",
+      "mode": "native",
+      "platforms": [
+        "linux",
+        "win32",
+        "darwin"
+      ],
+      "shard": 1
+    },
+    {
+      "id": "native-closure-cwd-refusal",
+      "file": "tests/method-closure.test.mjs",
+      "name": "kit cwd remains unsupported by the native workspace validation profile",
+      "mode": "native",
+      "platforms": [
+        "linux",
+        "win32",
+        "darwin"
+      ],
+      "shard": 1
+    },
+    {
+      "id": "native-carried-ia-kb",
+      "file": "tests/carried-method-executors.test.mjs",
+      "name": "carried ia-kb retains and executes every declared runner",
+      "mode": "native",
+      "platforms": [
+        "linux",
+        "win32",
+        "darwin"
+      ],
+      "shard": 1
+    },
+    {
+      "id": "native-method-position",
+      "file": "tests/method-position.test.mjs",
+      "name": "retained native position selects phase cells and preserves justified whole fallback",
+      "mode": "native",
+      "platforms": [
+        "linux",
+        "win32",
+        "darwin"
+      ],
+      "shard": 1
+    }
+  ],
+  "excluded": [
+    {
+      "file": "plugins/ia/tests/install-upgrade.test.mjs",
+      "status": "unsupported",
+      "reason": "Historical CLI migration requires a separately provided legacy installation."
+    },
+    {
+      "file": "plugins/ia/tests/kit-architecture-scripts.test.mjs",
+      "status": "unsupported",
+      "reason": "Operator host workspace probe requires explicit local workspace inputs."
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+#! ia 1.0
+
+@playbook authoring-deliver
+  meaning
+    says "The Delivery lane for IA authoring, as one whole procedure: understand the request and its scope (orient), design the change and choose the part capability that makes it (plan), make the change through that capability (act), then review it independently and deliver it with its evidence (learn). The parts are record authoring (authoring-workspace-authoring, authoring-probing-the-ia-toolchain), host authoring (host-lower, host-project, host-evaluate, host-qualify) and catalogue authoring (catalogue-author). The shared rules are the conventions authoring-scope, authoring-kit-install-and-bind, authoring-kit-tools, authoring-activity-keys and authoring-host-notes."
+    answers "How does an agent start, route and finish authoring work in the Delivery lane?"
+  subject
+    subject-word capability
+  cognition
+    orient
+      primary Attention
+      Attention means "Understand the request. Name what is to be made or changed: records of existing words in a workspace, an admission question about IA, a plugin to lower, project, evaluate or qualify, or a plugin to bring inside a catalogue's house rules. Read the scope convention (authoring-scope) first: records of existing public words only; a new word, system, workspace or kit is out of scope, to be authored by hand from the public IA documentation or with an InventArch subscription, so say so and stop that part."
+      Inference means "Find the root and its toolchain: whether the folder is an IA workspace (a .ia/src at or above it), which @inventarch/cli it pins and which language base it locks; read the toolchain convention (authoring-toolchain) and never run the ia on the PATH. For a plugin, find its manifests and the hosts it ships for; for a catalogue, find its validator and manifest schema."
+      Decision means "Choose the part. Records of existing words in a workspace: authoring-workspace-authoring (delivery.workspace-authoring, delivery.author). An admission question, an unfamiliar validation error or a draft of uncertain admission: authoring-probing-the-ia-toolchain first (delivery.probe). A plugin into records: host-lower (delivery.host); records back into a plugin: host-project; a skill's triggering: host-evaluate; a plugin on its hosts: host-qualify. A plugin for a catalogue: catalogue-author (delivery.catalogue), with host-qualify after it."
+      Learning means "Read earlier results for the same root before repeating their work: probe answers, lowering maps, round-trip reports, trigger-evaluation observations and validator runs."
+    plan
+      primary Inference
+      Attention means "Design the change. Restate what must hold when it is done: the records admit with zero errors and mean what was intended, a lowered plugin keeps every file and key, a projection is content-exact and a fixed point, an evaluation stays inside its cap, a catalogue plugin passes the catalogue's validator."
+      Inference means "Plan the smallest change through the chosen part's capability and follow its playbook's cells, which arrive whole in the same packet when it is bound. When the part's key is unbound, the resolver refuses IA-CORE-NO-METHOD: offer bind.mjs recommend inventarch/ia-authoring-kit, as the activity-keys convention (authoring-activity-keys) says, and never follow a stage from memory."
+      Decision means "Name the checks that will judge it before it runs: authoring-workspace-validate and authoring-field-lint for records, host-validate and host-fixed-point for a lowering and a projection, host-trigger-eval for an evaluation, catalogue-validate for a catalogue plugin. Product and authority choices go to the person with options; never take them."
+      Learning means "State what would make the change fail, and which probe or check would show it, before anything is written."
+    act
+      primary Decision
+      Attention means "Make the change through the chosen capability, inside the paths the task authorises. Probe in a scratch copy, never in the real workspace (law authoring-probe-never-the-workspace)."
+      Inference means "Run the kit's tools from the kit folder by their full path, as the kit-tools convention (authoring-kit-tools) says, and the declared checks through the core's checker runner (check.mjs <check>); where a tool cannot run, do its work by hand as the probe-by-hand convention (authoring-probe-by-hand) says."
+      Decision means "Fix the source, never the generated output or the evidence, when a check refuses; keep every failed run on the record and rerun after the fix."
+      Learning means "Change no stage, gate, decision status or milestone as a side effect, and create no system, workspace or kit (law authoring-no-promotion)."
+    learn
+      primary Learning
+      Attention means "Review: have a reviewer who did not author the change read it against its checks; nobody reviews their own work, and a review with no separate reviewer is reported as not run."
+      Inference means "Deliver: report each check's command, exit code and output verbatim, with the CLI version that ran; keep declared, structurally admitted, executed and accepted apart (law authoring-run-before-claim)."
+      Decision means "Say what is verified, what is provisional, what is still broken and the next bounded step; a missing tool is unavailable, never passed."
+      Learning means "Record what the work taught: a probe answer that differs from the rule sheet goes to the ia-authoring-record steward, a description fix to the skill's owner, a validator finding to the catalogue's owner."

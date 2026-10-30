@@ -1,0 +1,45 @@
+#! ia 1.0
+
+@law authoring-run-before-claim
+  meaning
+    says "Declared is not executed, and admission is not truth. Records describe: a contract, law or mandate states what must hold and enforces nothing until an evaluator runs; admission means the records conform, not that they are true. Keep declared, structurally admitted, executed and accepted apart. Never write enforced, verified or passes without the run, and never report a pass for something you did not run in this session; a filtered run that selects nothing can still exit 0, so report it as not found, not pass, and never summarise a failure as a pass with caveats. A rule is enforced only when a contract requirement has success and failure cases whose evaluators run. Ground every claim about an existing thing with path:line, or label it inferred or unknown; read the source, not memory. A case cites a test only after you opened it and confirmed its title; until a test exists the case says unavailable with its gate, which is an honest, complete state. A missing tool means the check is unavailable, never passed."
+    answers "What may be claimed about a workspace's records, and what does each claim need behind it?"
+  governance
+    severity blocking
+    requires "Claim enforced, verified or passes only for a run you made in this session and can quote; label every other claim declared, inferred, unknown or unavailable with its gate, and never cite a test you have not opened."
+  subject
+    subject-word system
+    subject-kind definition
+
+@law authoring-stewards-write-their-folders
+  meaning
+    says "System records are written by each system's steward, inside the folder its stewardship mandate covers, and only with Write or Edit, never with the shell. Nobody else writes a system's records: a lead or an author of workspace instances writes nothing under .ia/src/systems/. IA 3.4.0 renders no steward agents and registers no steward guard (it guards a path only through an authored @hook): the brief's rules, not a hook, keep a steward in its folder, and the absence of a guard is not permission. A write outside a steward's folder is a defect to report; check for it with git log and the diff against the steward's report. Never edit installed package bytes or a cache, never silently reclaim upstream word ownership, and edit hash-pinned files only when you must, with a rehash."
+    answers "Who writes a system's records, where, and how is a write outside a steward's folder treated?"
+  governance
+    severity blocking
+    requires "Write a system's records only as its steward, inside the paths its stewardship mandate covers and with file tools; never write under .ia/src/systems/ as anyone but that system's steward, and report any write outside a steward's folder as a defect."
+  subject
+    subject-word system
+    subject-kind definition
+
+@law authoring-no-promotion
+  meaning
+    says "Don't promote as a side effect, and leave the user's choices to the user. Completing records never changes a component's stage or a seam's stage, closes a gate, changes a decision's status or marks a milestone closed; a proposed or prototype component with real code and tests stays as it is and is reported as a promotion candidate for the human. Product and authority choices are always the user's: frame them with at least two options and what each would change, and never take them; technical ones may be recommended. New systems, stage promotions, gate closures and policy choices go to the user; creating a system needs the user's approval, because in an initialized workspace it is authored by hand. A structural change (a component move, a new system, a minted word) is decided explicitly, recorded where it applies and reported. Never override a user's constraint silently: name the conflict and the reason."
+    answers "What may never change as a side effect of completing records, and which choices belong to the user?"
+  governance
+    severity blocking
+    requires "Change no stage, gate, decision status or milestone as a side effect, take no product or authority choice, create no system without the user's approval, and record and report every structural change."
+  subject
+    subject-word system
+    subject-kind definition
+
+@law authoring-probe-never-the-workspace
+  meaning
+    says "Probe before you write, and never in the real workspace. Admission rules vary by language version: learn them in a scratch copy, never by breaking the real workspace, where it wastes everyone's time and can block other stewards. Never write probe files into the real workspace; probes, captures and surveys run on a temporary copy that is deleted afterwards. Never run the ia on the PATH, which may be an older release, and never npx --no ia, which with no workspace install runs a globally installed CLI; run the CLI the workspace pins, or exactly @inventarch/cli 3.4.0, through the core's ia.mjs or IA_CLI_PATH, and refuse a CLI below 3.x. Do not install, restore, fetch, activate, create organisations or edit access just to answer an authoring question, and never rotate the live capture pair during a read-only survey."
+    answers "Where are admission rules learned, and which IA CLI may run?"
+  governance
+    severity blocking
+    requires "Probe, capture and survey only temporary copies of a workspace, never write probe files into it, never run the ia on the PATH or npx --no ia, and never install, restore or capture in a real workspace just to answer a question."
+  subject
+    subject-word system
+    subject-kind definition

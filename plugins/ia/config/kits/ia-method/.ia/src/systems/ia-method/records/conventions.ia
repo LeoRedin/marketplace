@@ -1,0 +1,41 @@
+#! ia 1.0
+
+@convention method-capture-before-delivery
+  meaning
+    says "Before committing to deliver a change, capture its scope and impact at the smallest useful depth, citing existing artifacts rather than copying them: intent (users, problem, desired result, non-goals, success and refusal examples); identity and lineage; ownership (semantic, implementation, effect and data owners, and the accountable decider); foundation (existing systems, words, APIs and contracts it reuses or extends); surfaces (records, documents, exports, CLI, MCP, HTTP, IDE, hosts, storage, distribution); composition (required systems, versions, dependency closure); behaviour and binding (inputs, outputs, effects, failure, recovery, compatibility); impact (upstream assumptions, downstream consumers, migrations); evidence (checks, review, observations, what stays unevaluated); and delivery (the smallest connected slice, its owner, prerequisite decisions and exit evidence). A first idea needs only identity, outcome, provisional owner, sources and open questions."
+    answers "What does an agent capture before committing to deliver a change?"
+  governance
+    severity advisory
+    requires "Capture the ten concerns at the smallest useful depth before delivery, and give a reason for each concern marked not applicable. Do not require a brief, decision, spec and plan for every small reversible change; add an artifact when it has an independent job."
+  subject
+    subject-word spec
+
+@convention method-handoff-packet
+  meaning
+    says "A handoff to another agent or a later session is a compact packet derived from the owning sources, in seven parts: (1) the intended outcome, canonical identity, requested change and non-goals; (2) the exact source revisions and the current authoritative decision, spec and implementation references, with history labelled as history; (3) the semantic and implementation owners, the applicable methods and contracts, and the permitted scope; (4) the affected dependencies and surfaces, the current scoped states with their claim labels, conflicts and unknowns; (5) how to verify the current state from a clean start: the setup, then a non-interactive run that needs no credentials, with the output that proves each step, and the steps that cannot be scripted, which stay unrun; (6) the next bounded action, its expected artifact, its success and refusal criteria and the checks available to run; (7) where results, evidence, changed applicability and remaining work must be recorded. A packet without claim labels or without part 5 is not ready to hand off: add the missing part first. A summary cannot certify material its writer did not read; the packet keeps its omissions and provenance."
+    answers "What does an agent leave for the next agent?"
+  governance
+    severity advisory
+    requires "End every handoff with the seven-part packet, never hand off one that lacks claim labels or a clean-start verification, and leave results and open work in their owning sources rather than in the conversation."
+  subject
+    subject-word task
+
+@convention method-reconcile-on-change
+  meaning
+    says "Reconcile the account when a decision selects, rejects, defers or replaces an approach; when a spec changes a dependency, requirement, interface or supported surface; when an implementation closes a slice, reveals a contradiction or changes an advertised capability; when a binding changes or evidence goes stale; and when a task moves, a document retires or an outcome is no longer wanted. Update the owning facts, the affected links and requirements, the delivery disposition and the next action, then regenerate the views derived from them. Historical decisions and observations stay attributable; replaced work leaves the actionable view only with an explicit disposition."
+    answers "When must an agent reconcile the account, and what does it update?"
+  governance
+    severity advisory
+    requires "On each listed change, update the owning records and links, the delivery disposition and the next action before moving on."
+  subject
+    subject-word decision
+
+@convention method-improvement-lifecycle
+  meaning
+    says "An improvement is a proposal to change one owned target, never an applied change. It names the target record or file, its owning system and path, the exact text it would replace and that text's digest, the candidate text, what the change applies to, how it is verified and how it is reversed. The target's owner reviews it and records the outcome, the reviewer and the rationale; only the owner applies it, then verifies it with ia validate and the checks the proposal names. A proposal whose target changed after its digest was taken is stale: rebase it on the current text or withdraw it, never apply it blind. Where the evidence behind an improvement is admitted, and how a governed task records it, belongs to the procedure the work runs under."
+    answers "What does an improvement carry, and who applies it?"
+  governance
+    severity advisory
+    requires "Give every improvement its target, owning system and path, exact before text and digest, candidate, verification and reversal; leave review and application to the target's owner, and treat a target that moved since its digest as stale."
+  subject
+    subject-word improvement

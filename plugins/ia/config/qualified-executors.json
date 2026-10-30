@@ -1,0 +1,155 @@
+{
+  "format": "inventarch.executor-profiles/1",
+  "profiles": {
+    "kb-check-locators-v1": {
+      "kit": "ia-kb",
+      "check": "kb-check-locators",
+      "script": "config/kits/ia-kb/scripts/check-locators.mjs",
+      "argv": [
+        "${NODE}",
+        "${KIT}/scripts/check-locators.mjs",
+        "${KIT}/assets/examples/split-body/locators.json"
+      ],
+      "cwd": "kit",
+      "modules": [
+        {
+          "path": "config/kits/ia-kb/scripts/check-locators.mjs",
+          "sha256": "f6f10576df097270e3aa0157df280912d054b1efffc29f65ccccf65ec83bce13",
+          "imports": [
+            "node:assert/strict",
+            "node:crypto",
+            "node:fs",
+            "node:path",
+            "node:child_process",
+            "node:url"
+          ]
+        }
+      ],
+      "dynamicImports": [],
+      "subprocesses": [],
+      "review": "Fixed invocation supplies no --checkout. CLI constructs empty checkouts; git branch is unreachable. Workspace manifest is captured as data; metadata validation does not verify document bytes."
+    },
+    "kb-check-task-locators-v1": {
+      "kit": "ia-kb",
+      "check": "kb-check-task-locators",
+      "script": "config/kits/ia-kb/scripts/check-locators.mjs",
+      "argv": [
+        "${NODE}",
+        "${KIT}/scripts/check-locators.mjs",
+        "${ARG:manifest}"
+      ],
+      "cwd": "workspace",
+      "arguments": {
+        "manifest": "workspace-file"
+      },
+      "modules": [
+        {
+          "path": "config/kits/ia-kb/scripts/check-locators.mjs",
+          "sha256": "f6f10576df097270e3aa0157df280912d054b1efffc29f65ccccf65ec83bce13",
+          "imports": [
+            "node:assert/strict",
+            "node:crypto",
+            "node:fs",
+            "node:path",
+            "node:child_process",
+            "node:url"
+          ]
+        }
+      ],
+      "dynamicImports": [],
+      "subprocesses": [],
+      "review": "Fixed invocation supplies no --checkout. CLI constructs empty checkouts; git branch is unreachable. Workspace manifest is captured as data; metadata validation does not verify document bytes."
+    },
+    "kb-check-decisions-v1": {
+      "kit": "ia-kb",
+      "check": "kb-check-decisions",
+      "script": "config/kits/ia-kb/scripts/check-decisions.mjs",
+      "argv": [
+        "${NODE}",
+        "${KIT}/scripts/check-decisions.mjs",
+        "${IA}"
+      ],
+      "cwd": "workspace",
+      "modules": [
+        {
+          "path": "config/kits/ia-kb/scripts/check-decisions.mjs",
+          "sha256": "d3b45a227be354da4d1b8a3bb93126d3235eb903b7a824403f885b043eb9bfc7",
+          "imports": [
+            "node:child_process",
+            "node:fs",
+            "node:path",
+            "node:url"
+          ]
+        }
+      ],
+      "dynamicImports": [],
+      "subprocesses": [
+        {
+          "executor": "attested-native-cli",
+          "commands": [
+            "validate",
+            "records"
+          ],
+          "selection": "fixed expanded ${IA} argv only"
+        }
+      ],
+      "review": "No module imports or dynamic code. Only passed attested native CLI argv runs. Native stdout buffers are bounded by carried script to 256 MiB; outer supervisor enforces wall time and process-tree termination."
+    },
+    "authoring-field-lint-v1": {
+      "kit": "ia-authoring",
+      "check": "authoring-field-lint",
+      "script": "config/kits/ia-authoring/scripts/field-lint.mjs",
+      "argv": [
+        "${NODE}",
+        "${KIT}/scripts/field-lint.mjs",
+        "--root",
+        "${WORKSPACE}"
+      ],
+      "cwd": "workspace",
+      "modules": [
+        {
+          "path": "config/kits/ia-authoring/scripts/field-lint.mjs",
+          "sha256": "8f0b3a7fff8f6934855c8c3407dfdfb9ff9f2f2764cbb500ca16f58438457f8e",
+          "imports": [
+            "node:fs",
+            "../../../../scripts/lib/scratch.mjs",
+            "node:path",
+            "node:url"
+          ]
+        },
+        {
+          "path": "scripts/lib/cli.mjs",
+          "sha256": "512925dc5f3f35235a2fbe58ac9a5586ae51253d0f293414285faf604ce9dd59",
+          "imports": [
+            "node:child_process",
+            "node:fs",
+            "node:path"
+          ]
+        },
+        {
+          "path": "scripts/lib/scratch.mjs",
+          "sha256": "c10093e16cedca14b12d40a9536ada6ca7956404d3effc7508d346ae5b2096f9",
+          "imports": [
+            "node:assert/strict",
+            "node:child_process",
+            "node:fs",
+            "node:os",
+            "node:path",
+            "./cli.mjs"
+          ]
+        }
+      ],
+      "dynamicImports": [],
+      "subprocesses": [
+        {
+          "executor": "attested-native-cli",
+          "commands": [
+            "capture"
+          ],
+          "selection": "IA_CLI_PATH forced to attested entry; npx disabled"
+        }
+      ],
+      "review": "Carried from the field-lint helper qualified before the public cut: the same imports, argv, cwd and subprocesses; only its header comments changed, and lib/cli.mjs pins 3.4.1."
+    }
+  }
+}
