@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "ia": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@inventarch/mcp-door@3.4.1"
+      ],
+      "env": {
+        "IA_KITS_DIR": "${CLAUDE_PLUGIN_ROOT}/config/kits"
+      }
+    }
+  }
+}

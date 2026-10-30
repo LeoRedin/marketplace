@@ -17,11 +17,19 @@ Before workspace adoption or creation, disclose the service origin and target wo
 
 ## 1. Resolve before acting
 
-Pick the activity from the person's words, then run:
+Through the IA door this plugin ships (its MCP server `ia`; Claude Code lists its tools as `mcp__plugin_ia_ia__<tool>`). The door takes structured input only: never pass the person's words to it except as `subject`.
+
+1. **Once per session**, call `ia_session`. Its briefing names the workspace, the installed kits, the three lanes and the current task pin, if any.
+2. Call `ia_catalogue {lane: "delivery"}`, adding `word` or `phase` when the person named one. It lists the lane's keys with one-line descriptions, each `bound` or `installed`. Choose the key that matches the person's words; the table below is this lane's own vocabulary, and a bound kit may offer more (a key `delivery.<activity>` reads `ia-delivery:<activity>`).
+3. Call `ia_method {key}`, adding `task` for a coordination task and `subject` for what the packet is for. It returns the packet and pins the method to the task. If the session lost the packet (a compaction, a new session on the same task), call `ia_method` again with the same key and task: the pin keeps the same method.
+
+**Fallback, until `@inventarch/mcp-door` ships `ia_method`:** when the door tools are absent (no `ia_catalogue` or `ia_method` tool, or the door refuses it as an unknown tool), resolve with the plugin's script instead, and use `node "${CLAUDE_PLUGIN_ROOT}/scripts/kit.mjs" list` in place of the catalogue. Both print the same packet:
 
 ```
 node "${CLAUDE_PLUGIN_ROOT}/scripts/resolve.mjs" --entry delivery --activity <activity> [--subject <what>] [--seat <identity>] [--project <p> --task <t> [--run <r>]] --json
 ```
+
+The key for each request, as `delivery.<activity>` (the fallback's `--activity`):
 
 | The person wants to | Activity | Scope key |
 | --- | --- | --- |
@@ -48,4 +56,4 @@ Read it as the `ia:init` skill says: carry out `instructions` in order; honour `
 
 ## 4. Lanes
 
-Designing new IA words, systems, workspaces or kits is outside the public kits: do it by hand from the public IA documentation, or with an InventArch account, which serves the subscription methods for it. A change in a governed repository (`.ia/governance.json`) needs the InventArch governance plugin. Reading, changing and checking as separate hands: this plugin's `reader`, `worker` and `checker` briefs with the packet; a kit profile runs as one of them, the packet's `role.brief` naming which.
+Designing new IA words, systems, workspaces or kits is outside the public kits: do it by hand from the public IA documentation, or with an InventArch account, which serves the subscription methods for it. A change in a governed repository (`.ia/governance.json`) needs a kit that declares governance handlers (the `ia-governance` kit, `ia kit add`); until one is installed, say so before changing anything. Reading, changing and checking as separate hands: this plugin's `reader`, `worker` and `checker` briefs with the packet; a kit profile runs as one of them, the packet's `role.brief` naming which.

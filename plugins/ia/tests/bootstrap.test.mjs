@@ -4,6 +4,7 @@
 // which survives however many keys are bound; exit 0 always, with or without
 // a CLI.
 import assert from 'node:assert/strict';
+import { mkdirSync, utimesSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { boundKeys, LIMIT } from '../scripts/bootstrap.mjs';
@@ -78,4 +79,30 @@ test('without any CLI it still reports from the sources, and without bindings it
   assert.match(text, /Kits installed: none/);
   assert.match(text, /no \.ia\/bindings\.json, so no method is bound.*kit\.mjs bind <kit> --apply/);
   assert.ok(text.length <= LIMIT);
+});
+
+test('after a compaction it re-injects the current task pin, the one written last for this workspace', t => {
+  const dir = sandbox(t, 'ia-core-boot-');
+  const repo = makeRepo(join(dir, 'repo'));
+  const home = join(dir, 'home');
+  const env = envFor({ cli: fakeCli(dir), kitsDir: join(dir, 'kits'), temp: dir, extra: { IA_HOME: home, CLAUDE_PLUGIN_ROOT: '<plugin>', IA_NO_ACCOUNT_OFFER: '1' } });
+  const pin = (project, task, root, capability, when) => {
+    const folder = join(home, 'work-v1', project, task);
+    mkdirSync(folder, { recursive: true });
+    const file = join(folder, 'binding.json');
+    writeFileSync(file, JSON.stringify({ format: 3, revision: 2, workspace: { root, revision: 'r' }, task, kits: { 'inventarch/alpha-kit': { version: '0.3.0', archive: 'a'.repeat(64), sources: 'b'.repeat(64) } }, keys: { 'work.milestone': { kit: 'inventarch/alpha-kit', capability, records: [], scopeKey: null, intent: null } } }));
+    utimesSync(file, when, when);
+  };
+  pin('proj', 'older', repo, 'old-method', new Date('2026-10-01T00:00:00Z'));
+  pin('proj', 'newer', repo, 'milestone-method', new Date('2026-10-20T00:00:00Z'));
+  pin('proj', 'elsewhere', join(dir, 'other-repo'), 'not-this-one', new Date('2026-10-29T00:00:00Z'));
+  const compact = run('bootstrap.mjs', [], env, { input: JSON.stringify({ hook_event_name: 'SessionStart', source: 'compact', cwd: repo }) });
+  assert.equal(compact.status, 0, compact.stderr);
+  const text = compact.json.hookSpecificOutput.additionalContext;
+  assert.match(text, /Current task pin \(proj\/newer, revision 2\): work\.milestone -> inventarch\/alpha-kit@0\.3\.0 milestone-method/);
+  assert.match(text, /ia_method \{key, task: "newer"\}/);
+  assert.match(text, /<plugin>\/scripts\/resolve\.mjs" --entry <lane> --activity <activity> --project proj --task newer --json/);
+  assert.doesNotMatch(text, /old-method|not-this-one/);
+  const startup = run('bootstrap.mjs', [], env, { input: JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup', cwd: repo }) });
+  assert.doesNotMatch(startup.json.hookSpecificOutput.additionalContext, /Current task pin/, 'only a compaction re-injects the pin');
 });

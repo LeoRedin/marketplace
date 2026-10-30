@@ -6,7 +6,7 @@ import { test } from 'node:test';
 const root = new URL('../', import.meta.url);
 const read = path => readFileSync(new URL(path, root), 'utf8');
 test('Delivery discovers hosted UX before native resolution without restoring a fifth skill', () => {
-  assert.deepEqual(readdirSync(fileURLToPath(new URL('skills/', root))).sort(), ['delivery', 'doctor', 'init', 'knowledge', 'work']);
+  assert.deepEqual(readdirSync(fileURLToPath(new URL('skills/', root))).sort(), ['delegate', 'delivery', 'doctor', 'init', 'knowledge', 'work']);
   const delivery = read('skills/delivery/SKILL.md');
   assert.match(delivery.split('---')[1], /UX improvements.*design tokens.*accessibility audits/);
   const stage = delivery.indexOf('references/design-stage.md');

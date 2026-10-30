@@ -11,11 +11,19 @@ The entry point for durable information and evidence, including reading an IA wo
 
 ## 1. Resolve before acting
 
-Pick the activity from the person's words, then run:
+Through the IA door this plugin ships (its MCP server `ia`; Claude Code lists its tools as `mcp__plugin_ia_ia__<tool>`). The door takes structured input only: never pass the person's words to it except as `subject`.
+
+1. **Once per session**, call `ia_session`. Its briefing names the workspace, the installed kits, the three lanes and the current task pin, if any.
+2. Call `ia_catalogue {lane: "knowledge"}`, adding `word` or `phase` when the person named one. It lists the lane's keys with one-line descriptions, each `bound` or `installed`. Choose the key that matches the person's words; the table below is this lane's own vocabulary, and a bound kit may offer more (a key `knowledge.<activity>` reads `ia-knowledge:<activity>`).
+3. Call `ia_method {key}`, adding `task` for a coordination task and `subject` for what the packet is for. It returns the packet and pins the method to the task. If the session lost the packet (a compaction, a new session on the same task), call `ia_method` again with the same key and task: the pin keeps the same method.
+
+**Fallback, until `@inventarch/mcp-door` ships `ia_method`:** when the door tools are absent (no `ia_catalogue` or `ia_method` tool, or the door refuses it as an unknown tool), resolve with the plugin's script instead, and use `node "${CLAUDE_PLUGIN_ROOT}/scripts/kit.mjs" list` in place of the catalogue. Both print the same packet:
 
 ```
 node "${CLAUDE_PLUGIN_ROOT}/scripts/resolve.mjs" --entry knowledge --activity <activity> [--subject <what>] [--seat <identity>] --json
 ```
+
+The key for each request, as `knowledge.<activity>` (the fallback's `--activity`):
 
 | The person wants to | Activity | Scope key |
 | --- | --- | --- |

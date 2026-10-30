@@ -12,7 +12,7 @@ import unittest
 import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
-from validate import ROOT, HOOK_PLUGINS, PLUGINS, QUALIFIED_CODEX_HOOKS, UNADVERTISED, host_run_checks, load, qualified_hooks, selected_bytes, validate, schema_check, safe_bytes
+from validate import ROOT, HOOK_PLUGINS, MCP_PLUGINS, PLUGINS, QUALIFIED_CODEX_HOOKS, UNADVERTISED, host_run_checks, load, qualified_hooks, qualified_mcp, selected_bytes, validate, schema_check, safe_bytes
 from package import candidate
 from selection import proposed
 
@@ -21,7 +21,7 @@ BRIDGE = '**Codex:** read [the Codex host instructions](../../CODEX.md) first.'
 CATALOGS = ('.claude-plugin/marketplace.json', '.agents/plugins/marketplace.json')
 # The public catalogue's one plugin, the core, its four entry skills, and the plugins it retired or left private.
 CORE = 'ia'
-CORE_SKILLS = ('doctor', 'init', 'work', 'delivery', 'knowledge')
+CORE_SKILLS = ('delegate', 'doctor', 'init', 'work', 'delivery', 'knowledge')
 RETIRED = ('inventarch-development', 'inventarch-workspace', 'inventarch-architecture', 'inventarch-kb', 'inventarch-work', 'inventarch-governance', 'inventarch-studio')
 
 
@@ -262,7 +262,8 @@ class ScaffoldTests(unittest.TestCase):
     def test_runtime_components_refuse(self):
         cases = {
             'plugins/ia/hooks/other.json': 'unapproved plugin component',
-            'plugins/ia/.mcp.json': 'unapproved plugin component',
+            'plugins/ia/.mcp.json': 'ia MCP servers differ from the qualified door',
+            'plugins/ia/.lsp.json': 'unapproved plugin component',
             'plugins/ia/commands/run.md': 'unapproved plugin component',
             'plugins/ia/bin/tool.js': 'unapproved plugin component',
             'plugins/ia/config/.mcp.json': 'runtime component not admitted',
@@ -277,8 +278,10 @@ class ScaffoldTests(unittest.TestCase):
                     validate(self.root)
 
     def test_hook_plugins_are_the_one_exception(self):
-        # public-core-hooks: the core's read-only bootstrap and on-write check; nothing else, and nothing unadvertised.
+        # public-core-hooks and public-kit-handlers: the core's bootstrap and kit handler hooks; nothing else, and nothing
+        # unadvertised. public-door-mcp: the core's one MCP server, the IA door.
         self.assertEqual(set(HOOK_PLUGINS), {'ia'})
+        self.assertEqual(MCP_PLUGINS, ('ia',))
         self.assertEqual(UNADVERTISED, set())
         self.assertEqual(QUALIFIED_CODEX_HOOKS, {})
         self.assertEqual(PLUGINS, ('ia',))
@@ -291,7 +294,7 @@ class ScaffoldTests(unittest.TestCase):
             'plugins/ia/hooks/extra.json': 'unapproved plugin component',
             'plugins/ia/hooks/sub/hooks.json': 'unapproved plugin component',
             'plugins/ia/scripts/hooks.json': 'runtime component not admitted',
-            'plugins/ia/.mcp.json': 'unapproved plugin component',
+            'plugins/ia/skills/work/.mcp.json': 'runtime component not admitted',
             'plugins/ia/config/hooks.json': 'runtime component not admitted',
             'plugins/ia/scripts/HOOKS.JSON': 'runtime component not admitted',
             'plugins/ia/config/.MCP.json': 'runtime component not admitted',
@@ -324,14 +327,21 @@ class ScaffoldTests(unittest.TestCase):
                     self.rehash()
                     validate(self.root)
 
-    def test_core_bootstrap_hook_must_equal_the_qualified_set(self):
-        # private-core-bootstrap-hook: one read-only SessionStart hook on startup and resume, 15 seconds, no argument;
-        # private-core-on-write-hook: one read-only PostToolUse hook after a write, 30 seconds, no argument.
-        # The expectation is built the way the validator builds it, so the shipped hooks.json is held to this exact JSON.
-        expected = {'hooks': {'SessionStart': [{'matcher': 'startup|resume', 'hooks': [
-            {'type': 'command', 'command': 'node "${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap.mjs"', 'timeout': 15}]}],
-            'PostToolUse': [{'matcher': 'Write|Edit|MultiEdit', 'hooks': [
-                {'type': 'command', 'command': 'node "${CLAUDE_PLUGIN_ROOT}/scripts/on-write.mjs"', 'timeout': 30}]}]}}
+    def test_core_hooks_must_equal_the_qualified_set(self):
+        # public-core-hooks: the read-only SessionStart bootstrap on startup, resume and compact, 15 seconds, no argument.
+        # public-kit-handlers: scripts/handlers.mjs with one event argument for every SessionStart source, UserPromptSubmit,
+        # PreToolUse and PostToolUse on edits and shell commands, and Stop. The expectation is written out here, so the
+        # shipped hooks.json is held to this exact JSON.
+        edits_matcher = 'Write|Edit|MultiEdit|NotebookEdit|Bash|PowerShell'
+        def handler(script, timeout, argument=None):
+            return {'type': 'command', 'command': 'node "${CLAUDE_PLUGIN_ROOT}/scripts/' + script + '"' + (' ' + argument if argument else ''), 'timeout': timeout}
+        expected = {'hooks': {
+            'SessionStart': [{'matcher': 'startup|resume|compact', 'hooks': [handler('bootstrap.mjs', 15)]},
+                             {'hooks': [handler('handlers.mjs', 60, 'session')]}],
+            'UserPromptSubmit': [{'hooks': [handler('handlers.mjs', 30, 'prompt')]}],
+            'PreToolUse': [{'matcher': edits_matcher, 'hooks': [handler('handlers.mjs', 30, 'pre')]}],
+            'PostToolUse': [{'matcher': edits_matcher, 'hooks': [handler('handlers.mjs', 60, 'post')]}],
+            'Stop': [{'hooks': [handler('handlers.mjs', 30, 'stop')]}]}}
         canonical = lambda value: json.dumps(value, sort_keys=True)
         self.assertEqual(canonical(qualified_hooks(CORE)), canonical(expected))
         self.assertEqual(canonical(load(self.root / 'plugins/ia/hooks/hooks.json')), canonical(expected))
@@ -343,23 +353,49 @@ class ScaffoldTests(unittest.TestCase):
             'other script': lambda v: group(v)['hooks'][0].update(command='node "${CLAUDE_PLUGIN_ROOT}/scripts/resolve.mjs"'),
             'argument': lambda v: group(v)['hooks'][0].update(command='node "${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap.mjs" --write'),
             'chained command': lambda v: group(v)['hooks'][0].update(command='node "${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap.mjs"; curl x'),
-            'added event': lambda v: v['hooks'].update(UserPromptSubmit=v['hooks']['SessionStart']),
-            'blocking pre-tool': lambda v: v['hooks'].update(PreToolUse=v['hooks'].pop('SessionStart')),
+            'added event': lambda v: v['hooks'].update(Notification=v['hooks']['Stop']),
             'timeout': lambda v: group(v)['hooks'][0].update(timeout=600),
             'float timeout': lambda v: group(v)['hooks'][0].update(timeout=15.0),
             'no hooks': lambda v: v['hooks'].clear(),
-            'on-write widened matcher': lambda v: v['hooks']['PostToolUse'][0].update(matcher='.*'),
-            'on-write other script': lambda v: v['hooks']['PostToolUse'][0]['hooks'][0].update(command='node "${CLAUDE_PLUGIN_ROOT}/scripts/check.mjs"'),
-            'on-write chained command': lambda v: v['hooks']['PostToolUse'][0]['hooks'][0].update(command='node "${CLAUDE_PLUGIN_ROOT}/scripts/on-write.mjs"; curl x'),
-            'on-write blocking pre-tool': lambda v: v['hooks'].update(PreToolUse=v['hooks'].pop('PostToolUse')),
-            'on-write timeout': lambda v: v['hooks']['PostToolUse'][0]['hooks'][0].update(timeout=600),
-            'on-write dropped': lambda v: v['hooks'].pop('PostToolUse'),
+            'handlers narrowed to startup': lambda v: v['hooks']['SessionStart'][1].update(matcher='startup'),
+            'pre widened to every tool': lambda v: v['hooks']['PreToolUse'][0].update(matcher='.*'),
+            'pre runs the session event': lambda v: v['hooks']['PreToolUse'][0]['hooks'][0].update(command='node "${CLAUDE_PLUGIN_ROOT}/scripts/handlers.mjs" session'),
+            'post chained command': lambda v: v['hooks']['PostToolUse'][0]['hooks'][0].update(command='node "${CLAUDE_PLUGIN_ROOT}/scripts/handlers.mjs" post; curl x'),
+            'post runs the old on-write hook': lambda v: v['hooks']['PostToolUse'][0]['hooks'][0].update(command='node "${CLAUDE_PLUGIN_ROOT}/scripts/on-write.mjs"'),
+            'prompt timeout': lambda v: v['hooks']['UserPromptSubmit'][0]['hooks'][0].update(timeout=600),
+            'stop dropped': lambda v: v['hooks'].pop('Stop'),
         }
         for name, change in edits.items():
             with self.subTest(edit=name):
                 self.tearDown(); self.setUp()
                 self.edit_json('plugins/ia/hooks/hooks.json', change)
                 with self.assertRaisesRegex(ValueError, 'ia hooks differ from the qualified set: plugins/ia/hooks/hooks.json'):
+                    validate(self.root)
+
+    def test_core_door_must_equal_the_qualified_server(self):
+        # public-door-mcp: one server, ia, launched with npx at the pinned IA version and told where the bundled kits are.
+        expected = {'mcpServers': {'ia': {'command': 'npx', 'args': ['-y', '@inventarch/mcp-door@3.4.1'],
+                                          'env': {'IA_KITS_DIR': '${CLAUDE_PLUGIN_ROOT}/config/kits'}}}}
+        canonical = lambda value: json.dumps(value, sort_keys=True)
+        self.assertEqual(canonical(qualified_mcp('3.4.1')), canonical(expected))
+        self.assertEqual(canonical(load(self.root / 'plugins/ia/.mcp.json')), canonical(expected))
+        def door(value): return value['mcpServers']['ia']
+        edits = {
+            'unpinned': lambda v: door(v).update(args=['-y', '@inventarch/mcp-door']),
+            'other version': lambda v: door(v).update(args=['-y', '@inventarch/mcp-door@3.4.0']),
+            'other package': lambda v: door(v).update(args=['-y', 'some-other-server']),
+            'shell command': lambda v: door(v).update(command='bash'),
+            'second server': lambda v: v['mcpServers'].update(extra={'command': 'npx', 'args': ['-y', 'x']}),
+            'renamed server': lambda v: v['mcpServers'].update(door=v['mcpServers'].pop('ia')),
+            'remote server': lambda v: v['mcpServers'].update(ia={'type': 'http', 'url': 'https://example.com/mcp'}),
+            'extra env': lambda v: door(v)['env'].update(TOKEN='x'),
+            'no kits dir': lambda v: door(v).pop('env'),
+        }
+        for name, change in edits.items():
+            with self.subTest(edit=name):
+                self.tearDown(); self.setUp()
+                self.edit_json('plugins/ia/.mcp.json', change)
+                with self.assertRaisesRegex(ValueError, 'ia MCP servers differ from the qualified door: plugins/ia/.mcp.json'):
                     validate(self.root)
 
     def test_runtime_keys_in_frontmatter_refuse(self):
@@ -500,7 +536,7 @@ class ScaffoldTests(unittest.TestCase):
     def test_agent_wildcard_tools_refuse(self):
         p = self.root / 'plugins/ia/agents/checker.md'
         text = p.read_text(encoding='utf-8')
-        p.write_text(text.replace('tools: Read, Grep, Glob, Bash', 'tools: "*"', 1), encoding='utf-8', newline='\n')
+        p.write_text(re.sub(r'^tools: .*$', 'tools: "*"', text, count=1, flags=re.M), encoding='utf-8', newline='\n')
         self.rehash()
         with self.assertRaisesRegex(ValueError, 'tools allowlist'):
             validate(self.root)

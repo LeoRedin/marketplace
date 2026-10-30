@@ -22,7 +22,8 @@ MODEL_INVOCABLE_PER_PLUGIN = 4
 HIDDEN_DESCRIPTION = 160  # stage skills are reached by path; Codex still lists them
 LISTING_BUDGET = 7500  # names plus descriptions of every skill in the catalogue; Codex ignores disable-model-invocation
 # What a Git install may copy at a plugin's top level. Hooks, MCP and LSP servers, commands, settings, output
-# styles, monitors and bin/ are runtime components this catalogue does not admit (decision public-plugin-components).
+# styles, monitors and bin/ are runtime components this catalogue does not admit (decision public-plugin-components),
+# apart from the core's qualified hooks (QUALIFIED_HOOKS) and its one MCP server, the IA door (QUALIFIED_MCP).
 PLUGIN_TOP = {'.claude-plugin', '.codex-plugin', 'skills', 'agents', 'references', 'templates', 'examples', 'scripts', 'config', 'tests'}
 RUNTIME_FILES = {'hooks.json', '.mcp.json', '.lsp.json', 'settings.json', '.app.json', 'monitors.json'}
 # The exceptions, each a decision: a plugin listed here ships Claude Code hooks as hooks/hooks.json, exactly as
@@ -39,16 +40,39 @@ def _handler(script, argument, timeout, **flags):
 # A qualified set is event -> [(matcher, [(script under scripts/, argument, timeout, flags)])]; the hook file must equal
 # exactly this, so a widened matcher, a rewired or dropped handler, an added event, a changed timeout or flag fails.
 QUALIFIED_HOOKS = {
-    # public-core-hooks: one read-only SessionStart hook at startup and resume that prints the workspace's identity and
-    # the resolve instruction, offers an InventArch account once per session at startup (never blocking, suppressible),
-    # and says once when a repository is governed but the governance plugin is missing; it reads no credentials and never
-    # fetches. One read-only PostToolUse hook after a write that runs the on-write checks carried kits declare
-    # (onwrite.json) and returns their report as context; silent otherwise, never blocks.
+    # public-core-hooks: one read-only SessionStart bootstrap at startup, resume and compact that prints the workspace's
+    # identity and the resolve instruction, offers an InventArch account once per session at startup (never blocking,
+    # suppressible), says once when a repository is governed but no installed kit declares governance handlers, and
+    # after a compaction re-injects the current task pin; it reads no credentials and never fetches.
+    # public-kit-handlers: scripts/handlers.mjs runs the handlers installed kits declare (handlers.json, and onwrite.json
+    # as tool post handlers) for every SessionStart source, UserPromptSubmit, PreToolUse and PostToolUse on edits and
+    # shell commands, and Stop; a fast silent no-op when no kit declares one, and a pre block is honoured only in a
+    # workspace with .ia/governance.json.
     'ia': {
-        'SessionStart': [('startup|resume', [_handler('bootstrap.mjs', None, 15)])],
-        'PostToolUse': [('Write|Edit|MultiEdit', [_handler('on-write.mjs', None, 30)])],
+        'SessionStart': [('startup|resume|compact', [_handler('bootstrap.mjs', None, 15)]),
+                         (None, [_handler('handlers.mjs', 'session', 60)])],
+        'UserPromptSubmit': [(None, [_handler('handlers.mjs', 'prompt', 30)])],
+        'PreToolUse': [(_EDITS, [_handler('handlers.mjs', 'pre', 30)])],
+        'PostToolUse': [(_EDITS, [_handler('handlers.mjs', 'post', 60)])],
+        'Stop': [(None, [_handler('handlers.mjs', 'stop', 30)])],
     },
 }
+# public-door-mcp: the core ships one MCP server, the IA door, as .mcp.json at its root, exactly this: server ia,
+# launched with npx at the pinned IA version (sources.lock.json released.cli), and told where the bundled kits are.
+# Claude Code names its tools mcp__plugin_ia_ia__<tool>. No other plugin and no other file may declare an MCP server.
+DOOR_PACKAGE = '@inventarch/mcp-door'
+
+
+def qualified_mcp(cli):
+    return {'mcpServers': {'ia': {'command': 'npx', 'args': ['-y', f'{DOOR_PACKAGE}@{cli}'],
+                                  'env': {'IA_KITS_DIR': '${CLAUDE_PLUGIN_ROOT}/config/kits'}}}}
+
+
+MCP_PLUGINS = ('ia',)
+
+
+def mcp_file(name):
+    return f'plugins/{name}/.mcp.json'
 HOOK_PLUGINS = tuple(QUALIFIED_HOOKS)
 CODEX_HOOKS_OFF = {'hooks': {}}
 # A plugin may run Codex hooks only from a file its Codex manifest names and this table qualifies; none does yet.
@@ -251,9 +275,11 @@ def plugin_files(root, name):
         require(not path.is_symlink(), 'symlink in plugin: ' + rel)
         require(not STRAY_DIRS.intersection(parts), 'stray folder in plugin: ' + rel)
         hooks_exception = name in HOOK_PLUGINS and parts[2] == 'hooks' and (rel in hook_files(name) or (len(parts) == 3 and path.is_dir()))
-        require(parts[2] in PLUGIN_TOP or hooks_exception or (len(parts) == 3 and path.is_file() and rel.endswith('.md')),
+        mcp_exception = name in MCP_PLUGINS and rel == mcp_file(name) and path.is_file()
+        require(parts[2] in PLUGIN_TOP or hooks_exception or mcp_exception or (len(parts) == 3 and path.is_file() and rel.endswith('.md')),
                 'unapproved plugin component: ' + rel)
-        require(parts[-1].lower() not in RUNTIME_FILES or (name in HOOK_PLUGINS and rel == hooks_file(name)), 'runtime component not admitted: ' + rel)
+        require(parts[-1].lower() not in RUNTIME_FILES or (name in HOOK_PLUGINS and rel == hooks_file(name)) or mcp_exception,
+                'runtime component not admitted: ' + rel)
         # The frontmatter rules reach agents/<name>.md and skills/<name>/SKILL.md only, so nothing a host might load as
         # an agent or a skill may sit anywhere else (recursive agent loading, skill.md on a case-insensitive disk).
         require(parts[2] != 'agents' or len(parts) == 3 or (len(parts) == 4 and path.is_file() and rel.endswith('.md')),
@@ -421,6 +447,11 @@ def validate(root=ROOT):
     canonical = lambda value: json.dumps(value, sort_keys=True)
     for name in HOOK_PLUGINS:
         require(canonical(load(root / hooks_file(name))) == canonical(qualified_hooks(name)), name + ' hooks differ from the qualified set: ' + hooks_file(name))
+    pins = load(root / 'sources.lock.json')
+    for name in MCP_PLUGINS:
+        require(mcp_file(name) in entries, name + ' ships the IA door: ' + mcp_file(name) + ' must exist and be selected')
+        require(canonical(load(root / mcp_file(name))) == canonical(qualified_mcp(pins['released']['cli'])),
+                name + ' MCP servers differ from the qualified door: ' + mcp_file(name))
     for name, (_, table) in QUALIFIED_CODEX_HOOKS.items():
         require(canonical(load(root / codex_hooks_file(name))) == canonical(render_hooks(table)), name + ' Codex hooks differ from the qualified set: ' + codex_hooks_file(name))
     catalog_paths = ('.claude-plugin/marketplace.json', '.agents/plugins/marketplace.json')
@@ -469,7 +500,6 @@ def validate(root=ROOT):
             safe_bytes(root, source)
     record_coverage(root)
     host_run_checks(root)
-    pins = load(root / 'sources.lock.json')
     require(pins['released']['cli'] == '3.4.1' and 'pending' not in pins, 'release standing: sources.lock.json pins the released 3.4.1 and no unreleased build')
     schema_check(load(root / 'examples/review-dossier.json'), load(root / 'schemas/review-dossier.schema.json'))
     return {'status':'passed', 'plugins':len(PLUGINS), 'selectedFiles':len(entries), 'skills':skills,

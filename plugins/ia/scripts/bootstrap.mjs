@@ -1,9 +1,11 @@
 #!/usr/bin/env node
-// The SessionStart bootstrap (startup|resume, decision public-core-hooks):
+// The SessionStart bootstrap (startup|resume|compact, decision public-core-hooks):
 // read-only, never blocks, never fetches. At startup it may first show the
 // person two one-line notices (lib/account.mjs): the InventArch account offer
-// (once per session, suppressible) and, in a governed repository without the
-// governance plugin, that it is governed. Outside an IA workspace it says
+// (once per session, suppressible) and, in a governed repository where no
+// installed kit declares governance handlers, that it is governed. After a
+// compaction it re-injects the current task pin's summary (pinSummary), so
+// the session can resolve the same method again. Outside an IA workspace it says
 // nothing else. Inside one it hands the session at
 // most 2,500 characters (LIMIT): the workspace identity and revision, the kits
 // the repository installed, whether .ia/bindings.json exists and which keys it
@@ -12,7 +14,7 @@
 // CLI call is bounded so the whole hook ends inside 10 s.
 // Reads the hook's stdin JSON ({ cwd, source, ... }); prints
 // { systemMessage?, hookSpecificOutput: { hookEventName, additionalContext } }.
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveCli, runIa } from './lib/cli.mjs';
@@ -20,6 +22,8 @@ import { readBindings } from './lib/binding.mjs';
 import { installedKits } from './lib/kit.mjs';
 import { accountOffer, governanceNotice } from './lib/account.mjs';
 import { findWorkspace } from './lib/workspace.mjs';
+import { iaHome } from './lib/home.mjs';
+import { readPin } from './lib/pin.mjs';
 
 export const LIMIT = 2500;
 const CLI_BUDGET_MS = 7000;
@@ -101,6 +105,52 @@ export function context(root, env = process.env) {
   return `${fit(head, room, '~')}\n${resolveLine}`;
 }
 
+export const PIN_LIMIT = 800;
+const MAX_PIN_FOLDERS = 2000;
+
+// The current task pin of this workspace: IA_CORE_RUN_ROOT's when set, else
+// the most recently written <IA home>/work-v1/<project>/<task>/binding.json
+// that names this workspace root. Returns { project, task, pin } or null.
+// Bounded: at most MAX_PIN_FOLDERS task folders are looked at.
+export function currentPin(root, env = process.env) {
+  const read = dir => { try { return readPin(dir, root); } catch { return null; } };
+  if (env.IA_CORE_RUN_ROOT) {
+    const pin = read(resolve(env.IA_CORE_RUN_ROOT));
+    return pin ? { project: null, task: pin.task ?? null, pin } : null;
+  }
+  let work;
+  try { work = join(iaHome(env), 'work-v1'); } catch { return null; }
+  if (!existsSync(work)) return null;
+  let best = null, seen = 0;
+  for (const project of readdirSync(work).sort()) {
+    let tasks;
+    try { tasks = readdirSync(join(work, project)); } catch { continue; }
+    for (const task of tasks.sort()) {
+      if (++seen > MAX_PIN_FOLDERS) break;
+      const file = join(work, project, task, 'binding.json');
+      let mtime;
+      try { mtime = statSync(file).mtimeMs; } catch { continue; }
+      if (best && mtime <= best.mtime) continue;
+      const pin = read(join(work, project, task));
+      if (pin) best = { project, task, pin, mtime };
+    }
+  }
+  return best && { project: best.project, task: best.task, pin: best.pin };
+}
+
+// The current pin's summary for a compacted session, at most PIN_LIMIT
+// characters, or null when the workspace has no pin.
+export function pinSummary(root, env = process.env, plugin = null) {
+  const found = currentPin(root, env);
+  if (!found) return null;
+  const { project, task, pin } = found;
+  const keys = Object.entries(pin.keys).map(([key, row]) => `${key} -> ${row.kit}@${pin.kits[row.kit]?.version ?? '?'} ${row.capability}`).join('; ');
+  const where = project ? `--project ${project} --task ${task}` : 'IA_CORE_RUN_ROOT';
+  const again = `If the method's packet was lost in compaction, resolve the same key again for this task: ia_method {key${project ? `, task: "${task}"` : ''}} through the ia door, or node "${plugin ?? '<plugin>'}/scripts/resolve.mjs" --entry <lane> --activity <activity> ${where} --json; the pin keeps the same method.`;
+  const head = `Current task pin (${project ? `${project}/${task}` : where}, revision ${pin.revision}): `;
+  return fit(head + keys, Math.max(0, PIN_LIMIT - again.length - 1), ' ...') + '\n' + again;
+}
+
 // The hook's answer for one SessionStart input, or null to print nothing.
 export function payload(hook, env = process.env) {
   const cwd = typeof hook.cwd === 'string' && hook.cwd ? hook.cwd : process.cwd();
@@ -110,7 +160,12 @@ export function payload(hook, env = process.env) {
   if (!root && !offer && !governed) return null;
   const parts = [];
   if (root) parts.push(context(root, env));
-  if (governed) parts.push('This repository is governed and the InventArch governance plugin is not installed: tell the person before changing anything, and never treat the repository as ungoverned.');
+  if (root && hook.source === 'compact') {
+    const plugin = (env.CLAUDE_PLUGIN_ROOT || fileURLToPath(new URL('..', import.meta.url))).replace(/\\/g, '/').replace(/\/+$/, '');
+    const pinned = pinSummary(root, env, plugin);
+    if (pinned) parts.push(pinned);
+  }
+  if (governed) parts.push('This repository is governed (.ia/governance.json) and no installed kit declares governance handlers: tell the person before changing anything, and never treat the repository as ungoverned; the ia-governance kit (ia kit add) supplies them.');
   if (offer) parts.push('The person was shown the InventArch account offer once at startup: do not repeat it and do not wait for it.');
   const notice = [governed, offer].filter(Boolean).join('\n');
   return { ...(notice ? { systemMessage: notice } : {}), hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: parts.join('\n') } };
