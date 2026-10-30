@@ -56,7 +56,7 @@ codex plugin add ia@inventarch
 
 `codex plugin marketplace upgrade` refreshes the Git snapshot. If the plugin's version did not change, Codex keeps its cached copy: run `codex plugin remove` and then `codex plugin add`.
 
-Installing the plugin also gives Claude Code the IA door: the plugin starts it with `npx -y @inventarch/mcp-door@3.4.1`, so the first session in a new environment needs network access to fetch it once.
+Installing the plugin also gives Claude Code the IA door: the plugin's launcher (`scripts/door.mjs`, run with `node`) starts `npx -y @inventarch/mcp-door@3.4.1`, never through a shell (on Windows it runs npm's `npx-cli.js` with `node`), so the first session in a new environment needs network access to fetch it once.
 
 Then run `/ia:init` in a repository: it offers `ia init` and binds the default kits. By hand, in a repository that is an IA workspace:
 
@@ -89,6 +89,14 @@ A repository can carry its own way in, so that a clone works the same for everyo
      { "mcpServers": { "ia": { "command": "npx", "args": ["-y", "@inventarch/mcp-door@3.4.1"] } } }
      ```
 
+     On native Windows, Claude Code cannot start `npx` (a `.cmd` shim) directly; a repository whose people work there commits the `cmd /c` form instead:
+
+     ```json
+     { "mcpServers": { "ia": { "command": "cmd", "args": ["/c", "npx", "-y", "@inventarch/mcp-door@3.4.1"] } } }
+     ```
+
+     With this plugin installed you need neither: its own door entry runs `node` on its launcher, which starts npx without a shell on Windows too.
+
    - Codex, `.codex/config.toml`:
 
      ```toml
@@ -96,6 +104,8 @@ A repository can carry its own way in, so that a clone works the same for everyo
      command = "npx"
      args = ["-y", "@inventarch/mcp-door@3.4.1"]
      ```
+
+     On Windows, use `command = "cmd"` and `args = ["/c", "npx", "-y", "@inventarch/mcp-door@3.4.1"]`.
 
    - GitHub Copilot in VS Code, `.vscode/mcp.json`:
 

@@ -372,18 +372,29 @@ class ScaffoldTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'ia hooks differ from the qualified set: plugins/ia/hooks/hooks.json'):
                     validate(self.root)
 
+    def test_core_door_stays_off_in_codex(self):
+        # Codex reads a plugin's .mcp.json too (codex-cli 0.164.0-alpha.11.1 lists it): the Codex manifest keeps it off.
+        for name, change in {'missing': lambda m: m.pop('mcpServers'), 'a server': lambda m: m.update(mcpServers='./.mcp.json')}.items():
+            with self.subTest(edit=name):
+                self.tearDown(); self.setUp()
+                self.edit_json('plugins/ia/.codex-plugin/plugin.json', change)
+                with self.assertRaisesRegex(ValueError, 'keeps its MCP server off in Codex'):
+                    validate(self.root)
+
     def test_core_door_must_equal_the_qualified_server(self):
-        # public-door-mcp: one server, ia, launched with npx at the pinned IA version and told where the bundled kits are.
-        expected = {'mcpServers': {'ia': {'command': 'npx', 'args': ['-y', '@inventarch/mcp-door@3.4.1'],
+        # public-door-mcp: one server, ia, run by node through the plugin's door launcher (which starts npx at the pinned
+        # IA version, never through a shell) and told where the bundled kits are.
+        expected = {'mcpServers': {'ia': {'command': 'node', 'args': ['${CLAUDE_PLUGIN_ROOT}/scripts/door.mjs'],
                                           'env': {'IA_KITS_DIR': '${CLAUDE_PLUGIN_ROOT}/config/kits'}}}}
         canonical = lambda value: json.dumps(value, sort_keys=True)
-        self.assertEqual(canonical(qualified_mcp('3.4.1')), canonical(expected))
+        self.assertEqual(canonical(qualified_mcp()), canonical(expected))
         self.assertEqual(canonical(load(self.root / 'plugins/ia/.mcp.json')), canonical(expected))
         def door(value): return value['mcpServers']['ia']
         edits = {
-            'unpinned': lambda v: door(v).update(args=['-y', '@inventarch/mcp-door']),
-            'other version': lambda v: door(v).update(args=['-y', '@inventarch/mcp-door@3.4.0']),
-            'other package': lambda v: door(v).update(args=['-y', 'some-other-server']),
+            'bare npx': lambda v: door(v).update(command='npx', args=['-y', '@inventarch/mcp-door@3.4.1']),
+            'cmd /c npx': lambda v: door(v).update(command='cmd', args=['/c', 'npx', '-y', '@inventarch/mcp-door@3.4.1']),
+            'other script': lambda v: door(v).update(args=['${CLAUDE_PLUGIN_ROOT}/scripts/resolve.mjs']),
+            'extra argument': lambda v: door(v)['args'].append('--root'),
             'shell command': lambda v: door(v).update(command='bash'),
             'second server': lambda v: v['mcpServers'].update(extra={'command': 'npx', 'args': ['-y', 'x']}),
             'renamed server': lambda v: v['mcpServers'].update(door=v['mcpServers'].pop('ia')),

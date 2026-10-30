@@ -26,5 +26,6 @@
     "displayName": "InventArch",
     "shortDescription": "Resolve the bound method, then act on its packet",
     "category": "Developer Tools"
-  }
+  },
+  "mcpServers": {}
 }

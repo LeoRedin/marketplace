@@ -16,7 +16,6 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PINNED } from './lib/cli.mjs';
 import { iaHome } from './lib/home.mjs';
 import { parseArgs, printJson, refuse, UsageError } from './lib/workspace.mjs';
 
@@ -30,9 +29,10 @@ class DelegateError extends Error {
   constructor(message, code) { super(message); this.code = code; }
 }
 
-// The door the delegate runs: the same server and pin this plugin ships.
+// The door the delegate runs: the same launcher, pin and kits this plugin's .mcp.json uses (scripts/door.mjs starts
+// npx -y @inventarch/mcp-door@<PINNED>, never through a shell).
 export function doorServer(plugin = PLUGIN) {
-  return { command: 'npx', args: ['-y', `@inventarch/mcp-door@${PINNED}`], env: { IA_KITS_DIR: `${plugin}/config/kits` } };
+  return { command: 'node', args: [`${plugin}/scripts/door.mjs`], env: { IA_KITS_DIR: `${plugin}/config/kits` } };
 }
 
 // Is delegation turned on, and is this run allowed to delegate? Throws a DelegateError when not.

@@ -17,11 +17,11 @@
     },
     {
       "path": "plugins/ia/.codex-plugin/plugin.json",
-      "sha256": "7ac19cfeaaa486985137aa97ae0b78824662773248c748d6a6247d9a982cb8f3"
+      "sha256": "f8aa850464c105c3f2e04f4f4e70583c55380bb5f77b0a5132065d59f08cba8d"
     },
     {
       "path": "plugins/ia/.mcp.json",
-      "sha256": "5668d69d9e6d4387b3a43e9ee748141efc9f13dab1529ae855e1f309878b0bb2"
+      "sha256": "ac81f81a7a64d2244505f5ea9becfc42aaa16f37c3678dbb12f2d987dba94ef5"
     },
     {
       "path": "plugins/ia/agents/checker.md",
@@ -37,11 +37,11 @@
     },
     {
       "path": "plugins/ia/CHANGELOG.md",
-      "sha256": "3ead51f633470179f1d47c2f668982f1208e79ce662373dea7009fe881aee767"
+      "sha256": "7501cb169ba843c2ade0fc21ea07198e24ff558bc3871c797f64a7a0b26e2c82"
     },
     {
       "path": "plugins/ia/CODEX.md",
-      "sha256": "c19e7b196484479cb9f00bfd8ba9ce3c299dd05564b3996b57a90e9796666a3c"
+      "sha256": "ed5b15933d526d8c6acd872e5e53df4993d4d5c0e4c9f9af1538a7ded6b1ec20"
     },
     {
       "path": "plugins/ia/config/kits/ia-authoring/.ia/distributions.lock.json",
@@ -501,7 +501,7 @@
     },
     {
       "path": "plugins/ia/README.md",
-      "sha256": "5ef372701b6fb3ce94ee28a3073079e8da5a3759fab0ff6e7397938958792432"
+      "sha256": "711a4a56d67291032c30f69e72aef6838dbaa30a20415a201b3644ef8e17e28a"
     },
     {
       "path": "plugins/ia/references/design-service.md",
@@ -529,11 +529,15 @@
     },
     {
       "path": "plugins/ia/scripts/delegate.mjs",
-      "sha256": "7b7e64588cb717dcbe5961466c19fb8d6c286a4e81c03bafa2a769aacdd753fb"
+      "sha256": "ce9e4dd1ac93e55c74da156e23ae3eea1ff304485f5941b6619ea1924a1328db"
     },
     {
       "path": "plugins/ia/scripts/design.mjs",
       "sha256": "745ed84b088119ef116d037cc3d029cfe8755aaa16a061f4b9dd39757631f1c6"
+    },
+    {
+      "path": "plugins/ia/scripts/door.mjs",
+      "sha256": "75a3a57c48adc9e3c7f6bc879b3806d946e22b0caf989d40d31ee902b54eb6fb"
     },
     {
       "path": "plugins/ia/scripts/handlers.mjs",
@@ -693,7 +697,7 @@
     },
     {
       "path": "plugins/ia/skills/init/SKILL.md",
-      "sha256": "be4effa6ed72375d303cd9e9da010fc397281ade0c763369819c79e506b67301"
+      "sha256": "3ca54b253cd15d556e5f5e041c3bf8b63f9ad6d87cf3421f6a243c0f70aace3b"
     },
     {
       "path": "plugins/ia/skills/knowledge/SKILL.md",

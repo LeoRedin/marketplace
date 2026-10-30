@@ -43,11 +43,14 @@ test('the config file turns it on; the preview names the command, the door, the 
   assert.deepEqual(codex.json.env, { IA_DELEGATION_DEPTH: '1' });
   assert.equal(codex.json.packetDigest, 'f'.repeat(64));
   assert.deepEqual(codex.json.argv.slice(0, 2), ['codex', 'exec']);
-  assert.ok(codex.json.argv.includes('mcp_servers.ia.args=["-y","@inventarch/mcp-door@3.4.1"]'));
+  assert.ok(codex.json.argv.includes('mcp_servers.ia.command="node"'));
+  assert.ok(codex.json.argv.some(a => /^mcp_servers\.ia\.args=\[".*\/scripts\/door\.mjs"\]$/.test(a)), codex.json.argv.join(' '));
   assert.equal(codex.json.argv.at(-1), '-', 'the prompt goes on stdin');
   const claude = run('delegate.mjs', args('claude', ['--timeout', '60']), env);
   assert.deepEqual(claude.json.argv.slice(0, 3), ['claude', '-p', '--mcp-config']);
-  assert.deepEqual(JSON.parse(claude.json.argv[3]).mcpServers.ia.args, ['-y', '@inventarch/mcp-door@3.4.1']);
+  const door = JSON.parse(claude.json.argv[3]).mcpServers.ia;
+  assert.equal(door.command, 'node');
+  assert.match(door.args[0], /\/scripts\/door\.mjs$/);
   assert.equal(claude.json.timeoutSeconds, 60);
   assert.equal(run('delegate.mjs', args('claude', ['--timeout', '99999']), env).status, 2);
   assert.equal(run('delegate.mjs', args('gemini'), env).status, 2);
@@ -67,5 +70,5 @@ test('with --run the delegate gets the packet inline on stdin and the depth one 
   assert.deepEqual({ depth: seen.depth, packet: seen.packet, brief: seen.brief }, { depth: '1', packet: true, brief: true });
   assert.deepEqual(seen.args.slice(0, 2), ['-p', '--mcp-config']);
   assert.deepEqual(command('codex', { bin: 'x', plugin: '/p' }).slice(-2), ['mcp_servers.ia.env={IA_KITS_DIR="/p/config/kits"}', '-']);
-  assert.deepEqual(doorServer('/p'), { command: 'npx', args: ['-y', '@inventarch/mcp-door@3.4.1'], env: { IA_KITS_DIR: '/p/config/kits' } });
+  assert.deepEqual(doorServer('/p'), { command: 'node', args: ['/p/scripts/door.mjs'], env: { IA_KITS_DIR: '/p/config/kits' } });
 });

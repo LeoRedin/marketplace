@@ -4,7 +4,7 @@
 
 The lanes go through the IA door, kits run handlers and depend on other kits, and governance arrives as a kit (decisions `public-door-mcp`, `public-kit-handlers`, `public-kit-dependencies`, `public-delegate`, `public-governance-probe` and `public-core-hooks`). No kit's bytes changed: the bundled releases stand.
 
-- The plugin ships the IA door as its MCP server `ia` (`.mcp.json`: `npx -y @inventarch/mcp-door@3.4.1`, with `IA_KITS_DIR` set to the bundled kits). Claude Code names its tools `mcp__plugin_ia_ia__<tool>`.
+- The plugin ships the IA door as its MCP server `ia` (`.mcp.json`: `node scripts/door.mjs`, a launcher that starts `npx -y @inventarch/mcp-door@3.4.1` never through a shell (on Windows, where `npx` is a `.cmd` shim, it runs npm's `npx-cli.js` with `node`), with stdio passed through and `IA_KITS_DIR` set to the bundled kits). Claude Code names its tools `mcp__plugin_ia_ia__<tool>`. Codex reads a plugin's `.mcp.json` too, so the Codex manifest keeps the door off with `"mcpServers": {}` until it is qualified there.
 - The lanes call `ia_session` once per session, then `ia_catalogue {lane}` to choose a key and `ia_method {key}` for the packet. Until `@inventarch/mcp-door` ships `ia_method`, they fall back to `scripts/resolve.mjs` and `kit.mjs list`.
 - The reader, checker and worker allowlists name the door's tools by their plugin-scoped names; the checker now has the door tools too. The old `mcp__ia-workspace` entries never matched a plugin server and are gone.
 - The SessionStart bootstrap also runs on `compact`, and then re-injects the current task pin's summary and how to resolve the same method again.

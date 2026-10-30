@@ -58,17 +58,17 @@ QUALIFIED_HOOKS = {
     },
 }
 # public-door-mcp: the core ships one MCP server, the IA door, as .mcp.json at its root, exactly this: server ia,
-# launched with npx at the pinned IA version (sources.lock.json released.cli), and told where the bundled kits are.
-# Claude Code names its tools mcp__plugin_ia_ia__<tool>. No other plugin and no other file may declare an MCP server.
-DOOR_PACKAGE = '@inventarch/mcp-door'
-
-
-def qualified_mcp(cli):
-    return {'mcpServers': {'ia': {'command': 'npx', 'args': ['-y', f'{DOOR_PACKAGE}@{cli}'],
+# run by node through scripts/door.mjs, which starts npx -y @inventarch/mcp-door at the plugin's IA pin (lib/cli.mjs
+# PINNED, held to sources.lock.json by tools/consistency.py) never through a shell (on Windows, where npx is a .cmd shim, it runs npm's npx-cli.js with node); and
+# told where the bundled kits are. Claude Code names its tools mcp__plugin_ia_ia__<tool>. No other plugin and no other
+# file may declare an MCP server.
+def qualified_mcp():
+    return {'mcpServers': {'ia': {'command': 'node', 'args': ['${CLAUDE_PLUGIN_ROOT}/scripts/door.mjs'],
                                   'env': {'IA_KITS_DIR': '${CLAUDE_PLUGIN_ROOT}/config/kits'}}}}
 
 
 MCP_PLUGINS = ('ia',)
+CODEX_MCP_OFF = {}
 
 
 def mcp_file(name):
@@ -375,6 +375,9 @@ def validate(root=ROOT):
                 require(manifest.pop('hooks', None) == expected, name + ' names its qualified Codex hooks: its Codex manifest needs "hooks": "' + expected + '"')
             elif host == 'codex' and name in HOOK_PLUGINS:
                 require(manifest.pop('hooks', None) == CODEX_HOOKS_OFF, name + ' keeps its hooks off in Codex: its Codex manifest needs "hooks": {"hooks": {}}')
+            if host == 'codex' and name in MCP_PLUGINS:
+                # Codex reads a plugin's .mcp.json too; the door stays off there until qualified (task codex-door-and-handlers).
+                require(manifest.pop('mcpServers', None) == CODEX_MCP_OFF, name + ' keeps its MCP server off in Codex: its Codex manifest needs "mcpServers": {}')
             schema_check(manifest, schema)
             require(manifest['name'] == name, 'plugin identity')
             if host == 'codex':
@@ -450,7 +453,8 @@ def validate(root=ROOT):
     pins = load(root / 'sources.lock.json')
     for name in MCP_PLUGINS:
         require(mcp_file(name) in entries, name + ' ships the IA door: ' + mcp_file(name) + ' must exist and be selected')
-        require(canonical(load(root / mcp_file(name))) == canonical(qualified_mcp(pins['released']['cli'])),
+        require(f'plugins/{name}/scripts/door.mjs' in entries, name + ' ships the IA door launcher: plugins/' + name + '/scripts/door.mjs')
+        require(canonical(load(root / mcp_file(name))) == canonical(qualified_mcp()),
                 name + ' MCP servers differ from the qualified door: ' + mcp_file(name))
     for name, (_, table) in QUALIFIED_CODEX_HOOKS.items():
         require(canonical(load(root / codex_hooks_file(name))) == canonical(render_hooks(table)), name + ' Codex hooks differ from the qualified set: ' + codex_hooks_file(name))
