@@ -4,7 +4,7 @@ The public InventArch plugin catalogue (`inventarch`). It ships one plugin, `ia`
 
 | Plugin | What it is for |
 |---|---|
-| [ia](plugins/ia/README.md) | The core. Three lanes, `ia:work`, `ia:knowledge` and `ia:delivery`, plus the user-invoked `ia:init` and `ia:doctor`; a resolver over `ia position` that binds a task to a method kit and delivers its playbook cells as a packet; reader, checker and worker profiles; kit lookup, install and bind verbs; and two read-only hooks (a session bootstrap and an on-write check). |
+| [ia](plugins/ia/README.md) | The core. Three lanes, `ia:work`, `ia:knowledge` and `ia:delivery`, plus the user-invoked `ia:init`, `ia:doctor` and `ia:delegate`; the IA door as its MCP server, whose `ia_session`, `ia_catalogue` and `ia_method` tools deliver a bound method kit's playbook cells as a packet (with a resolver over `ia position` as the fallback); reader, checker and worker profiles; kit lookup, install, dependency and bind verbs; a read-only session bootstrap; and hooks that run the handlers installed kits declare. |
 
 ## Kits
 
@@ -56,6 +56,8 @@ codex plugin add ia@inventarch
 
 `codex plugin marketplace upgrade` refreshes the Git snapshot. If the plugin's version did not change, Codex keeps its cached copy: run `codex plugin remove` and then `codex plugin add`.
 
+Installing the plugin also gives Claude Code the IA door: the plugin starts it with `npx -y @inventarch/mcp-door@3.4.1`, so the first session in a new environment needs network access to fetch it once.
+
 Then run `/ia:init` in a repository: it offers `ia init` and binds the default kits. By hand, in a repository that is an IA workspace:
 
 ```sh
@@ -65,7 +67,48 @@ node "<plugin root>/scripts/kit.mjs" bind inventarch/ia-kb-kit --apply
 node "<plugin root>/scripts/kit.mjs" bind inventarch/ia-authoring-kit --apply
 ```
 
-Every `kit.mjs` verb previews unless you pass `--apply`. `upgrade`, `repin` and `rebind` move a repository to a new kit release; `add --from <folder or archive>` installs a kit into `<IA home>/kits/<kit>/<version>/`.
+Every `kit.mjs` verb previews unless you pass `--apply`. `upgrade`, `repin` and `rebind` move a repository to a new kit release; `add --from <folder or archive>` installs a kit into `<IA home>/kits/<kit>/<version>/`. A kit that depends on another kit (its `.ia/release.json` names it) installs only once that kit is found: carried by the plugin, already in `<IA home>/kits`, or next to it in the same folder. Add the dependency first; adoption then vendors both.
+
+### Bootstrap a repository for every host
+
+A repository can carry its own way in, so that a clone works the same for everyone and in every host, with or without this plugin. Commit two small pieces; neither holds a local path or a credential.
+
+1. **The instruction block**, in `CLAUDE.md` and `AGENTS.md` (and `.github/copilot-instructions.md` for Copilot):
+
+   ```markdown
+   ## InventArch
+
+   Start with `ia_session`. For any task, use `ia:work`, `ia:knowledge` or `ia:delivery`: call `ia_catalogue` with that lane, choose a key, then `ia_method` with the key, and follow only the packet it returns. If context was lost, call `ia_method` again with the same key and task.
+   ```
+
+2. **The door entry**, which starts the IA door with `npx` at the pinned version:
+
+   - Claude Code, `.mcp.json`:
+
+     ```json
+     { "mcpServers": { "ia": { "command": "npx", "args": ["-y", "@inventarch/mcp-door@3.4.1"] } } }
+     ```
+
+   - Codex, `.codex/config.toml`:
+
+     ```toml
+     [mcp_servers.ia]
+     command = "npx"
+     args = ["-y", "@inventarch/mcp-door@3.4.1"]
+     ```
+
+   - GitHub Copilot in VS Code, `.vscode/mcp.json`:
+
+     ```json
+     { "servers": { "ia": { "type": "stdio", "command": "npx", "args": ["-y", "@inventarch/mcp-door@3.4.1"] } } }
+     ```
+
+     For the Copilot coding agent, add the same server under the repository's Copilot MCP configuration on GitHub. Copilot has no plugin and no hooks, so the door and the instruction block are its only way in: the lanes' names in the block are what it calls through the door.
+
+`ia init` and `ia host` (IA CLI) write these pieces for you once the framework release that commits them ships; until then, copy them by hand. With this plugin installed, Claude Code already has the door (the plugin ships it as its MCP server `ia`, whose tools are `mcp__plugin_ia_ia__<tool>`); a committed `.mcp.json` entry then adds a second copy under `mcp__ia__<tool>`, which is harmless, and is still what a teammate without the plugin, or another host, uses. The door finds the kits in `<IA home>/kits`; the plugin's own door also finds the kits it bundles.
+
+Until `@inventarch/mcp-door` ships `ia_session`, `ia_catalogue` and `ia_method` (the framework release after 3.4.1), the 3.4.1 door serves only its read tools, and this plugin's lanes fall back to `scripts/resolve.mjs`.
+
 
 ### Coexisting with the CLI-rendered plugin
 
@@ -89,7 +132,15 @@ At the start of a session the core offers, once, to connect an InventArch accoun
 
 ### Governed repositories
 
-A repository adopted for governance (it has `.ia/governance.json`) needs the InventArch governance plugin, available with an account. Without it the core says so once per session and does not pretend the repository is ungoverned.
+A repository adopted for governance (it has `.ia/governance.json`) needs a kit that declares governance handlers: the `ia-governance` kit, available with an account (`ia kit add`). Until one is installed the core says so once per session ("this repository is governed; add the ia-governance kit") and does not pretend the repository is ungoverned.
+
+### Kit handlers
+
+A kit may declare handlers in a `handlers.json` beside its records: scripts the core runs at session start, on each prompt, before or after an edit or shell command, and when a turn stops. Only installed kits whose folder holds the script run them (a kit fetched as a release carries no executables); each kit adds at most 2,000 characters of context; a handler may block a tool call only in a repository that opted in with `.ia/governance.json`. With no kit declaring a handler, the hooks do nothing.
+
+### Delegating to another model
+
+`/ia:delegate` hands one resolved step to `codex exec` or `claude -p`, with the IA door and the packet, one level deep and with a timeout. It is off until you set `"delegation": true` in `~/.ia/config.json`, and it runs nothing until you confirm the command it shows.
 
 ### Set it up for a team repository
 

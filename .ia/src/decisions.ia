@@ -130,9 +130,9 @@
 
 @decision public-governance-probe
   meaning
-    says "When .ia/governance.json exists and the governance plugin is not installed, the session hook says once that the repository is governed and needs that plugin, which is available with an InventArch subscription. It never falls back silently to ungoverned work."
+    says "When .ia/governance.json exists and no installed kit declares governance handlers (a tool pre handler in its handlers.json), the session hook says once, at startup, that the repository is governed and to add the ia-governance kit (ia kit add). No plugin is looked for. It never falls back silently to ungoverned work."
   work
-    title "Say when a governed repository lacks its plugin"
+    title "Say when a governed repository lacks its governance kit"
     status made
     owner "InventArch maintainers"
     start "2026-10-30"
@@ -141,7 +141,7 @@
   decision
     question "What does the public core do in a repository adopted for governance?"
     decider "Operator"
-    choice "When .ia/governance.json exists and the governance plugin is not installed, the session hook says once that the repository is governed and needs that plugin, which is available with an InventArch subscription. It never falls back silently to ungoverned work."
+    choice "When .ia/governance.json exists and no installed kit declares governance handlers (a tool pre handler in its handlers.json), the session hook says once, at startup, that the repository is governed and to add the ia-governance kit (ia kit add). No plugin is looked for. It never falls back silently to ungoverned work."
     rationale "Governance is not part of the public offering, and pretending a governed repository is ungoverned would be worse than saying so."
 
 @decision public-workspace-placement
@@ -162,7 +162,7 @@
 
 @decision public-plugin-components
   meaning
-    says "Skills, agents, references, templates, examples, config, node scripts and tests. No MCP servers, LSP servers, commands, settings, monitors or bin/, and no hooks, mcpServers or permissionMode in skill or agent frontmatter. At most four model-invocable skills per plugin; stage-skill descriptions at most 160 characters; every agent declares a tools allowlist. The only hooks are the core's qualified pair (public-core-hooks)."
+    says "Skills, agents, references, templates, examples, config, node scripts and tests. No LSP servers, commands, settings, monitors or bin/, no MCP server but the core's IA door (public-door-mcp), and no hooks, mcpServers or permissionMode in skill or agent frontmatter. At most four model-invocable skills per plugin; stage-skill descriptions at most 160 characters; every agent declares a tools allowlist. The only hooks are the core's qualified set (public-core-hooks)."
   work
     title "Admit only reviewable plugin components"
     status made
@@ -173,14 +173,14 @@
   decision
     question "What may a plugin in this catalogue ship?"
     decider "Maintainers"
-    choice "Skills, agents, references, templates, examples, config, node scripts and tests. No MCP servers, LSP servers, commands, settings, monitors or bin/, and no hooks, mcpServers or permissionMode in skill or agent frontmatter. At most four model-invocable skills per plugin; stage-skill descriptions at most 160 characters; every agent declares a tools allowlist. The only hooks are the core's qualified pair (public-core-hooks)."
+    choice "Skills, agents, references, templates, examples, config, node scripts and tests. No LSP servers, commands, settings, monitors or bin/, no MCP server but the core's IA door (public-door-mcp), and no hooks, mcpServers or permissionMode in skill or agent frontmatter. At most four model-invocable skills per plugin; stage-skill descriptions at most 160 characters; every agent declares a tools allowlist. The only hooks are the core's qualified set (public-core-hooks)."
     rationale "A Git install copies a plugin's whole folder, so everything that ships must be reviewable text with no ambient authority."
 
 @decision public-core-hooks
   meaning
-    says "One SessionStart hook (startup|resume, scripts/bootstrap.mjs, 15 seconds) that prints the workspace identity and the resolve instruction, makes the account offer at startup and the governance probe, reads no credentials and never fetches; and one PostToolUse hook (Write|Edit|MultiEdit, scripts/on-write.mjs, 30 seconds) that runs the on-write checks carried kits declare. tools/validate.py pins both to exactly these events, matchers, commands and timeouts, and the Codex manifest keeps them off."
+    says "The SessionStart bootstrap (startup, resume and compact, scripts/bootstrap.mjs, 15 seconds) prints the workspace identity and the resolve instruction, makes the account offer at startup and the governance probe, re-injects the current task pin after a compaction, reads no credentials and never fetches. scripts/handlers.mjs runs the handlers installed kits declare, with one event argument: SessionStart for every source (60 seconds), UserPromptSubmit (30), PreToolUse (30) and PostToolUse (60) on Write, Edit, MultiEdit, NotebookEdit, Bash and PowerShell, and Stop (30). tools/validate.py pins all of them to exactly these events, matchers, commands and timeouts, and the Codex manifest keeps them off."
   work
-    title "Pin the core's two read-only hooks"
+    title "Pin the core's hooks"
     status made
     owner "InventArch maintainers"
     start "2026-10-30"
@@ -189,7 +189,7 @@
   decision
     question "Which hooks does the core ship, and how are they held?"
     decider "Maintainers"
-    choice "One SessionStart hook (startup|resume, scripts/bootstrap.mjs, 15 seconds) that prints the workspace identity and the resolve instruction, makes the account offer at startup and the governance probe, reads no credentials and never fetches; and one PostToolUse hook (Write|Edit|MultiEdit, scripts/on-write.mjs, 30 seconds) that runs the on-write checks carried kits declare. tools/validate.py pins both to exactly these events, matchers, commands and timeouts, and the Codex manifest keeps them off."
+    choice "The SessionStart bootstrap (startup, resume and compact, scripts/bootstrap.mjs, 15 seconds) prints the workspace identity and the resolve instruction, makes the account offer at startup and the governance probe, re-injects the current task pin after a compaction, reads no credentials and never fetches. scripts/handlers.mjs runs the handlers installed kits declare, with one event argument: SessionStart for every source (60 seconds), UserPromptSubmit (30), PreToolUse (30) and PostToolUse (60) on Write, Edit, MultiEdit, NotebookEdit, Bash and PowerShell, and Stop (30). tools/validate.py pins all of them to exactly these events, matchers, commands and timeouts, and the Codex manifest keeps them off."
     rationale "Hooks run without a prompt, so each one is narrow, read-only and pinned."
 
 @decision public-codex-manifest-interface
@@ -287,3 +287,67 @@
     decider "Operator"
     choice "The plugin is ia (ia@inventarch; the catalogue stays inventarch, and kit ids do not change). Its model-invocable entry skills are the three lanes, ia:work, ia:knowledge and ia:delivery; the setup skill is the user-invoked ia:init, merged with the CLI-rendered plugin's init steps, beside a user-invoked ia:doctor; its agents are ia:reader, ia:checker and ia:worker; a capability bound to a lane is shown as ia-<lane>:<activity>, the binding key re-spelled, whichever kit supplies it (a lane's entry, <lane>.*, reads ia-<lane>). Until the CLI changes so that ia host adds this marketplace and installs ia@inventarch from it, users remove the CLI-rendered registration of the same catalogue name (claude plugin marketplace remove inventarch) before adding this one."
     rationale "Everything a person types or reads starts with ia, and one plugin with three lanes is what the public offering is."
+
+@decision public-door-mcp
+  meaning
+    says "The core ships one MCP server, the IA door, as plugins/ia/.mcp.json: server ia, npx -y @inventarch/mcp-door at the pinned IA version (3.4.1), with IA_KITS_DIR set to the plugin's config/kits. Claude Code names its tools mcp__plugin_ia_ia__<tool>, and the reader, checker and worker allowlists name ia_session, ia_catalogue and ia_method that way (reader and worker also ia_position, ia_read and ia_vocabulary). The lanes call ia_session once per session, ia_catalogue {lane} to choose a key and ia_method {key} for the packet; until @inventarch/mcp-door ships ia_method they fall back to scripts/resolve.mjs and kit.mjs list. tools/validate.py admits that one file, exactly."
+  work
+    title "Ship the IA door as the core's MCP server"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "How does the core reach the method catalogue and packets without a per-workspace registration?"
+    decider "Operator"
+    choice "The core ships one MCP server, the IA door, as plugins/ia/.mcp.json: server ia, npx -y @inventarch/mcp-door at the pinned IA version (3.4.1), with IA_KITS_DIR set to the plugin's config/kits. Claude Code names its tools mcp__plugin_ia_ia__<tool>, and the reader, checker and worker allowlists name ia_session, ia_catalogue and ia_method that way (reader and worker also ia_position, ia_read and ia_vocabulary). The lanes call ia_session once per session, ia_catalogue {lane} to choose a key and ia_method {key} for the packet; until @inventarch/mcp-door ships ia_method they fall back to scripts/resolve.mjs and kit.mjs list. tools/validate.py admits that one file, exactly."
+    rationale "One door carries every method for every host; launching it from the plugin needs no local path and no second server, and pinning it like the CLI keeps it reviewable."
+
+@decision public-kit-handlers
+  meaning
+    says "A kit may ship handlers.json (format 1: session handlers with their events, prompt, tool with phase pre or post and a tool-name match, and stop, each a .mjs script inside the kit with a timeout of at most 25 seconds). scripts/handlers.mjs runs them from SessionStart (every source), UserPromptSubmit, PreToolUse and PostToolUse on edits and shell commands, and Stop, only for installed kits (this plugin's config/kits and <IA home>/kits) whose folder holds the script, so a fetched release, which carries no executables, never runs one. Each runs as node <script> with the hook JSON on stdin and IA_KIT_ROOT, IA_WORKSPACE_ROOT and IA_HOME set; the core merges their additionalContext at most 2,000 characters per kit; a pre block is honoured only in a workspace with .ia/governance.json; with no handler declared every hook is a silent no-op. onwrite.json runs as tool post handlers. handlers.json is a sidecar the sources digest covers, and its scripts must be declared assets."
+  work
+    title "Run the handlers installed kits declare"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "How does a kit run session, prompt, tool and stop logic, such as a governance ledger, without a plugin of its own?"
+    decider "Operator"
+    choice "A kit may ship handlers.json (format 1: session handlers with their events, prompt, tool with phase pre or post and a tool-name match, and stop, each a .mjs script inside the kit with a timeout of at most 25 seconds). scripts/handlers.mjs runs them from SessionStart (every source), UserPromptSubmit, PreToolUse and PostToolUse on edits and shell commands, and Stop, only for installed kits (this plugin's config/kits and <IA home>/kits) whose folder holds the script, so a fetched release, which carries no executables, never runs one. Each runs as node <script> with the hook JSON on stdin and IA_KIT_ROOT, IA_WORKSPACE_ROOT and IA_HOME set; the core merges their additionalContext at most 2,000 characters per kit; a pre block is honoured only in a workspace with .ia/governance.json; with no handler declared every hook is a silent no-op. onwrite.json runs as tool post handlers. handlers.json is a sidecar the sources digest covers, and its scripts must be declared assets."
+    rationale "Governance, Studio and work engines become kit scripts, so the public core runs them and no private plugin is needed; opting in per workspace keeps a kit from blocking work nobody asked it to govern."
+
+@decision public-kit-dependencies
+  meaning
+    says "A kit release's .ia/release.json dependencies other than inventarch/language name a kit id and range. Adoption (kit.mjs add), add --from and the restored read root resolve each dependency, transitively and dependencies first, from the kits this plugin carries, then <IA home>/kits, then the dependency's own folder next to the kit; the first whose latest release satisfies the range wins. Its sources must pack to that recorded release, and its archive goes with the language base into the copy's or the workspace's vendor catalog, so ia install --catalog and ia restore --catalog resolve it. A missing dependency, a cycle or two releases of one kit is refused before anything is written."
+  work
+    title "Vendor the kits a kit depends on"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "How does a kit that requires another kit's system install and restore?"
+    decider "Operator"
+    choice "A kit release's .ia/release.json dependencies other than inventarch/language name a kit id and range. Adoption (kit.mjs add), add --from and the restored read root resolve each dependency, transitively and dependencies first, from the kits this plugin carries, then <IA home>/kits, then the dependency's own folder next to the kit; the first whose latest release satisfies the range wins. Its sources must pack to that recorded release, and its archive goes with the language base into the copy's or the workspace's vendor catalog, so ia install --catalog and ia restore --catalog resolve it. A missing dependency, a cycle or two releases of one kit is refused before anything is written."
+    rationale "A method kit that mints no words requires the vocabulary kit that does; adoption has to bring that kit along, or the native install refuses."
+
+@decision public-delegate
+  meaning
+    says "Only through the user-invoked ia:delegate (disable-model-invocation), off by default until the person sets delegation true in ~/.ia/config.json or IA_DELEGATION=1. scripts/delegate.mjs builds a codex exec or claude -p command that gets the IA door (--mcp-config for claude -p, -c mcp_servers.ia for codex exec) and the brief with the packet inline on stdin, sets IA_DELEGATION_DEPTH one higher, refuses when it is already 1 or more, applies a timeout (900 seconds by default, at most 3,600) and runs only with --run."
+  work
+    title "Delegate across models only on the person's word"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "May the core hand a step to another model's command line?"
+    decider "Operator"
+    choice "Only through the user-invoked ia:delegate (disable-model-invocation), off by default until the person sets delegation true in ~/.ia/config.json or IA_DELEGATION=1. scripts/delegate.mjs builds a codex exec or claude -p command that gets the IA door (--mcp-config for claude -p, -c mcp_servers.ia for codex exec) and the brief with the packet inline on stdin, sets IA_DELEGATION_DEPTH one higher, refuses when it is already 1 or more, applies a timeout (900 seconds by default, at most 3,600) and runs only with --run."
+    rationale "Cross-model delegation spends another account and reaches outside the session, so the person turns it on and starts it, and one level deep keeps it from fanning out."

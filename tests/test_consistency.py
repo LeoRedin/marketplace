@@ -227,9 +227,9 @@ class ConsistencyTests(unittest.TestCase):
 
     def test_changelog_must_lead_with_the_manifest_version(self):
         for host in ('claude', 'codex'):
-            self.json_edit(f'plugins/ia/.{host}-plugin/plugin.json', lambda m: m.update(version='1.0.1'))
-        self.json_edit('sources.lock.json', lambda s: s['pluginVersion'].update({'ia': '1.0.1'}))
-        self.assertProblem(r'plugins/ia/CHANGELOG\.md: latest entry is 1\.0\.0, the manifest says 1\.0\.1')
+            self.json_edit(f'plugins/ia/.{host}-plugin/plugin.json', lambda m: m.update(version='1.1.1'))
+        self.json_edit('sources.lock.json', lambda s: s['pluginVersion'].update({'ia': '1.1.1'}))
+        self.assertProblem(r'plugins/ia/CHANGELOG\.md: latest entry is 1\.1\.0, the manifest says 1\.1\.1')
 
     # Version bumps against a base (git).
 
@@ -237,8 +237,8 @@ class ConsistencyTests(unittest.TestCase):
         self.init_history()
         self.write(PLUGIN_FILE, self.text(PLUGIN_FILE) + '\nA shipped change.\n')
         self.rehash()
-        self.assertProblem(r'ia: shipped bytes changed since HEAD but its version stays 1\.0\.0', base='HEAD')
-        self.bump('ia', '1.0.1')
+        self.assertProblem(r'ia: shipped bytes changed since HEAD but its version stays 1\.1\.0', base='HEAD')
+        self.bump('ia', '1.1.1')
         self.assertEqual(check(self.root, base='HEAD'), [])
 
     def test_test_only_change_needs_no_bump(self):
@@ -252,7 +252,7 @@ class ConsistencyTests(unittest.TestCase):
         self.write(PLUGIN_FILE, self.text(PLUGIN_FILE) + '\nA shipped change.\n')
         self.rehash()
         self.bump('ia', '0.9.0')
-        self.assertProblem(r'ia: .*version stays|ia: version 0\.9\.0 is not above 1\.0\.0', base='HEAD')
+        self.assertProblem(r'ia: .*version stays|ia: version 0\.9\.0 is not above 1\.1\.0', base='HEAD')
 
     def test_release_ranks_above_its_pre_release(self):
         from consistency import semver
