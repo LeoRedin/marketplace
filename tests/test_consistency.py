@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -324,6 +325,18 @@ class ConsistencyTests(unittest.TestCase):
         self.json_edit('kits/ia-kb/releases/9.0.0.json', lambda r: r.update(archive='1' * 64))
         problems = check(self.root, base=base)
         self.assertFalse([p for p in problems if 'releases.json' in p], problems)
+
+    def test_a_base_without_a_selection_counts_everything_as_new(self):
+        # A new repository starts from a commit with no catalogue: nothing at the base was published.
+        self.init_history()
+        run = lambda *a, **k: subprocess.run(['git', *a], cwd=self.root, check=True, capture_output=True, text=True, **k).stdout.strip()
+        empty = run('mktree', input='')
+        base = run('commit-tree', empty, '-m', 'start', env={**os.environ, 'GIT_AUTHOR_NAME': 't', 'GIT_AUTHOR_EMAIL': 't@t', 'GIT_COMMITTER_NAME': 't', 'GIT_COMMITTER_EMAIL': 't@t'})
+        tree = run('rev-parse', 'HEAD^{tree}')
+        head = run('commit-tree', tree, '-p', base, '-m', 'the catalogue', env={**os.environ, 'GIT_AUTHOR_NAME': 't', 'GIT_AUTHOR_EMAIL': 't@t', 'GIT_COMMITTER_NAME': 't', 'GIT_COMMITTER_EMAIL': 't@t'})
+        run('reset', '-q', '--hard', head)
+        problems = check(self.root, base=base)
+        self.assertFalse([p for p in problems if 'base selection' in p or 'releases' in p], problems)
 
     # Kit release sources (git, issue #81).
 

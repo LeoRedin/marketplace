@@ -340,10 +340,17 @@ def semver(version):
 def version_bumps(root, base, problems):
     try:
         merge_base = git(root, 'merge-base', base, 'HEAD').strip()
-        old_selection = load_json(git(root, 'show', f'{merge_base}:export-selection.json'))
-    except (subprocess.CalledProcessError, ValueError) as error:
+    except subprocess.CalledProcessError as error:
         problems.append(f'--base {base}: cannot read the base selection ({str(error).strip()[:120]})')
         return
+    if git(root, 'ls-tree', '--name-only', merge_base, 'export-selection.json').strip() == '':
+        old_selection = {'files': []}
+    else:
+        try:
+            old_selection = load_json(git(root, 'show', f'{merge_base}:export-selection.json'))
+        except (subprocess.CalledProcessError, ValueError) as error:
+            problems.append(f'--base {base}: cannot read the base selection ({str(error).strip()[:120]})')
+            return
     old = {row['path']: row['sha256'] for row in old_selection['files']}
     new = {row['path']: row['sha256'] for row in read_json(root, 'export-selection.json')['files']}
     changed = {p for p in old.keys() | new.keys() if old.get(p) != new.get(p) and p.startswith('plugins/')}
