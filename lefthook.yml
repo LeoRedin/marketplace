@@ -1,0 +1,53 @@
+# This repository's own Git hooks (decision public-local-gates); no plugin ships them, and decision
+# public-plugin-components still refuses plugin hooks. `npm ci` at the root installs them (lefthook's postinstall).
+# CI runs the same commands (.github/workflows/gates.yml). The test suites stay in CI and `npm test`: they take minutes.
+# Like validate.py, the checks read the working tree, not only what is staged or pushed: keep unstaged edits valid.
+# LEFTHOOK=0 skips the hooks for one command; a worktree without node_modules skips the lint and the language check.
+pre-commit:
+  parallel: true
+  commands:
+    validate:
+      run: python tools/validate.py
+    selection:
+      run: python tools/selection.py --check
+    bundle:
+      run: node tools/bundle-kits.mjs --check
+    index:
+      run: node tools/kit.mjs index --check
+    package:
+      run: node tools/kit.mjs package --check
+    consistency:
+      run: python tools/consistency.py
+    lint:
+      skip:
+        - run: test ! -f node_modules/.bin/biome
+      run: node_modules/.bin/biome lint
+    language:
+      glob: "*.{ia,json}"
+      skip:
+        - run: test ! -f node_modules/@inventarch/cli/dist/main.js
+      run: node tools/check-language.mjs
+
+pre-push:
+  parallel: true
+  commands:
+    validate:
+      run: python tools/validate.py
+    selection:
+      run: python tools/selection.py --check
+    bundle:
+      run: node tools/bundle-kits.mjs --check
+    index:
+      run: node tools/kit.mjs index --check
+    package:
+      run: node tools/kit.mjs package --check
+    consistency:
+      run: python tools/consistency.py --base origin/main
+    lint:
+      skip:
+        - run: test ! -f node_modules/.bin/biome
+      run: node_modules/.bin/biome lint
+    language:
+      skip:
+        - run: test ! -f node_modules/@inventarch/cli/dist/main.js
+      run: node tools/check-language.mjs

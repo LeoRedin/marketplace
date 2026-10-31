@@ -1,0 +1,180 @@
+#! ia 1.0
+
+@contract ia-authoring-record
+  version "0.1.0"
+  meaning
+    says "What the IA authoring kit guarantees mechanically: that its sources admit under the pinned language, that every gate it declares carries exactly one fixed command the core's checker runner can execute and nothing else, that every file it carries is listed and present, that its recorded release names the kit and the records its sources are, and that the scripts it carries run from the kit folder with only the core's helper. The kit's own tests, plugins/ia/tests/kit-authoring.test.mjs and kit-authoring-scripts.test.mjs, evaluate each requirement; each case names the test that exercises it. The kit's playbooks, conventions and laws are guidance an agent applies and a reviewer checks, and no requirement here covers them."
+    answers "What does the IA authoring kit guarantee, and how is each guarantee checked?"
+  invariants
+    REQ-AUTH-01 "A copy of the kit's sources restores its pinned language base offline with the pinned CLI and validates with zero errors; a record that names an evaluator the language does not implement is refused at restore."
+    REQ-AUTH-02 "Every @check in the kit other than the coverage check runs COMP-CHECK and carries exactly one non-empty fixed command in check.scope, and checks.json names only declared checks, each with a shell-free argv that spells its check's command, so the checker runner can execute only the commands the kit declares."
+    REQ-AUTH-03 "Every file listed in .ia/release.json exists under the kit root, a Markdown file as documentation and any other as an asset, and every file under assets/ and scripts/ is listed."
+    REQ-AUTH-04 "The kit's releases.json names the kit id .ia/release.json declares, and the release recorded for the descriptor's version records the (system, word, name) triples read from the sources and their sources digest."
+    REQ-AUTH-05 "The probe and the governance lint run from the kit folder with no file outside it but the core's scripts/lib/scratch.mjs: the governance lint reports a misspelled clause and exits 1, and the probe refuses a usage error with exit 2 before anything is copied."
+  relationships
+    governs @law authoring-run-before-claim
+    governs @law authoring-stewards-write-their-folders
+    governs @law authoring-no-promotion
+    governs @law authoring-probe-never-the-workspace
+    cites @agent ia-authoring-record-steward
+
+@check ia-authoring-record-coverage
+  meaning
+    says "Checks that every requirement of the ia-authoring-record contract has a success case and a failure case. IA evaluates the coverage; the requirements themselves are evaluated by the kit's tests, which ia validate does not run."
+    answers "Is every ia-authoring-record requirement covered by cases?"
+  check
+    runs COMP-COVERAGE
+    scope "The ia-authoring-record requirements and their cases."
+  relationships
+    enforces @contract ia-authoring-record
+
+@check authoring-workspace-validate
+  meaning
+    says "The live workspace's admission at error severity, run from the workspace root with the CLI the core resolves: zero errors means the records conform, not that they are true. ia validate renders 50 findings by default, its counts and exit code are whole-workspace, and a filtered path validates nothing alone, so a steward still judges the findings in its own folder. The command is the scope; IA evaluates only the declaration (COMP-CHECK), and the core's checker runner executes it, filling ia with the resolved CLI."
+    answers "Does the live workspace admit with zero errors?"
+  check
+    runs COMP-CHECK
+    scope "ia validate --severity error --json"
+  relationships
+    enforces @contract ia-authoring-record
+
+@check authoring-field-lint
+  meaning
+    says "The governance lint: the kit's field-lint.mjs, run from the kit folder against the workspace root, captures a temp copy through the core's scratch-capture helper and reports every key under a local record's governance section that the word's schema does not declare and that is not a clause the compiler consumes (applies, requires, severity), with a suggestion where one is close. IA admits such a key and ignores it, so admission cannot catch it. Exit 0: lint-clean; 1: at least one such key; 2: no CLI or capture. The command is the scope; IA evaluates only the declaration (COMP-CHECK), and the core's checker runner executes it."
+    answers "Does any local record carry a governance clause IA admits but never uses?"
+  check
+    runs COMP-CHECK
+    scope "node <kit>/scripts/field-lint.mjs --root <workspace>"
+  relationships
+    enforces @contract ia-authoring-record
+
+@case authoring-req-01-success
+  meaning
+    says "A scratch copy of the kit restores its pinned language base offline and validates with zero errors under the pinned CLI."
+    answers "Does the kit admit under the pinned CLI?"
+  scenario
+    kind success
+    given "A copy of the kit's .ia folder and declared assets in a scratch directory, and the pinned @inventarch/cli named by IA_CORE_TEST_CLI."
+    request "Run ia restore --apply --yes --root <copy>, then ia validate --root <copy> --json."
+    expected "The restore reports installed, and validate reports status admitted with zero errors."
+    evaluator "plugins/ia/tests/kit-authoring.test.mjs :: REQ-AUTH-01 success: the kit admits under the pinned CLI"
+  relationships
+    implements @contract ia-authoring-record#REQ-AUTH-01
+
+@case authoring-req-01-failure
+  meaning
+    says "A copy of the kit with a check that names an evaluator the language does not implement is refused at restore with IA-COMP-CHECK-UNKNOWN."
+    answers "Does the pinned CLI refuse an unknown evaluator?"
+  scenario
+    kind failure
+    given "A copy of the kit in which the host-validate check is rewritten to run an evaluator named host-gate, and the pinned CLI."
+    request "Run ia restore --apply --yes --root <copy>."
+    expected "The restore refuses with IA-DIST-ADMISSION-FAILED carrying IA-COMP-CHECK-UNKNOWN for that check."
+    evaluator "plugins/ia/tests/kit-authoring.test.mjs :: REQ-AUTH-01 failure: an unknown evaluator is refused at restore"
+    code IA-COMP-CHECK-UNKNOWN
+  relationships
+    implements @contract ia-authoring-record#REQ-AUTH-01
+
+@case authoring-req-02-success
+  meaning
+    says "Every gate check in the kit runs COMP-CHECK with one non-empty fixed command, and checks.json gives each a shell-free argv equal to that command."
+    answers "Does every gate declare one fixed command?"
+  scenario
+    kind success
+    given "The kit's compliance records and checks.json as shipped."
+    request "Parse every @check, read check.runs and check.scope, and compare each checks.json argv with its check's scope."
+    expected "Every check other than ia-authoring-record-coverage runs COMP-CHECK with a non-empty scope, the coverage check runs COMP-COVERAGE, and every checks.json entry names a declared check whose scope its argv spells."
+    evaluator "plugins/ia/tests/kit-authoring.test.mjs :: REQ-AUTH-02 success: every gate check declares one fixed command that checks.json runs"
+  relationships
+    implements @contract ia-authoring-record#REQ-AUTH-02
+
+@case authoring-req-02-failure
+  meaning
+    says "A gate check whose scope is empty fails the structural test, so the checker runner has nothing to execute for it."
+    answers "Is a gate without a command refused?"
+  scenario
+    kind failure
+    given "A copy of the kit in which one gate's scope is the empty string."
+    request "Run the structural gate check over the copy."
+    expected "The test reports that gate as lacking a command and fails."
+    evaluator "plugins/ia/tests/kit-authoring.test.mjs :: REQ-AUTH-02 failure: a gate without a command is refused"
+  relationships
+    implements @contract ia-authoring-record#REQ-AUTH-02
+
+@case authoring-req-03-success
+  meaning
+    says "Every file the release descriptor lists exists under the kit root, and every carried file is listed."
+    answers "Are all carried files present and listed?"
+  scenario
+    kind success
+    given "The kit's .ia/release.json, assets/ and scripts/ folders as shipped."
+    request "Read each listed file and its role, and list every file under assets/ and scripts/."
+    expected "Every listed file exists with the role its kind requires, and no carried file is unlisted."
+    evaluator "plugins/ia/tests/kit-authoring.test.mjs :: REQ-AUTH-03 success: every listed asset exists and every carried file is listed"
+  relationships
+    implements @contract ia-authoring-record#REQ-AUTH-03
+
+@case authoring-req-03-failure
+  meaning
+    says "A release descriptor that lists an asset the kit does not carry fails the asset check."
+    answers "Is a missing asset reported?"
+  scenario
+    kind failure
+    given "A copy of the kit whose release.json lists assets/missing.md."
+    request "Run the asset check over the copy."
+    expected "The check reports assets/missing.md as missing and fails."
+    evaluator "plugins/ia/tests/kit-authoring.test.mjs :: REQ-AUTH-03 failure: a listed asset that is missing is reported"
+  relationships
+    implements @contract ia-authoring-record#REQ-AUTH-03
+
+@case authoring-req-04-success
+  meaning
+    says "The release index names the kit id of .ia/release.json, and the release of its version records the sources' triples and digest."
+    answers "Does the recorded release describe these sources?"
+  scenario
+    kind success
+    given "The kit's .ia/release.json, releases.json, its per-version release file and its sources as shipped."
+    request "Compare the ids and versions, the record triples and the sources digest."
+    expected "The kit id matches, a release of the descriptor's version is recorded, and its records and sources digest equal the sources'."
+    evaluator "plugins/ia/tests/kit-authoring.test.mjs :: REQ-AUTH-04 success: the release index names the kit and the recorded release matches the sources"
+  relationships
+    implements @contract ia-authoring-record#REQ-AUTH-04
+
+@case authoring-req-04-failure
+  meaning
+    says "A kit whose sources changed after its release was recorded is reported by the sources digest."
+    answers "Is a drifted release record reported?"
+  scenario
+    kind failure
+    given "A copy of the kit whose checks.json gained a byte after the release was recorded."
+    request "Run the release check over the copy."
+    expected "The check reports that the recorded sources digest differs from the sources and fails."
+    evaluator "plugins/ia/tests/kit-authoring.test.mjs :: REQ-AUTH-04 failure: a release record that drifts from the sources is reported"
+  relationships
+    implements @contract ia-authoring-record#REQ-AUTH-04
+
+@case authoring-req-05-success
+  meaning
+    says "The probe and the governance lint run from the kit folder, importing only the core's scratch-capture helper, and the lint reports a misspelled clause."
+    answers "Do the carried scripts run from the kit?"
+  scenario
+    kind success
+    given "The kit folder as shipped, a synthetic compiled snapshot and node."
+    request "Check every static import of the kit's scripts, then run scripts/field-lint.mjs --artifact on a snapshot holding governance.aplies."
+    expected "Each script that captures imports exactly ../../../../scripts/lib/scratch.mjs, and the lint prints the finding with its suggestion and exits 1."
+    evaluator "plugins/ia/tests/kit-authoring-scripts.test.mjs :: one resolver and one probe: every script that captures imports the core's scripts/lib/scratch.mjs ; plugins/ia/tests/kit-authoring-scripts.test.mjs :: field-lint: the CLI reads --artifact, prints JSON and exits 1 on findings"
+  relationships
+    implements @contract ia-authoring-record#REQ-AUTH-05
+
+@case authoring-req-05-failure
+  meaning
+    says "The probe refuses an argument error with exit 2 before anything is copied."
+    answers "Does the carried probe refuse a usage error safely?"
+  scenario
+    kind failure
+    given "A scratch folder with no workspace, and the kit's probe."
+    request "Run scripts/probe.mjs with no target, then with --file but no --system, then with a system that does not exist."
+    expected "Each run exits 2, names the error and the usage line, and prints nothing on stdout."
+    evaluator "plugins/ia/tests/kit-authoring-scripts.test.mjs :: probe: argument errors exit 2 before anything is copied"
+  relationships
+    implements @contract ia-authoring-record#REQ-AUTH-05

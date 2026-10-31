@@ -1,0 +1,23 @@
+{
+  "format": 1,
+  "pluginVersion": {
+    "ia": "1.1.0"
+  },
+  "nativeHeader": "#! ia 1.0",
+  "released": {
+    "cli": "3.4.1",
+    "registry": "https://registry.npmjs.org/@inventarch%2Fcli",
+    "cliNpmIntegrity": "sha512-n6gYTcK2m1tR4csBCX+MF5Hq4i5gxr+QkH4z5ZekIHSRDZ4j0MDo593P25ep9PjQdvtAjHoHBSMaoalmg3maaQ==",
+    "sourceCommit": "64d15f4779a02d2319deb5c834df89d3e8b4c5d4",
+    "languageVersion": "3.2.0",
+    "languageArchiveSha256": "7b36e4b4959a7bead1c57906cd346b419f32570dac0ac764af805ad20cd63b16",
+    "verification": "registry integrity from the root package-lock.json (npm ci --ignore-scripts, 2026-10-30); sourceCommit is the inventarch/ia commit 'Release 3.4.1' (64d15f47), not yet checked against the package's provenance; the bundled inventarch/language base is 3.2.0 (archive 7b36e4b4, manifest 03a22656), as in 3.4.0"
+  },
+  "sources": [
+    {
+      "id": "catalogue-cut",
+      "head": "dd993c0",
+      "standing": "the tree of InventArch's internal plugin catalogue this public catalogue was cut from on 2026-10-30, with fresh history; the first commit imports it unchanged and the next removes everything that is not public"
+    }
+  ]
+}

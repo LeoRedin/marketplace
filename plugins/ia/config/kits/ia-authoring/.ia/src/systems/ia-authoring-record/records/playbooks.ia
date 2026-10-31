@@ -1,0 +1,97 @@
+#! ia 1.0
+
+@playbook authoring-probing-the-ia-toolchain
+  meaning
+    says "Probe a scratch copy for what IA 3.x admits. Rules differ between language and CLI versions: language 1.2.0 (in @inventarch/cli 2.0.0), for instance, refused a contract with no governs edge (IA-LANG-CONTRACT-UNBOUND), a rule the 1.1.0 sheet never recorded, and since 3.0 ia validate admits a check on an evaluator that is not built in, which every other reader still refuses (R3). Learning a rule by breaking the real workspace wastes everyone's time and can block other stewards, so find out in a copy. The rule sheet is the authoring-ia-rules-* conventions; the probe examples are the kit's assets/probe-examples/."
+    answers "How is an admission question answered by experiment, and what does admission not check?"
+  subject
+    subject-word check
+  cognition
+    orient
+      primary Attention
+      Attention means "Read the vocabulary first. ia vocabulary <word> --schema --json gives a shipped word's sections and fields, each marked required or not, with types and enums, and names its owning system. It reads only the catalogue shipped with the CLI (44 words in 3.1.1, 3.2.2, 3.3.0 and 3.4.0) and needs no workspace, so npx -y @inventarch/cli@3.4.1 vocabulary <word> --schema --json works anywhere. It takes no --root, and refuses a word the workspace mints (IA-CLI-USAGE Unknown word)."
+      Inference means "For a local word such as acme-component, read .ia/src/systems/<owner>/schemas/<word>.schema.ia and the owner's discriminators, and find its records with the door (ia_search)."
+      Decision means "A system's system.ia gives the words it mints (discriminators) and the edges it consents to (edges, rows of <predicate> <targets> using <sources>). An edge needs a matching row in both endpoint owners' edges blocks, source first. No edges block means it refuses every edge to or from the words it mints (R2)."
+      Learning means "Check the rule sheet for the rules already verified, each with its error code and fix."
+    plan
+      primary Inference
+      Attention means "Step 1, write the smallest set of records that asks the question. Use the examples as starting points: refused.ia shows four distinct refusals (a @template its system does not directly require, governs onto a @system, a made-up check.runs, and a contract with no failure case), and admitted.ia is the corrected version, run with --requires agent-composition-system and showing a multi-phase playbook with an Escalation cell. Copy one into the scratch copy, never into the workspace, and never into a kit's records."
+      Inference means "Questions worth probing before a build-out: which words can each system author, given its requires (R1)? Which edges do both endpoint owners consent to, and does every minted word have rows for its outgoing and incoming edges (R2)? Which check.runs values are admitted (R3)? Is coverage per requirement or contract-wide (R4)?"
+      Decision means "Does requires @contract create an adoption that floods NOT-EVALUATED warnings, one per requirement of the contract (R5, R10)? Which sections are field-checked (R11: in 1.1.0, 2.0.0, 3.1.1, 3.2.2, 3.3.0 and 3.4.0 every section is, except governance, where any key is admitted)? Does every contract govern something (R14)? Does the steward apply to every word the system mints (R6)? Is the stewardship mandate's authority section (participant, moves, scope, covers) admitted in the system's folder?"
+      Learning means "Run probes with the lint, so a misspelled governance clause is reported instead of silently ignored."
+    act
+      primary Decision
+      Attention means "Step 2, run it against a copy of the workspace. The kit's probe runs node <kit>/scripts/probe.mjs --root <workspace> [--cli <ia main.js>] --system <target system> --file my-probe.ia [--requires agent-composition-system,authoring-system] [--set PLACEHOLDER=value] [--lint] [--json] [--keep]: --requires adds systems to the copy's system.ia, so you can test whether a missing requires is the cause; --set fills placeholders; --add-system <folder> adds a whole drafted system (which must not exist yet); --lint reports misspelled governance keys as refusals; --json gives one verdict per file. The copy is the workspace's .ia minus exactly .ia/work; the script prints admitted or refused, every error and any warning from the probe file, then deletes the copy."
+      Inference means "Exit codes: 0, every probe file admitted (and lint-clean with --lint); 1, refused; 2, usage error, caught before anything is copied; 3, tool or environment failure (no CLI resolved, a CLI below 3.x, a mandate refusing the default actor, validate output unparseable, capture crash), which means the verdict is unknown, not refused; with --json a failure prints status error. Without --cli or IA_CLI_PATH it runs the workspace's own @inventarch/cli, else 3.4.0 through npx (IA_CLI_NO_NPX=1 forbids that), never the ia on the PATH, refusing a CLI below 3.x, with one stderr line naming the CLI that ran."
+      Decision means "Run the kit's probe (node <kit>/scripts/probe.mjs), or, where it cannot run, probe by hand in a fresh temp copy as the convention authoring-probe-by-hand says: copy .ia without .ia/work; drop the probe into <copy>/.ia/src/systems/<system>/probes/ with its PROBE_* placeholders filled, as --set did; restore the copy if it has no active distributions; run ia.mjs validate --root <copy> --max-findings 100000 --json, with no --severity filter, which would hide the warnings, and confirm truncated is false; the probe file is refused on any error in it, and the whole run is refused on any error outside the probe files (the probe broke something else, or the workspace already had errors); report every warning on a probe file, IA-GRAPH-TARGET-MISSING above all; lint its governance keys from the capture's @schema records; delete the copy."
+      Learning means "Step 3, record the answer as a rule: the statement, the error code, the fix, the language version and the date. Propose it to this kit's steward for the rule sheet if it is new or differs from what is written there."
+    learn
+      primary Learning
+      Attention means "Check what admission does not: ia validate admits any word as an effect class (rule H2) and, since 3.0, a check on an evaluator that is not built in (R3, H3; the probe reports it); it admits a mandate's authority (participant, moves, scope, covers) without checking any write against it: IA 3.4.0 applies a mandate only to its own gated commands and, where the workspace authors a @hook over a path, through the guard ia host claude --apply registers, which judges the acting participant's Synthesis move whatever covers says. Review those by reading the records (ia position --seat <identity> --json), not by trusting a clean validate."
+      Inference means "Never write probe files into the real workspace: the copy is a temp directory."
+      Decision means "Treat the rule sheet as a cache, not as truth. When the workspace's language version differs from the sheet's, re-probe before relying on a rule."
+      Learning means "When a probe is admitted, also check that the record means what you intended. Admission is schema conformance, not design quality, and governance keys are not field-checked."
+
+@playbook authoring-workspace-authoring
+  meaning
+    says "Author records of adopted IA words in an existing workspace, checked in a scratch copy, when only records are needed and no new system is. It reads the scope, current authoring and the IA model (conventions authoring-scope, authoring-current-authoring, authoring-ia-model-*)."
+    answers "How are instances of existing words authored, checked and applied in a workspace?"
+  subject
+    subject-word spec
+  cognition
+    orient
+      primary Attention
+      Attention means "Read the scope (authoring-scope), current authoring and the IA model."
+      Inference means "Inspect the exact target schemas, the installed pin, the authored roots, the source bindings and the task authority."
+      Decision means "Select existing words; a new word, system, workspace or kit is out of scope (authoring-scope): say so and stop that part."
+      Learning means "Preserve stable instance identities and resolve the full typed and relationship closure."
+    plan
+      primary Inference
+      Attention means "Draft the smallest changes under the authorised source root."
+      Inference means "Follow current authoring: distinguish tool version, language distribution, grammar header and artifact format; use a workspace when existing words suffice; declare an agent participant and mandate only when policy delivery needs them (authority.participant, moves, scope, covers, excluded-words), knowing they grant no host access and guarantee no CLI enforcement; use stable names for new instances and preserve original adopted identities; draft only admitted sections and fields from the canonical schema."
+      Decision means "Check the draft structurally in a temporary copy: with the kit's probe (node <kit>/scripts/probe.mjs --root <workspace> --system <system> --file <draft.ia>) for records in a system folder, or by hand for workspace-root instances: copy the workspace's .ia and its bound source roots to a temp folder, overlay the staging .ia/src, and run ia.mjs validate --root <copy> --max-findings 100000 --json on the copy, never on the workspace, with no --severity filter, since the not-evaluated warnings are part of what you report, and confirm truncated is false (or ia.mjs capture --root <copy> --json, which writes the snapshot inside the copy)."
+      Learning means "The probe drops records into an existing system folder; do not place workspace instances into an invented owner merely to probe them."
+    act
+      primary Decision
+      Attention means "Apply exact authorised changes."
+      Inference means "Validate against the selected toolchain and report actual evidence: the admission errors and the not-evaluated findings."
+      Decision means "Do not change installed sources, dependency pins, native status, acceptance or publication incidentally. Structured participant and scope fields require a compatible schema."
+      Learning means "Missing host enforcement is not permission to violate existing policy."
+    learn
+      primary Learning
+      Attention means "For authored governance clauses, also run the governance lint against the selected root and CLI (the kit's field-lint.mjs --root <workspace> [--cli <selected-IA-entry>] --json, or by hand from a temp capture's @schema records where it cannot run, as the convention authoring-probe-by-hand says): it includes workspace-root instances and catches admitted misspellings that the compiler does not consume."
+      Inference means "Report the admission errors and not-evaluated findings, with the CLI version that ran."
+      Decision means "Acceptance, runtime qualification, publication and native release packaging each need their own task authority and evidence; they do not follow from structural validation."
+      Learning means "Report not-evaluated and unavailable evidence explicitly."
+
+@playbook authoring-toolchain-prober
+  meaning
+    says "The toolchain prober's brief: answer admission and vocabulary questions about IA by experiment, never by assumption, working only in throwaway copies. It follows the probing stage, whose cells arrive in the same packet. Not for authoring the real records, which stewards do."
+    answers "How does the toolchain prober answer an admission question, and what does it return?"
+  subject
+    subject-word check
+  cognition
+    orient
+      primary Attention
+      Attention means "Follow the probing stage's cells in this packet (authoring-probing-the-ia-toolchain). Start from the rule sheet (the authoring-ia-rules-* conventions), the probe (the kit's scripts/probe.mjs, or by hand) and its examples (the kit's assets/probe-examples/)."
+      Inference means "ia vocabulary <word> --schema --json reads only the catalogue shipped with the CLI and needs no workspace (npx -y @inventarch/cli@3.4.1 vocabulary <word> --schema --json); when the session has the ia-workspace MCP server, its ia_vocabulary tool reads the same catalogue."
+      Decision means "For a word the workspace mints, read its .ia/src/systems/<owner>/schemas/<word>.schema.ia instead."
+      Learning means "You run as the core's worker because you write, but only probe files and copies in a scratch or temp directory you create."
+    plan
+      primary Inference
+      Attention means "Write probe files only to a scratch or temp directory, never inside the workspace."
+      Inference means "Make the copy outside the workspace and outside ~/.ia, where the CLI refuses with IA-DIST-PATH-UNSAFE."
+      Decision means "Use the CLI the workspace pins, through the core's ia.mjs or IA_CLI_PATH; never the ia on the PATH; refuse a CLI below 3.x."
+      Learning means "Probe with the lint so a misspelled governance clause is caught (R11)."
+    act
+      primary Decision
+      Attention means "Run the smallest probe that asks the question, one question per probe file where you can."
+      Inference means "Read every finding the validation prints for your probe files, warnings such as IA-GRAPH-TARGET-MISSING included."
+      Decision means "Delete the copy when you are done; never leave one under the workspace."
+      Learning means "If the environment fails (no CLI, a crash, unparseable output), report the verdict unknown, not refused."
+    learn
+      primary Learning
+      Attention means "For each question, return the rule; the exact error code, or admitted; the minimal fix; the language and CLI version you probed; and the probe you ran."
+      Inference means "When a result contradicts the rule sheet, say so explicitly: the sheet is a cache, and the workspace's toolchain is the truth."
+      Decision means "Remind the asker that admission is schema conformance, not meaning: keys under governance are never field-checked, so a misspelled clause there is admitted and does nothing (R11)."
+      Learning means "Report requested against effective operations: the files you wrote (scratch only) and the commands you ran, with their exit codes."

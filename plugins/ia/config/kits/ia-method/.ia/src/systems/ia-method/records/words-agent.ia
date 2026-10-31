@@ -1,0 +1,83 @@
+#! ia 1.0
+
+@capability agent-method
+  meaning
+    says "Work with agent records under the IA methodology: the agent-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking an agent. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for an agent?"
+  composition
+    playbooks [@playbook agent-method]
+  execution
+    effects [read, local-write]
+
+@playbook agent-method
+  meaning
+    says "How an agent works with agent records, each a participant and the vocabulary its governance applies to, which grants no host permission: orient through ia position --word agent and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with agent records?"
+  subject
+    subject-word agent
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word agent at the seat the work concerns, read the agent records it points at with ia read, and run ia vocabulary agent --schema for the sections and fields an agent carries."
+      Inference means "Read the agents at the seat, the words each applies and the mandates that name it."
+      Decision means "agent is a word of agent-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/agent-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these agent records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the agent must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Decide which participant acts and which words its governance applies to; an agent grants nothing on its own."
+      Decision means "Extend an existing agent through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the agent will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the agent; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Author the agent with the words it applies; its authority belongs to a mandate and its host permissions to the host."
+      Decision means "Change agent records only through ia preview agent <name> <field>=<value>..., then ia author with the same form and the digest preview returned, then ia validate; use --set or --relate the same way for one field or relationship."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Check the agent against the mandates that name it and the steward pointers that cite it."
+      Decision means "Reconcile the records that cite or depend on the agent, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."
+
+@capability mandate-method
+  meaning
+    says "Read and apply mandate records under the IA methodology: the mandate-method playbook's orient, plan, act and learn cells for finding the mandate records that bear on the work and applying them to it. It reads and applies; it authors and enforces nothing, and it grants no authority."
+    answers "Which procedure does an agent follow to apply mandate records?"
+  composition
+    playbooks [@playbook mandate-method]
+  execution
+    effects [read]
+
+@playbook mandate-method
+  meaning
+    says "How an agent reads and applies mandate records, each the bounded authority of a participant (its moves, scope, excluded words and covered paths), independent of host authorization: find the ones at the seat through ia position --word mandate, turn them into constraints on the plan, apply them at every step and report how the work stood against them. Authoring, changing and enforcing mandate records lie outside this kit."
+    answers "How does an agent read and apply mandate records?"
+  subject
+    subject-word mandate
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word mandate at the seat the work concerns, read each mandate it delivers with ia read, and run ia vocabulary mandate --schema for the shape of one."
+      Inference means "Read the mandate that names the participant: its moves, scope, exclusions and covered paths; ia position lists it in the packet."
+      Decision means "mandate is a word of agent-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/agent-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left about these mandate records before applying them again."
+    plan
+      primary Inference
+      Attention means "List the mandate records that apply, with their severity, as constraints on the plan."
+      Inference means "Plan only the moves the mandate allows, inside its scope and paths; ia preview refuses a move or a word it does not allow."
+      Decision means "When a mandate blocks the plan, change the plan or ask the person; never plan around a blocking rule."
+      Learning means "Say how the work will show that it applied each mandate."
+    act
+      primary Decision
+      Attention means "Before each step, re-read the mandate records that bear on it."
+      Inference means "Stay inside the mandate's moves and scope at every step; when the work needs more, stop and ask the person."
+      Decision means "This kit reads and applies mandate records only. A change to one goes to its owner as a proposal, and enforcement (gates, recorded evidence, verifiers) is not part of this public kit."
+      Learning means "Record where applying a mandate changed or stopped a step."
+    learn
+      primary Learning
+      Attention means "Report how the work stood against each mandate that applied, citing the evidence."
+      Inference means "Say which moves the work used and confirm each one was within the mandate."
+      Decision means "Reconcile the records the work changed with the mandate records that apply, and leave the handoff packet method-handoff-packet describes."
+      Learning means "When a mandate was unclear or did not fit the work, propose an improvement to its owner, as method-improvement-lifecycle describes."

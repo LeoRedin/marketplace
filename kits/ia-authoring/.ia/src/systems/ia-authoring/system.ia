@@ -1,0 +1,22 @@
+#! ia 1.0
+
+@system ia-authoring
+  provider "local"
+  version "0.1.0"
+  describes "The public IA authoring kit: how records of existing public IA words, host plugins and plugin catalogues are authored, checked and delivered. This main system holds the Delivery lane's entry capability, authoring-deliver, whose playbook routes to the three part systems: ia-authoring-record (records of existing words in a workspace, and probing what IA admits), ia-authoring-host (lowering a Claude, Codex or Grok plugin into records, projecting it back, evaluating its triggers and qualifying it on its hosts) and ia-authoring-catalogue (the house rules of a plugin catalogue and the check that runs its validator). It also holds the conventions the parts share (the scope, how kits are installed and bound, the kit's tools, the activity keys and the host notes), the steward and the release root. A new word, system, workspace or kit is out of its scope. This system mints no words and grants no authority."
+  steward @agent ia-authoring-steward
+  requires
+    - ia-authoring-record
+    - ia-authoring-host
+    - ia-authoring-catalogue
+    - agent-system
+    - agent-composition-system
+    - workspace-system
+    - governance-system
+
+@agent ia-authoring-steward
+  meaning
+    says "Owns the records of the IA authoring kit's main system and reviews every change to them; the steward of each part system owns that part."
+    answers "Who owns the IA authoring kit?"
+  governance
+    applies [convention, playbook, capability, agent, distribution]

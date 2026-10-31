@@ -1,0 +1,8 @@
+#! ia 1.0
+
+@distribution ia-kb-distribution
+  meaning
+    says "The release root of the IA KB kit: its ia-kb system, with the references, the split-body example, the locator checker and the decision checker as kit assets."
+    answers "Which records does this release ship?"
+  distribution
+    records [@system ia-kb]

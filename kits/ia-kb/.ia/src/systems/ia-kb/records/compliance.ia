@@ -1,0 +1,336 @@
+#! ia 1.0
+
+@contract ia-kb
+  version "0.2.0"
+  meaning
+    says "What the IA KB kit guarantees mechanically: that its sources admit under the pinned language, that every check it declares carries exactly one fixed command the core's checker runner can execute and nothing else, that every file it ships is listed and exists, that its recorded release names the kit its sources are, that every record and kit file its guidance names resolves, that the locator checker runs from the kit folder, accepting the kit's worked example and refusing a mutable revision, that the declared validation check passes on an admitted workspace and fails on a refused one, that the declared decision check passes a workspace whose made decisions name their decider, choice and rationale and whose superseded ones keep them and have a successor, and refuses one that does not, that a task's own locator manifest is checked through the runner without falling back to the example, and that every recommended binding delivers its whole playbook with the kit's laws, from the restored kit root and in an adopting repository. The kit's own tests, plugins/ia/tests/kit-kb.test.mjs and kit-kb-ingestion.test.mjs, evaluate each requirement; each case names the test that exercises it. The kit's playbooks, conventions and laws are guidance an agent applies and a reviewer checks, and no requirement here covers them."
+    answers "What does the KB kit guarantee, and how is each guarantee checked?"
+  invariants
+    REQ-KB-01 "A copy of the kit's sources restores its pinned language base offline with the pinned CLI and validates with zero errors; a record that names an evaluator the language does not implement is refused at restore."
+    REQ-KB-02 "Every @check in the kit other than the coverage check runs COMP-CHECK and carries exactly one non-empty fixed command in check.scope, checks.json gives each the argv that is that command, and a check whose scope is empty fails the structural test, so the checker runner can execute only the commands the kit declares."
+    REQ-KB-03 "Every asset listed in .ia/release.json exists under the kit root with an allowed role (a Markdown document documentation, a script or machine file asset), the split-body example body keeps the bytes the example manifest pins, no listed asset is missing and no file under assets/ or scripts/ is unlisted."
+    REQ-KB-04 "releases.json names the kit id and the version that .ia/release.json declares, its recorded sources digest equals the core's sourcesDigest of the kit folder (.ia, the declared assets, checks.json and delivery.json), and the release's recorded records list equals the (system, word, name) triples read from the sources."
+    REQ-KB-05 "Every kb- or ia-kb- name the kit's records other than its cases use in their text resolves to a record the sources declare, and every kit file they name (an assets/ path, or a config/kits/ia-kb/ path under the ia plugin root) is an asset the release lists or a folder holding one; a name or path that resolves to nothing fails the test."
+    REQ-KB-06 "The kit's locator checker runs from the kit folder: over the kit's worked example it reports metadata-only standing with zero network requests and no body disclosure and exits 0, and through the core's checker runner kb-check-locators exits 0; a manifest whose commit is a mutable branch name is refused with a non-zero exit, and through the runner the check exits 3."
+    REQ-KB-07 "Through the core's checker runner with the pinned CLI, kb-check-validate runs ia validate in the workspace under check and exits 0 when the workspace admits, and exits 3 when validation refuses it."
+    REQ-KB-08 "Every binding key the kit README recommends resolves through the core's resolve.mjs to its capability with all sixteen cells of that capability's playbook, read by identity in phase order (source playbook), the role its README names, the five laws in references with when always, and evidence.required equal to the capability's composed checks: from the restored kit root, and in an IA workspace that adopted the kit and holds a @spec, both at the workspace seat and with --seat at the @spec; a capability that delivery.json leaves out arrives as the position's cells instead."
+    REQ-KB-09 "The task-manifest check runs only the declared locator checker on the caller-selected regular file under the workspace; a valid manifest returns metadata-only standing, a mutable revision fails, and an absent, escaping or linked argument refuses before execution. The example check cannot accept a task manifest."
+    REQ-KB-10 "Through the core's checker runner, kb-check-decisions runs ia validate and then reads the workspace's admitted records with ia records, both through the CLI the runner resolves, and exits 0 when each of the workspace's own decisions that is made names a non-empty decision.decider, decision.choice and decision.rationale, and each that is superseded keeps them and is superseded by a @decision, through the successor's supersedes or its own superseded-by, in the same file or another; open, withdrawn and adopted decisions are not checked, and decision.effective-revision is not required. Otherwise the checker exits 1 and the runner 3, reporting each such decision with decision-made-needs-acceptance, decision-superseded-needs-acceptance or decision-superseded-needs-successor and a message naming the record and what it lacks. A workspace ia validate does not admit is never judged, since ia records leaves out the decisions validation refuses, and it, records the checker cannot read and a folder without .ia/src exit the checker 2 with nothing on stdout, never a pass."
+  relationships
+    governs @law kb-disclosure-boundary
+    governs @law kb-one-canonical-writer
+    governs @law kb-reviewer-independence
+    governs @law kb-not-evaluated-is-not-pass
+    governs @law kb-exact-pins
+    cites @agent ia-kb-steward
+
+@check ia-kb-coverage
+  meaning
+    says "Checks that every requirement of the ia-kb contract has a success case and a failure case. IA evaluates the coverage; the requirements themselves are evaluated by the kit's test, which ia validate does not run."
+    answers "Is every ia-kb requirement covered by cases?"
+  check
+    runs COMP-COVERAGE
+    scope "The ia-kb requirements and their cases."
+  relationships
+    enforces @contract ia-kb
+
+@check kb-check-validate
+  meaning
+    says "Native admission of the KB workspace under check: ia validate through the repository's pinned CLI, run from the workspace root; validation always goes through the CLI. Inspect the findings, not the exit status alone: zero errors with not-evaluated requirements is admission without a full compliance pass. The command is the scope; IA evaluates only the declaration (COMP-CHECK), and the core's checker runner executes it with the CLI it resolves."
+    answers "Does the KB workspace admit under its pinned CLI?"
+  check
+    runs COMP-CHECK
+    scope "ia validate --json"
+  relationships
+    enforces @contract ia-kb
+
+@check kb-check-locators
+  meaning
+    says "The kit's locator checker, scripts/check-locators.mjs, over the kit's own worked example manifest, assets/examples/split-body/locators.json, both in the kit folder that the runner names as ${KIT}. It proves on this host that the checker runs and that the convention's example passes it, metadata only, before an agent relies on the checker for a task's manifest. A task's own manifest is checked separately by kb-check-task-locators with --manifest; --checkout byte verification remains a separate direct invocation. The command is the scope; IA evaluates only the declaration (COMP-CHECK), and the core's checker runner executes it."
+    answers "Does the kit's locator checker run here and accept the worked example?"
+  check
+    runs COMP-CHECK
+    scope "node ${KIT}/scripts/check-locators.mjs ${KIT}/assets/examples/split-body/locators.json"
+  relationships
+    enforces @contract ia-kb
+
+@check kb-check-task-locators
+  meaning
+    says "Check the caller-selected workspace locator manifest through the constrained runner. The declared manifest argument occupies one argv slot and must name a regular workspace-relative file through real directories. Missing, escaping and linked paths refuse before execution. This checks metadata only: it makes no body-byte or native graph closure claim. The example check is separate and never substitutes for this task input."
+    answers "Does this task's own locator manifest satisfy the metadata contract?"
+  check
+    runs COMP-CHECK
+    scope "node ${KIT}/scripts/check-locators.mjs ${ARG:manifest}"
+  relationships
+    enforces @contract ia-kb
+
+@check kb-check-decisions
+  meaning
+    says "The decision lifecycle of the workspace under check, which IA's decision schema leaves optional. The kit's own checker, scripts/check-decisions.mjs in the kit folder the runner names as ${KIT}, runs ia validate and then reads the workspace's admitted records with ia records, both through the CLI the runner resolves: the trailing ia of the scope is ${IA}. It judges nothing in a workspace ia validate does not admit, because ia records answers one too but leaves out the decisions validation refuses. It refuses a made @decision that does not name a non-empty decision.decider, decision.choice and decision.rationale; a superseded one that no longer names them; and a superseded one that no @decision supersedes, by the successor's supersedes or its own superseded-by, in the same file or another. It does not require the accepted revision (decision.effective-revision) yet, because a KB rarely records one; requiring it is a follow-up. Only the workspace's own decisions are checked, and open and withdrawn ones are not. A finding exits 1 with its code and message; a workspace IA does not admit, or records it cannot read, exit 2, which is not evaluated, never a pass. The command is the scope; IA evaluates only the declaration (COMP-CHECK), and the core's checker runner executes it."
+    answers "Does every made decision of this KB name its acceptance, and every superseded one keep it and have a successor?"
+  check
+    runs COMP-CHECK
+    scope "node ${KIT}/scripts/check-decisions.mjs ia"
+  relationships
+    enforces @contract ia-kb
+
+@case kb-req-01-success
+  meaning
+    says "A scratch copy of the kit's sources restores its pinned language base offline and validates with zero errors under the pinned CLI."
+    answers "Does the kit admit under the pinned CLI?"
+  scenario
+    kind success
+    given "A copy of the kit's .ia folder and assets in a scratch directory, and the pinned @inventarch/cli named by IA_CORE_TEST_CLI."
+    request "Run ia restore --apply --yes --root <copy>, then ia validate --root <copy> --json."
+    expected "The restore reports installed, and validate reports status admitted with zero errors."
+    evaluator "inventarch/tests/kit-kb.test.mjs :: REQ-KB-01 success: the kit admits under the pinned CLI"
+  relationships
+    implements @contract ia-kb#REQ-KB-01
+
+@case kb-req-01-failure
+  meaning
+    says "A copy of the kit with a check that names an evaluator the language does not implement is refused at restore with IA-COMP-CHECK-UNKNOWN."
+    answers "Does the pinned CLI refuse an unknown evaluator?"
+  scenario
+    kind failure
+    given "A copy of the kit whose compliance.ia has the kb-check-validate check rewritten to run an evaluator named kb-gate, and the pinned CLI."
+    request "Run ia restore --apply --yes --root <copy>."
+    expected "The restore refuses with IA-DIST-ADMISSION-FAILED carrying IA-COMP-CHECK-UNKNOWN for that check."
+    evaluator "inventarch/tests/kit-kb.test.mjs :: REQ-KB-01 failure: an unknown evaluator is refused"
+    code IA-COMP-CHECK-UNKNOWN
+  relationships
+    implements @contract ia-kb#REQ-KB-01
+
+@case kb-req-02-success
+  meaning
+    says "Every gate check in the kit runs COMP-CHECK and carries exactly one non-empty fixed command in its scope, and checks.json gives each the argv that is its command."
+    answers "Does every check declare one fixed command the runner can execute?"
+  scenario
+    kind success
+    given "The kit's compliance.ia and checks.json as shipped."
+    request "Parse every @check, read check.runs and check.scope, and compare each checks.json argv with its check's scope."
+    expected "Every check other than ia-kb-coverage runs COMP-CHECK with a non-empty scope that equals its argv, the coverage check runs COMP-COVERAGE, and checks.json names exactly the gate checks."
+    evaluator "inventarch/tests/kit-kb.test.mjs :: REQ-KB-02 success: every gate check declares one fixed command and checks.json carries it"
+  relationships
+    implements @contract ia-kb#REQ-KB-02
+
+@case kb-req-02-failure
+  meaning
+    says "A gate check whose scope is empty fails the structural test, so the checker runner has nothing to execute for it."
+    answers "Is a check without a command refused?"
+  scenario
+    kind failure
+    given "A copy of the kit's compliance.ia in which the kb-check-validate scope is the empty string."
+    request "Run the structural gate check over the copy."
+    expected "The test reports kb-check-validate as lacking a command and fails."
+    evaluator "inventarch/tests/kit-kb.test.mjs :: REQ-KB-02 failure: a gate without a command is refused"
+  relationships
+    implements @contract ia-kb#REQ-KB-02
+
+@case kb-req-03-success
+  meaning
+    says "Every asset the release descriptor lists exists under the kit root with an allowed role, and every shipped file is listed."
+    answers "Are all shipped files present and listed?"
+  scenario
+    kind success
+    given "The kit's .ia/release.json, assets/ and scripts/ folders as shipped."
+    request "Read each listed asset and its role, hash the example body, and list the shipped files."
+    expected "Every path exists with an allowed role; the example body hashes to the digest its manifest pins; no shipped file is unlisted."
+    evaluator "inventarch/tests/kit-kb.test.mjs :: REQ-KB-03 success: every listed asset exists with its role"
+  relationships
+    implements @contract ia-kb#REQ-KB-03
+
+@case kb-req-03-failure
+  meaning
+    says "A release descriptor that lists an asset the kit does not ship, a shipped file the descriptor does not list, and an example body that no longer has its pinned bytes each fail the asset check."
+    answers "Is a missing asset reported?"
+  scenario
+    kind failure
+    given "A copy of the kit whose release.json lists assets/missing.md, a copy with an unlisted file under assets/, and a copy whose example body was edited."
+    request "Run the asset check over each copy."
+    expected "The check reports assets/missing.md as missing, the unlisted file as shipped but not listed, and the example body as no longer the pinned bytes, and fails each time."
+    evaluator "inventarch/tests/kit-kb.test.mjs :: REQ-KB-03 failure: a missing, an unlisted and a drifted asset are reported"
+  relationships
+    implements @contract ia-kb#REQ-KB-03
+
+@case kb-req-04-success
+  meaning
+    says "releases.json names the kit id and version of .ia/release.json, its sources digest is the kit folder's sourcesDigest, and the release's recorded records equal the triples read from the sources."
+    answers "Does the recorded release describe these sources?"
+  scenario
+    kind success
+    given "The kit's .ia/release.json, releases.json, its releases/ files and sources as shipped."
+    request "Compare the ids, the versions, the sources digest with sourcesDigest of the kit folder, and the record triples releaseRecords reads for the release."
+    expected "The kit id and version match, the sources digest equals sourcesDigest, and the recorded records equal the sources' triples."
+    evaluator "inventarch/tests/kit-kb.test.mjs :: REQ-KB-04 success: releases.json matches the release descriptor and the sources"
+  relationships
+    implements @contract ia-kb#REQ-KB-04
+
+@case kb-req-04-failure
+  meaning
+    says "A releases.json whose version differs from the release descriptor, or a playbook cell edited without a repack, fails the release check."
+    answers "Is a drifted release record reported?"
+  scenario
+    kind failure
+    given "A copy of the kit whose releases.json records version 0.0.9, and a copy whose kb-review playbook has one cell edited after the release was recorded."
+    request "Run the release check over each copy."
+    expected "The check reports the version mismatch for the first and the sources digest mismatch for the second, and fails each time."
+    evaluator "inventarch/tests/kit-kb.test.mjs :: REQ-KB-04 failure: a release record that drifts from the descriptor or the sources is reported"
+  relationships
+    implements @contract ia-kb#REQ-KB-04
+
+@case kb-req-05-success
+  meaning
+    says "Every kb- or ia-kb- name and every kit file path in the text of the kit's records other than its cases resolves to a declared record or a listed asset."
+    answers "Does every name and path the guidance cites resolve?"
+  scenario
+    kind success
+    given "The kit's sources and release.json as shipped."
+    request "Collect the kb- and ia-kb- names and the assets/ and config/kits/ia-kb/ paths in the quoted text of every record but the cases, and resolve each against the declared records and listed assets."
+    expected "Every name is a declared record and every path is a listed asset or a folder holding one."
+    evaluator "inventarch/tests/kit-kb.test.mjs :: REQ-KB-05 success: every name and path the records cite resolves"
+  relationships
+    implements @contract ia-kb#REQ-KB-05
+
+@case kb-req-05-failure
+  meaning
+    says "A cell that names a record the sources do not declare, or a kit file the release does not list, fails the citation check."
+    answers "Is a dangling citation reported?"
+  scenario
+    kind failure
+    given "A copy of the kit whose kb-review playbook cites a convention named kb-nowhere and the kit asset assets/kb-nowhere.md."
+    request "Run the citation check over the copy."
+    expected "The check reports kb-nowhere and assets/kb-nowhere.md as unresolved and fails."
+    evaluator "inventarch/tests/kit-kb.test.mjs :: REQ-KB-05 failure: a dangling name and a dangling path are reported"
+  relationships
+    implements @contract ia-kb#REQ-KB-05
+
+@case kb-req-06-success
+  meaning
+    says "The kit's locator checker, run from the kit folder over the kit's worked example, reports metadata-only standing with zero network requests and no body disclosure, and the core's checker runner runs kb-check-locators to exit 0."
+    answers "Does the locator checker run from the kit and accept its worked example?"
+  scenario
+    kind success
+    given "The kit folder as shipped, its checks.json, and an empty IA workspace folder."
+    request "Run the kb-check-locators argv with ${NODE} and ${KIT} filled, then node scripts/check.mjs kb-check-locators --kit inventarch/ia-kb-kit --root <workspace>."
+    expected "The checker exits 0 and prints the format, one document with metadata-only standing, networkRequests 0 and bodyDisclosure false; the runner exits 0 with exitCode 0."
+    evaluator "inventarch/tests/kit-kb.test.mjs :: REQ-KB-06 success: the locator checker accepts the worked example from the kit folder"
+  relationships
+    implements @contract ia-kb#REQ-KB-06
+
+@case kb-req-06-failure
+  meaning
+    says "A worked example whose commit is a mutable branch name is refused by the kit's locator checker, and the core's checker runner reports kb-check-locators as failed."
+    answers "Does the locator checker refuse a mutable revision?"
+  scenario
+    kind failure
+    given "A scratch kits folder holding a copy of the kit whose example manifest names the commit main, and an empty IA workspace folder."
+    request "Run the kb-check-locators argv over the copy, then node scripts/check.mjs kb-check-locators --kit inventarch/ia-kb-kit --root <workspace> with IA_CORE_KITS_DIR set to the scratch kits folder."
+    expected "The checker exits 1 with commit must be an exact object ID on stderr, and the runner exits 3 with a non-zero exitCode."
+    evaluator "inventarch/tests/kit-kb.test.mjs :: REQ-KB-06 failure: the locator checker refuses a mutable revision"
+  relationships
+    implements @contract ia-kb#REQ-KB-06
+
+@case kb-req-07-success
+  meaning
+    says "The core's checker runner runs kb-check-validate in a freshly initialised IA workspace, and ia validate admits it."
+    answers "Does the declared validation check pass on an admitted workspace?"
+  scenario
+    kind success
+    given "A workspace made by ia init --host none --apply --yes, and the pinned CLI named by IA_CLI_PATH."
+    request "Run node scripts/check.mjs kb-check-validate --kit inventarch/ia-kb-kit --root <workspace>."
+    expected "The runner exits 0 with exitCode 0, and the validate output reports status admitted."
+    evaluator "inventarch/tests/kit-kb.test.mjs :: REQ-KB-07 success: kb-check-validate passes on an admitted workspace"
+  relationships
+    implements @contract ia-kb#REQ-KB-07
+
+@case kb-req-07-failure
+  meaning
+    says "The core's checker runner reports kb-check-validate as failed for a workspace whose sources ia validate refuses."
+    answers "Does the declared validation check fail on a refused workspace?"
+  scenario
+    kind failure
+    given "The same workspace with a record file whose section the language does not admit, and the pinned CLI."
+    request "Run node scripts/check.mjs kb-check-validate --kit inventarch/ia-kb-kit --root <workspace>."
+    expected "The runner exits 3 with a non-zero exitCode, and the validate output reports status refused with errors."
+    evaluator "inventarch/tests/kit-kb.test.mjs :: REQ-KB-07 failure: kb-check-validate fails on a refused workspace"
+  relationships
+    implements @contract ia-kb#REQ-KB-07
+
+@case kb-req-08-success
+  meaning
+    says "Every binding key the kit README recommends resolves to its capability's whole playbook, with the role the README names, the five laws and the capability's composed checks as evidence.required, from the restored kit root and in an adopting repository at its workspace seat and at a @spec seat."
+    answers "Does every recommended binding deliver what the README says, wherever it is resolved?"
+  scenario
+    kind success
+    given "The README's bind.mjs lines written as .ia/bindings.json in two IA workspaces made by ia init: one that reads the kit from its restored root, and one that adopted the kit with kit.mjs adopt and holds a @spec model-api; the pinned CLI named by IA_CLI_PATH."
+    request "Run node scripts/resolve.mjs --entry knowledge --activity <activity> --root <workspace> --json for every key, in the adopting workspace also with --seat work-system/contract/spec/model-api."
+    expected "Each packet binds the README's capability, carries the sixteen cells of its playbook in phase order with source playbook, names the README's profile as role.profile with its mandate in references with when role, lists the five kb laws with when always, and requires exactly the capability's composed checks."
+    evaluator "inventarch/tests/kit-kb.test.mjs :: REQ-KB-08 success: every recommended binding delivers its whole playbook and the laws, restored and adopted"
+  relationships
+    implements @contract ia-kb#REQ-KB-08
+
+@case kb-req-08-failure
+  meaning
+    says "A capability that delivery.json does not list arrives as the cells ia position picks at the scope key, not as its whole playbook."
+    answers "Is the whole delivery the kit's declaration, not an accident of the seat?"
+  scenario
+    kind failure
+    given "A scratch kits folder holding a copy of the kit whose delivery.json leaves out kb-check, a workspace binding knowledge.check to kb-check, and IA_CORE_KITS_DIR set to the scratch kits folder."
+    request "Run node scripts/resolve.mjs --entry knowledge --activity check --root <workspace> --json from the restored root."
+    expected "The packet carries only the one kb-check cell the position delivers at context and orient, with source position, not the sixteen."
+    evaluator "inventarch/tests/kit-kb.test.mjs :: REQ-KB-08 failure: a capability delivery.json leaves out arrives as the position's cells"
+  relationships
+    implements @contract ia-kb#REQ-KB-08
+
+@case kb-req-09-success
+  meaning
+    says "A task manifest is checked through the declared runner without mistaking the bundled example for task evidence."
+    answers "Does the runner check the selected task manifest?"
+  scenario
+    kind success
+    given "An adopted KB kit and a valid workspace-relative locator manifest."
+    request "Run kb-check-task-locators with --manifest through check.mjs."
+    expected "Exit zero with metadata-only standing, no network requests and no body disclosure."
+    evaluator "inventarch/tests/kit-kb-ingestion.test.mjs :: adopted KB kit checks the task manifest and delivers its gate-runner profile"
+  relationships
+    implements @contract ia-kb#REQ-KB-09
+
+@case kb-req-09-failure
+  meaning
+    says "A failed task manifest never falls back to the bundled example."
+    answers "Does the runner refuse unsafe input and report failed metadata?"
+  scenario
+    kind failure
+    given "A mutable source revision or an absent, escaping or linked manifest path."
+    request "Run kb-check-task-locators through check.mjs."
+    expected "Mutable revisions fail; unsafe or missing arguments refuse before execution."
+    evaluator "inventarch/tests/kit-kb-ingestion.test.mjs :: adopted KB kit checks the task manifest and delivers its gate-runner profile; inventarch/tests/check.test.mjs"
+  relationships
+    implements @contract ia-kb#REQ-KB-09
+
+@case kb-req-10-success
+  meaning
+    says "A workspace whose made decisions name their decider, choice and rationale, with or without an effective revision, and whose superseded ones keep them and have a successor, passes the decision check; open, withdrawn and adopted decisions are left alone."
+    answers "Does the decision check pass a sound decision lifecycle?"
+  scenario
+    kind success
+    given "The workspace's own decisions: a made one with its acceptance and an effective revision and one without the revision, superseded ones with their acceptance that a made decision supersedes or that name their successor with superseded-by, each in the same file and in another, an open one and a withdrawn one without acceptance, beside an adopted made decision without it; served by a stand-in CLI as ia records prints them and, opt-in, authored in two files of a workspace ia init made, read with the pinned CLI."
+    request "Run node scripts/check.mjs kb-check-decisions --kit inventarch/ia-kb-kit --root <workspace>."
+    expected "The checker asks the CLI for ia validate --root <workspace> --json and then ia records --root <workspace> --params {}, and the runner exits 0 with exitCode 0 and a report of twelve decisions and no finding."
+    evaluator "inventarch/tests/kit-kb.test.mjs :: REQ-KB-10 success: kb-check-decisions passes made decisions with their acceptance and superseded ones with a successor; inventarch/tests/kit-kb.test.mjs :: REQ-KB-10 real CLI: kb-check-decisions reads the workspace's own decisions through ia records"
+  relationships
+    implements @contract ia-kb#REQ-KB-10
+
+@case kb-req-10-failure
+  meaning
+    says "A made decision lacking its decider, choice or rationale, and a superseded decision lacking them or a successor, each fail the decision check with their code and message, and a workspace IA refuses or records the checker cannot read never pass."
+    answers "Does the decision check refuse a made decision without its acceptance and a superseded one without a successor?"
+  scenario
+    kind failure
+    given "Made decisions each missing or blanking one of the three fields, a made decision with none of them, a superseded one that nothing supersedes, that supersedes itself or whose superseded-by names no decision, and a superseded one stripped of its decider, choice and rationale, also in reverse identity order, served by a stand-in CLI and, opt-in, authored in a workspace ia init made; a workspace ia validate refuses (a stand-in's refusal, two decisions whose names differ only in case, a decision without its question) or cannot open; ia records answers that refuse, exit non-zero or hold no records; and a folder without .ia/src."
+    request "Check each with the checker's checkDecisions and through node scripts/check.mjs kb-check-decisions --kit inventarch/ia-kb-kit --root <workspace>, and run the checker directly in the folder without .ia/src."
+    expected "Each such decision is reported: decision-made-needs-acceptance with @decision <name> is made without <the missing fields>, decision-superseded-needs-successor with @decision <name> is superseded, but no @decision supersedes it, and decision-superseded-needs-acceptance with @decision <name> is superseded without <the missing fields>; the checker exits 1 and the runner 3. Each finding comes in identity order. A refused or unopened workspace, whose records are then never read, an ia records answer it cannot use and a folder without .ia/src exit the checker 2 with nothing on stdout and a message naming why."
+    evaluator "inventarch/tests/kit-kb.test.mjs :: REQ-KB-10 failure: kb-check-decisions refuses a made decision without its acceptance and a superseded one without a successor; inventarch/tests/kit-kb.test.mjs :: REQ-KB-10 real CLI: kb-check-decisions reads the workspace's own decisions through ia records"
+  relationships
+    implements @contract ia-kb#REQ-KB-10

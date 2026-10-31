@@ -1,0 +1,258 @@
+{
+  "format": 2,
+  "kit": "inventarch/ia-method-kit",
+  "version": "0.2.0",
+  "archive": "2f0c68a28b86e69a35722cc51841bc7d0cc6c28ba7fde8c9a1955c77621dd7de",
+  "records": [
+    {
+      "system": "ia-method-foundation",
+      "word": "agent-profile",
+      "name": "foundation-auditor-profile"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "agent",
+      "name": "foundation-auditor"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "agent",
+      "name": "ia-method-foundation-steward"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "capability",
+      "name": "foundation-audit"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "capability",
+      "name": "foundation-probe"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "convention",
+      "name": "foundation-area-authority"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "convention",
+      "name": "foundation-area-composition"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "convention",
+      "name": "foundation-area-contracts"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "convention",
+      "name": "foundation-area-evidence"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "convention",
+      "name": "foundation-area-failure"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "convention",
+      "name": "foundation-area-identity"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "convention",
+      "name": "foundation-area-operations"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "convention",
+      "name": "foundation-area-outcome"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "convention",
+      "name": "foundation-area-ownership"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "convention",
+      "name": "foundation-area-sequencing"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "convention",
+      "name": "foundation-area-state"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "convention",
+      "name": "foundation-area-surfaces"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "convention",
+      "name": "foundation-area-trust"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "convention",
+      "name": "foundation-area-vocabulary"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "convention",
+      "name": "foundation-complete"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "convention",
+      "name": "foundation-learning-loop"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "convention",
+      "name": "foundation-probing-done"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "mandate",
+      "name": "ia-method-foundation-reader-mandate"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "playbook",
+      "name": "foundation-audit"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "playbook",
+      "name": "foundation-probe"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "principle",
+      "name": "foundation-materiality"
+    },
+    {
+      "system": "ia-method-foundation",
+      "word": "system",
+      "name": "ia-method-foundation"
+    },
+    {
+      "system": "ia-method",
+      "word": "agent",
+      "name": "ia-method-steward"
+    },
+    {
+      "system": "ia-method",
+      "word": "capability",
+      "name": "method-operate"
+    },
+    {
+      "system": "ia-method",
+      "word": "case",
+      "name": "method-req-01-failure"
+    },
+    {
+      "system": "ia-method",
+      "word": "case",
+      "name": "method-req-01-success"
+    },
+    {
+      "system": "ia-method",
+      "word": "check",
+      "name": "ia-method-coverage"
+    },
+    {
+      "system": "ia-method",
+      "word": "contract",
+      "name": "ia-method"
+    },
+    {
+      "system": "ia-method",
+      "word": "convention",
+      "name": "method-capture-before-delivery"
+    },
+    {
+      "system": "ia-method",
+      "word": "convention",
+      "name": "method-handoff-packet"
+    },
+    {
+      "system": "ia-method",
+      "word": "convention",
+      "name": "method-improvement-lifecycle"
+    },
+    {
+      "system": "ia-method",
+      "word": "convention",
+      "name": "method-reconcile-on-change"
+    },
+    {
+      "system": "ia-method",
+      "word": "distribution",
+      "name": "ia-method-distribution"
+    },
+    {
+      "system": "ia-method",
+      "word": "law",
+      "name": "method-provisional-foundation-ceiling"
+    },
+    {
+      "system": "ia-method",
+      "word": "playbook",
+      "name": "method-operate"
+    },
+    {
+      "system": "ia-method",
+      "word": "playbook",
+      "name": "method-provisional-foundation"
+    },
+    {
+      "system": "ia-method",
+      "word": "principle",
+      "name": "method-ask-while-continuing"
+    },
+    {
+      "system": "ia-method",
+      "word": "principle",
+      "name": "method-capability-is-the-unit"
+    },
+    {
+      "system": "ia-method",
+      "word": "principle",
+      "name": "method-claims-within-evidence"
+    },
+    {
+      "system": "ia-method",
+      "word": "principle",
+      "name": "method-levels-of-knowledge"
+    },
+    {
+      "system": "ia-method",
+      "word": "principle",
+      "name": "method-lineage-accountable"
+    },
+    {
+      "system": "ia-method",
+      "word": "principle",
+      "name": "method-locate-before-inventing"
+    },
+    {
+      "system": "ia-method",
+      "word": "principle",
+      "name": "method-one-account"
+    },
+    {
+      "system": "ia-method",
+      "word": "principle",
+      "name": "method-same-pattern-every-layer"
+    },
+    {
+      "system": "ia-method",
+      "word": "system",
+      "name": "ia-method"
+    }
+  ]
+}

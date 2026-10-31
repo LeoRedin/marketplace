@@ -1,0 +1,114 @@
+#! ia 1.0
+
+@agent kb-librarian
+  meaning
+    says "The kb-librarian: retrieves bounded KB context with canonical anchors and source attribution, the record IDs, revisions and the bodies the audience may read, for a task that needs it. Read-only on every host. Not for any change to the KB, which goes to kb-curator."
+    answers "Who retrieves KB context with attribution?"
+  governance
+    applies []
+
+@agent kb-reviewer
+  meaning
+    says "The kb-reviewer: reviews KB document changes, lifecycle evidence or maintenance check results independently before acceptance and returns findings with evidence. Read-only. Not for work it authored, and not for making the fixes, which go to kb-curator."
+    answers "Who reviews a KB change before acceptance?"
+  governance
+    applies []
+
+@agent kb-curator
+  meaning
+    says "The kb-curator: writes KB documents and their native records within assigned writer boundaries, new or revised documents with their @spec anchors, navigation and body bindings. Not for reviewing its own work (kb-reviewer) or read-only lookups (kb-librarian)."
+    answers "Who authors KB documents, their anchors and their bindings?"
+  governance
+    applies []
+
+@agent kb-gate-runner
+  meaning
+    says "The KB gate runner: runs the checks this kit declares, kb-check-validate, kb-check-decisions, kb-check-locators and kb-check-task-locators, each by its fixed command through the core's checker runner, and reports the command, exit code and output verbatim. It runs only declared checks and never edits what it checks."
+    answers "Who runs the KB kit's declared checks?"
+  governance
+    applies []
+
+@mandate ia-kb-reader-mandate
+  meaning
+    says "The reader's authority in the KB kit: observe and verify, never execute a source effect. The librarian and the reviewer run under it: they read, position, inspect and report with attribution; they write nothing, through the shell either, and they never commit, publish or widen an audience. Host authorization stays independent."
+    answers "What may the librarian or the reviewer do?"
+  governance
+    requires "Claim no host permission or execution from this mandate; read only, cite what you read, and report evidence verbatim."
+  authority
+    moves [Observation, Verification]
+    excluded-words [task, plan, decision, spec]
+
+@mandate ia-kb-checker-mandate
+  meaning
+    says "The checker's authority in the KB kit: observe, verify and execute only the checks this kit declares, each by its fixed command, in the workspace under check. It edits nothing, refreshes no index, and reports the command, exit code and output verbatim. Host authorization stays independent."
+    answers "What may the KB gate runner do?"
+  governance
+    requires "Claim no host permission from this mandate; run only declared checks and report them verbatim."
+  authority
+    moves [Observation, Verification, Execution]
+    excluded-words [task, plan, decision, spec]
+
+@mandate ia-kb-worker-mandate
+  meaning
+    says "The worker's authority in the KB kit: observe, verify, synthesise, delegate and execute inside its own worktree and the paths its task assigns, as the one writer of each overlapping change. The curator runs under it. It never publishes, widens an audience, accepts its own work or writes an adopted definition. Host authorization stays independent."
+    answers "What may the curator do?"
+  governance
+    requires "Claim no host permission from this mandate; write only inside the assigned paths of your own worktree, as the one writer of the change, and hand acceptance to an independent reviewer."
+  authority
+    moves [Observation, Verification, Synthesis, Delegation, Execution]
+
+@agent-profile kb-librarian-profile
+  meaning
+    says "Binds the kb-librarian to the reader role under the reader mandate, with the kb-retrieve capability; it runs the kb-retrieval playbook. The caller supplies the corpus root, the task, the audience and the allowed paths; this is a role brief, not an authority grant. Read through ia position (or, for the one repository the session's ia-workspace MCP server was registered for, its ia_position and ia_read tools) and the KB's own find and context tools when it supplies them; resolve canonical bodies only within the permitted audience and access; cite record IDs and source revisions; distinguish unavailable or stale bodies. Read-only on every host: write nothing, through the shell either; a writing task goes to kb-curator."
+    answers "Which profile does KB retrieval run under?"
+  composition
+    agent @agent kb-librarian
+    mandate @mandate ia-kb-reader-mandate
+    capabilities [@capability kb-retrieve]
+  execution
+    role reader
+    outcomes kb-context-v1
+    mandate-contract kb-reader-v1
+    limit-steps 25
+
+@agent-profile kb-reviewer-profile
+  meaning
+    says "Binds the kb-reviewer to the reader role under the reader mandate, with the kb-review capability; it runs the kb-review playbook. The caller supplies the corpus root, the task, the audience and the allowed paths; this is a role brief, not an authority grant. Read the exact candidate and source evidence; check identity, lifecycle decision authority, scope, references and reported evaluator results; return actionable findings and evidence. Never accept your own authored work or infer approval from a draft status, and route the fixes to kb-curator instead of making them."
+    answers "Which profile does an independent KB review run under?"
+  composition
+    agent @agent kb-reviewer
+    mandate @mandate ia-kb-reader-mandate
+    capabilities [@capability kb-review]
+  execution
+    role reader
+    outcomes kb-review-findings-v1
+    mandate-contract kb-reader-v1
+    limit-steps 30
+
+@agent-profile kb-curator-profile
+  meaning
+    says "Binds the kb-curator to the worker role under the worker mandate, with the kb-maintain-document and kb-bind-document capabilities. The caller supplies the corpus root, the task, the audience and the allowed paths; this is a role brief, not an authority grant. Keep document, anchor, binding and index changes coherent, preserve IDs, source revisions, exact byte digests, evidence and approved decisions, and return exact changed paths and checks. Run the locator checker directly on the task's own manifest: config/kits/ia-kb/scripts/check-locators.mjs under the ia plugin root, with --checkout repository-id=absolute-path for an explicitly supplied checkout; a metadata-only locator result cannot establish byte freshness. A body locator, workspace membership, plugin role or mandate declaration grants no permission. Hand acceptance and substantial reconciliation to an independent reviewer (kb-reviewer-profile). Do not write adopted definitions. One system has one canonical source writer: write only as the one writer assigned to an overlapping change, and route installed or adopted definition changes to their source owner. Report a check as passed only when it ran and its findings pass: zero errors with not-evaluated requirements is admission without a full compliance pass, and a missing tool or evaluator is unavailable, never passed."
+    answers "Which profile authors KB documents, their anchors and their bindings?"
+  composition
+    agent @agent kb-curator
+    mandate @mandate ia-kb-worker-mandate
+    capabilities [@capability kb-maintain-document, @capability kb-bind-document]
+    delegates [@agent-profile kb-reviewer-profile, @agent-profile kb-gate-runner-profile]
+  execution
+    role worker
+    outcomes kb-document-change-v1
+    mandate-contract kb-worker-v1
+    limit-steps 40
+
+@agent-profile kb-gate-runner-profile
+  meaning
+    says "Binds the KB gate runner to the checker role under the checker mandate, with the kb-gates capability whose checks are the gates it may run: kb-check-validate (ia validate in the workspace), kb-check-decisions (the decision lifecycle over the workspace's admitted records) and kb-check-locators (the kit's locator checker over its worked example). It runs only the @check records this kit declares, each by the fixed command in its scope, through the core's checker runner, and reports the command, exit code and output verbatim. For a task manifest, kb-check-task-locators takes --manifest with a workspace-relative regular file; missing input is refused, never replaced by the example. kb-check delegates these gates to it; the rest of the KB check (ia position, the KB's own index and check workflow and its tests) is the stage's, run by the agent running kb-check, which reports it beside the gate results, and a part nobody ran is reported as not run, never as passed."
+    answers "Which profile runs the KB kit's declared checks?"
+  composition
+    agent @agent kb-gate-runner
+    mandate @mandate ia-kb-checker-mandate
+    capabilities [@capability kb-gates]
+  execution
+    role checker
+    outcomes kb-gate-results-v1
+    mandate-contract kb-checker-v1

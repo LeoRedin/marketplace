@@ -1,0 +1,385 @@
+#! ia 1.0
+
+@decision public-catalogue-cut
+  meaning
+    says "inventarch/marketplace, catalogue name inventarch, is the public InventArch plugin catalogue. It was cut on 2026-10-30 from the tree of InventArch's internal plugin catalogue at dd993c0, with fresh history: the first commit imports that tree unchanged so the removal is reviewable, and the next removes everything that is not public. It ships one plugin, the inventarch core, and the public kits ia-method, ia-kb and ia-authoring."
+  work
+    title "Cut the public catalogue with fresh history"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "What is this repository, and where did it come from?"
+    decider "Operator"
+    choice "inventarch/marketplace, catalogue name inventarch, is the public InventArch plugin catalogue. It was cut on 2026-10-30 from the tree of InventArch's internal plugin catalogue at dd993c0, with fresh history: the first commit imports that tree unchanged so the removal is reviewable, and the next removes everything that is not public. It ships one plugin, the inventarch core, and the public kits ia-method, ia-kb and ia-authoring."
+    rationale "Public kits and their install machinery need a home anyone can read; proprietary methods stay in private sources and reach agents through an InventArch account."
+
+@decision public-apache-license
+  meaning
+    says "Apache-2.0 for every file here, with LICENSE and NOTICE copied from inventarch/ia; every plugin manifest and kit descriptor says Apache-2.0."
+  work
+    title "License everything public under Apache-2.0"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "Under which licence do the public plugin and kits ship?"
+    decider "Operator"
+    choice "Apache-2.0 for every file here, with LICENSE and NOTICE copied from inventarch/ia; every plugin manifest and kit descriptor says Apache-2.0."
+    rationale "It matches the public IA framework the kits build on."
+
+@decision public-kit-naming
+  meaning
+    says "Every kit: folder ia-<n>, kit id inventarch/ia-<n>-kit, main system ia-<n>, workspace ia-<n>-kit, distribution ia-<n>-distribution, steward ia-<n>-steward; a kit with several systems names the extra ones ia-<n>-<part>. Public or private is shown by the repository that holds a kit, never by its name."
+  work
+    title "Name every kit ia-<name>"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "How are kits named?"
+    decider "Operator"
+    choice "Every kit: folder ia-<n>, kit id inventarch/ia-<n>-kit, main system ia-<n>, workspace ia-<n>-kit, distribution ia-<n>-distribution, steward ia-<n>-steward; a kit with several systems names the extra ones ia-<n>-<part>. Public or private is shown by the repository that holds a kit, never by its name."
+    rationale "One pattern makes a kit's records predictable from its name, and moving a kit between repositories never renames it."
+
+@decision public-default-kits
+  meaning
+    says "The core bundles exactly three kits: ia-method for Work (the operating loop, the provisional-foundation ceiling, and one method capability with a four-cell playbook per public record word, governance words read-and-apply only), ia-kb for Knowledge (placement, binding, maintenance, checks, migration and review, with the kb-workspace-location convention), and ia-authoring for Delivery (record, host and catalogue authoring as one process). The retired ids inventarch/host-authoring-kit and inventarch/catalogue-authoring-kit are replaced by ia-authoring."
+  work
+    title "Carry ia-method, ia-kb and ia-authoring as the lane defaults"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "Which kits does the public core carry, and which lane does each cover?"
+    decider "Operator"
+    choice "The core bundles exactly three kits: ia-method for Work (the operating loop, the provisional-foundation ceiling, and one method capability with a four-cell playbook per public record word, governance words read-and-apply only), ia-kb for Knowledge (placement, binding, maintenance, checks, migration and review, with the kb-workspace-location convention), and ia-authoring for Delivery (record, host and catalogue authoring as one process). The retired ids inventarch/host-authoring-kit and inventarch/catalogue-authoring-kit are replaced by ia-authoring."
+    rationale "Each lane needs a public default; host and catalogue authoring must be one consistent process with record authoring."
+
+@decision public-opal-per-lane
+  meaning
+    says "Each lane's entry capability (work.*, knowledge.*, delivery.*) is declared whole in its kit's delivery.json, so its packet carries all four cells; knowledge place maps to the plan phase; per-activity keys keep their one-phase scope keys, and --phase overrides. No word is minted: phases are values of the public phase word."
+  work
+    title "Make each lane entry a whole four-phase procedure"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "How is the orient, plan, act, learn loop represented in each lane?"
+    decider "Maintainers"
+    choice "Each lane's entry capability (work.*, knowledge.*, delivery.*) is declared whole in its kit's delivery.json, so its packet carries all four cells; knowledge place maps to the plan phase; per-activity keys keep their one-phase scope keys, and --phase overrides. No word is minted: phases are values of the public phase word."
+    rationale "A request with no specific activity gets the whole loop; a specific activity gets the cell it needs."
+
+@decision public-releases-format-2
+  meaning
+    says "releases.json is a small index (format 2: kit, latest, and one row per release naming releases/<version>.json where its records were); each per-version file holds that release's record names and is immutable once published. Conversion is lossless (expanding the index rebuilds format 1 byte for byte), the consistency guard compares both sides through one expand(), new rows add source {repository, commit}, and the history is left out of the implementation digest and the method closure capture."
+  work
+    title "Split kit release history per version"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "How are a kit's releases recorded?"
+    decider "Maintainers"
+    choice "releases.json is a small index (format 2: kit, latest, and one row per release naming releases/<version>.json where its records were); each per-version file holds that release's record names and is immutable once published. Conversion is lossless (expanding the index rebuilds format 1 byte for byte), the consistency guard compares both sides through one expand(), new rows add source {repository, commit}, and the history is left out of the implementation digest and the method closure capture."
+    rationale "The embedded record lists made one file tens of thousands of lines long and changed every pin at every release."
+
+@decision public-kit-lookup
+  meaning
+    says "The core resolves a kit from its own config/kits, then from <IA home>/kits/<kit>/<version>/, filled by scripts/kit.mjs add --from <folder or archive> today and by the InventArch API later. The user verbs are list, add, bind, upgrade, repin, rebind and check in plugins/ia/scripts/kit.mjs; the maintainer verbs are pack, bundle, index and convert in tools/kit.mjs; every write validates first and previews unless --apply. kits/index.json broadcasts each kit's latest release and the binding keys it offers."
+  work
+    title "Look kits up in the plugin, then in the IA home"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "Where does the core find a kit?"
+    decider "Maintainers"
+    choice "The core resolves a kit from its own config/kits, then from <IA home>/kits/<kit>/<version>/, filled by scripts/kit.mjs add --from <folder or archive> today and by the InventArch API later. The user verbs are list, add, bind, upgrade, repin, rebind and check in plugins/ia/scripts/kit.mjs; the maintainer verbs are pack, bundle, index and convert in tools/kit.mjs; every write validates first and previews unless --apply. kits/index.json broadcasts each kit's latest release and the binding keys it offers."
+    rationale "Kits served outside the plugin need an install location the resolver trusts, and repositories need one tool to upgrade, repin and rebind after a release."
+
+@decision public-account-offer
+  meaning
+    says "At session startup only, once per session, never blocking, in one short message, the core tells the user how to add the remote InventArch MCP server (https://api.inventarch.dev/mcp); the host runs OAuth with PKCE, and the plugin stores no token and makes no network call. An account counts as present when the host already lists an inventarch MCP server in its documented local configuration or a design binding is set in the environment. The offer is suppressed by 'accountOffer': false in ~/.ia/config.json, by IA_NO_ACCOUNT_OFFER=1, or by a non-empty CI."
+  work
+    title "Offer an InventArch account once per session"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "How does the public core offer an account?"
+    decider "Operator"
+    choice "At session startup only, once per session, never blocking, in one short message, the core tells the user how to add the remote InventArch MCP server (https://api.inventarch.dev/mcp); the host runs OAuth with PKCE, and the plugin stores no token and makes no network call. An account counts as present when the host already lists an inventarch MCP server in its documented local configuration or a design binding is set in the environment. The offer is suppressed by 'accountOffer': false in ~/.ia/config.json, by IA_NO_ACCOUNT_OFFER=1, or by a non-empty CI."
+    rationale "Subscription kits need an account, and the offer must never get in the way of work."
+
+@decision public-governance-probe
+  meaning
+    says "When .ia/governance.json exists and no installed kit declares governance handlers (a tool pre handler in its handlers.json), the session hook says once, at startup, that the repository is governed and to add the ia-governance kit (ia kit add). No plugin is looked for. It never falls back silently to ungoverned work."
+  work
+    title "Say when a governed repository lacks its governance kit"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "What does the public core do in a repository adopted for governance?"
+    decider "Operator"
+    choice "When .ia/governance.json exists and no installed kit declares governance handlers (a tool pre handler in its handlers.json), the session hook says once, at startup, that the repository is governed and to add the ia-governance kit (ia kit add). No plugin is looked for. It never falls back silently to ungoverned work."
+    rationale "Governance is not part of the public offering, and pretending a governed repository is ungoverned would be worse than saying so."
+
+@decision public-workspace-placement
+  meaning
+    says "User-facing workspaces default to ~/Documents/ia/<domain> (studio, music, design and so on), and the user can point elsewhere. ~/.ia is the IA home only: config, state, the location registry and installed kits. A knowledge repository holds one .ia/src: a personal or single-team KB has one @workspace; an organisation store has one @workspace per department, each declaring its scope folders, plus an organisation @workspace that also declares the repository root (. @authored); a workspaces/<name>/ folder is only for a workspace released or adopted on its own."
+  work
+    title "Place user workspaces under ~/Documents/ia"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "Where do a user's workspaces live?"
+    decider "Operator"
+    choice "User-facing workspaces default to ~/Documents/ia/<domain> (studio, music, design and so on), and the user can point elsewhere. ~/.ia is the IA home only: config, state, the location registry and installed kits. A knowledge repository holds one .ia/src: a personal or single-team KB has one @workspace; an organisation store has one @workspace per department, each declaring its scope folders, plus an organisation @workspace that also declares the repository root (. @authored); a workspaces/<name>/ folder is only for a workspace released or adopted on its own."
+    rationale "The CLI refuses a workspace inside its home, and a predictable default keeps workspaces easy to find. The knowledge-repository layout is the operator's ruling dec-132 (2026-10-31), which replaced the earlier one-workspace-at-the-root wording."
+
+@decision public-plugin-components
+  meaning
+    says "Skills, agents, references, templates, examples, config, node scripts and tests. No LSP servers, commands, settings, monitors or bin/, no MCP server but the core's IA door (public-door-mcp), and no hooks, mcpServers or permissionMode in skill or agent frontmatter. At most four model-invocable skills per plugin; stage-skill descriptions at most 160 characters; every agent declares a tools allowlist. The only hooks are the core's qualified set (public-core-hooks)."
+  work
+    title "Admit only reviewable plugin components"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "What may a plugin in this catalogue ship?"
+    decider "Maintainers"
+    choice "Skills, agents, references, templates, examples, config, node scripts and tests. No LSP servers, commands, settings, monitors or bin/, no MCP server but the core's IA door (public-door-mcp), and no hooks, mcpServers or permissionMode in skill or agent frontmatter. At most four model-invocable skills per plugin; stage-skill descriptions at most 160 characters; every agent declares a tools allowlist. The only hooks are the core's qualified set (public-core-hooks)."
+    rationale "A Git install copies a plugin's whole folder, so everything that ships must be reviewable text with no ambient authority."
+
+@decision public-core-hooks
+  meaning
+    says "The SessionStart bootstrap (startup, resume and compact, scripts/bootstrap.mjs, 15 seconds) prints the workspace identity and the resolve instruction, makes the account offer at startup and the governance probe, re-injects the current task pin after a compaction, reads no credentials and never fetches. scripts/handlers.mjs runs the handlers installed kits declare, with one event argument: SessionStart for every source (60 seconds), UserPromptSubmit (30), PreToolUse (30) and PostToolUse (60) on Write, Edit, MultiEdit, NotebookEdit, Bash and PowerShell, and Stop (30). tools/validate.py pins all of them to exactly these events, matchers, commands and timeouts, and the Codex manifest keeps them off."
+  work
+    title "Pin the core's hooks"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "Which hooks does the core ship, and how are they held?"
+    decider "Maintainers"
+    choice "The SessionStart bootstrap (startup, resume and compact, scripts/bootstrap.mjs, 15 seconds) prints the workspace identity and the resolve instruction, makes the account offer at startup and the governance probe, re-injects the current task pin after a compaction, reads no credentials and never fetches. scripts/handlers.mjs runs the handlers installed kits declare, with one event argument: SessionStart for every source (60 seconds), UserPromptSubmit (30), PreToolUse (30) and PostToolUse (60) on Write, Edit, MultiEdit, NotebookEdit, Bash and PowerShell, and Stop (30). tools/validate.py pins all of them to exactly these events, matchers, commands and timeouts, and the Codex manifest keeps them off."
+    rationale "Hooks run without a prompt, so each one is narrow, read-only and pinned."
+
+@decision public-codex-manifest-interface
+  meaning
+    says "A Codex manifest is the Claude manifest without displayName and dependencies, plus skills and Codex's interface block (displayName, shortDescription, category); a hook plugin adds the empty hook configuration that keeps its hooks off in Codex. Every plugin ships a CODEX.md, and every skill opens with a bridge line to it."
+  work
+    title "Derive the Codex manifest from the Claude one"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "How do the two host manifests relate?"
+    decider "Maintainers"
+    choice "A Codex manifest is the Claude manifest without displayName and dependencies, plus skills and Codex's interface block (displayName, shortDescription, category); a hook plugin adds the empty hook configuration that keeps its hooks off in Codex. Every plugin ships a CODEX.md, and every skill opens with a bridge line to it."
+    rationale "Codex reads display fields from the interface block and lists every skill."
+
+@decision public-local-gates
+  meaning
+    says "npm ci installs lefthook, Biome and the pinned @inventarch/cli; lefthook runs validate, selection --check, bundle --check, consistency, lint and the language check before each commit, and again before each push with consistency --base origin/main. CI runs the same and the test suites."
+  work
+    title "Run the gates before every commit and push"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "Which checks guard this repository, and where do they run?"
+    decider "Maintainers"
+    choice "npm ci installs lefthook, Biome and the pinned @inventarch/cli; lefthook runs validate, selection --check, bundle --check, consistency, lint and the language check before each commit, and again before each push with consistency --base origin/main. CI runs the same and the test suites."
+    rationale "Problems are cheapest to fix before they leave the machine."
+
+@decision public-ci-matrix
+  meaning
+    says "Ubuntu for every pull request into main; Ubuntu, Windows and macOS for every push to main, including the native qualification shards."
+  work
+    title "Run CI on Ubuntu for pull requests and on three systems for main"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "On which operating systems does CI run?"
+    decider "Maintainers"
+    choice "Ubuntu for every pull request into main; Ubuntu, Windows and macOS for every push to main, including the native qualification shards."
+    rationale "Path and line-ending bugs show up on Windows and macOS; running them on main keeps pull requests fast."
+
+@decision public-cli-3-4-1
+  meaning
+    says "Exactly @inventarch/cli 3.4.1 (language base inventarch/language 3.2.0, archive 7b36e4b4); every changed kit is packed with it; the core's launchers, closure modules and qualified runtime cohort name it."
+  work
+    title "Pin @inventarch/cli 3.4.1"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "Which IA CLI do the catalogue and its kits target?"
+    decider "Maintainers"
+    choice "Exactly @inventarch/cli 3.4.1 (language base inventarch/language 3.2.0, archive 7b36e4b4); every changed kit is packed with it; the core's launchers, closure modules and qualified runtime cohort name it."
+    rationale "One exact CLI makes every packed archive reproducible."
+
+@decision public-core-1-0-0
+  meaning
+    says "inventarch 1.0.0: the public reset changes the licence, the repository, the kit set (private kits removed, two authoring kit ids retired), the release format and the hooks' behaviour, so it is a breaking release under a fresh history."
+  work
+    title "Release the public core as 1.0.0"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "Which version does the first public core carry?"
+    decider "Maintainers"
+    choice "inventarch 1.0.0: the public reset changes the licence, the repository, the kit set (private kits removed, two authoring kit ids retired), the release format and the hooks' behaviour, so it is a breaking release under a fresh history."
+    rationale "A repository bound to a kit the public core no longer carries must notice the change; a major version says so."
+
+@decision public-plugin-ia
+  meaning
+    says "The plugin is ia (ia@inventarch; the catalogue stays inventarch, and kit ids do not change). Its model-invocable entry skills are the three lanes, ia:work, ia:knowledge and ia:delivery; the setup skill is the user-invoked ia:init, merged with the CLI-rendered plugin's init steps, beside a user-invoked ia:doctor; its agents are ia:reader, ia:checker and ia:worker; a capability bound to a lane is shown as ia-<lane>:<activity>, the binding key re-spelled, whichever kit supplies it (a lane's entry, <lane>.*, reads ia-<lane>). Until the CLI changes so that ia host adds this marketplace and installs ia@inventarch from it, users remove the CLI-rendered registration of the same catalogue name (claude plugin marketplace remove inventarch) before adding this one."
+  work
+    title "Name the one public plugin ia, with three lanes"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "What is the public plugin called, and which skills does it advertise?"
+    decider "Operator"
+    choice "The plugin is ia (ia@inventarch; the catalogue stays inventarch, and kit ids do not change). Its model-invocable entry skills are the three lanes, ia:work, ia:knowledge and ia:delivery; the setup skill is the user-invoked ia:init, merged with the CLI-rendered plugin's init steps, beside a user-invoked ia:doctor; its agents are ia:reader, ia:checker and ia:worker; a capability bound to a lane is shown as ia-<lane>:<activity>, the binding key re-spelled, whichever kit supplies it (a lane's entry, <lane>.*, reads ia-<lane>). Until the CLI changes so that ia host adds this marketplace and installs ia@inventarch from it, users remove the CLI-rendered registration of the same catalogue name (claude plugin marketplace remove inventarch) before adding this one."
+    rationale "Everything a person types or reads starts with ia, and one plugin with three lanes is what the public offering is."
+
+@decision public-door-mcp
+  meaning
+    says "The core ships one MCP server, the IA door, as plugins/ia/.mcp.json: server ia, run as node scripts/door.mjs, a launcher that starts npx -y @inventarch/mcp-door at the plugin's IA pin (3.4.1, lib/cli.mjs PINNED) never through a shell (on Windows, where npx is a .cmd shim, it runs npm's npx-cli.js with node), with stdio passed through and IA_KITS_DIR set to the plugin's config/kits. Codex reads a plugin's .mcp.json too, so the Codex manifest keeps the door off with an empty mcpServers until it is qualified there. Claude Code names its tools mcp__plugin_ia_ia__<tool>, and the reader, checker and worker allowlists name ia_session, ia_catalogue and ia_method that way (reader and worker also ia_position, ia_read and ia_vocabulary). The lanes call ia_session once per session, ia_catalogue {lane} to choose a key and ia_method {key} for the packet; until @inventarch/mcp-door ships ia_method they fall back to scripts/resolve.mjs and kit.mjs list. tools/validate.py admits that one file, exactly."
+  work
+    title "Ship the IA door as the core's MCP server"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "How does the core reach the method catalogue and packets without a per-workspace registration?"
+    decider "Operator"
+    choice "The core ships one MCP server, the IA door, as plugins/ia/.mcp.json: server ia, run as node scripts/door.mjs, a launcher that starts npx -y @inventarch/mcp-door at the plugin's IA pin (3.4.1, lib/cli.mjs PINNED) never through a shell (on Windows, where npx is a .cmd shim, it runs npm's npx-cli.js with node), with stdio passed through and IA_KITS_DIR set to the plugin's config/kits. Codex reads a plugin's .mcp.json too, so the Codex manifest keeps the door off with an empty mcpServers until it is qualified there. Claude Code names its tools mcp__plugin_ia_ia__<tool>, and the reader, checker and worker allowlists name ia_session, ia_catalogue and ia_method that way (reader and worker also ia_position, ia_read and ia_vocabulary). The lanes call ia_session once per session, ia_catalogue {lane} to choose a key and ia_method {key} for the packet; until @inventarch/mcp-door ships ia_method they fall back to scripts/resolve.mjs and kit.mjs list. tools/validate.py admits that one file, exactly."
+    rationale "One door carries every method for every host; launching it from the plugin needs no local path and no second server, and pinning it like the CLI keeps it reviewable."
+
+@decision public-kit-handlers
+  meaning
+    says "A kit may ship handlers.json (format 1: session handlers with their events, prompt, tool with phase pre or post and a tool-name match, and stop, each a .mjs script inside the kit with a timeout of at most 25 seconds). scripts/handlers.mjs runs them from SessionStart (every source), UserPromptSubmit, PreToolUse and PostToolUse on edits and shell commands, and Stop, only for installed kits (this plugin's config/kits and <IA home>/kits) whose folder holds the script, so a fetched release, which carries no executables, never runs one. Each runs as node <script> with the hook JSON on stdin and IA_KIT_ROOT, IA_WORKSPACE_ROOT and IA_HOME set; the core merges their additionalContext at most 2,000 characters per kit; a pre block is honoured only in a workspace with .ia/governance.json; with no handler declared every hook is a silent no-op. onwrite.json runs as tool post handlers. handlers.json is a sidecar the sources digest covers, and its scripts must be declared assets."
+  work
+    title "Run the handlers installed kits declare"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "How does a kit run session, prompt, tool and stop logic, such as a governance ledger, without a plugin of its own?"
+    decider "Operator"
+    choice "A kit may ship handlers.json (format 1: session handlers with their events, prompt, tool with phase pre or post and a tool-name match, and stop, each a .mjs script inside the kit with a timeout of at most 25 seconds). scripts/handlers.mjs runs them from SessionStart (every source), UserPromptSubmit, PreToolUse and PostToolUse on edits and shell commands, and Stop, only for installed kits (this plugin's config/kits and <IA home>/kits) whose folder holds the script, so a fetched release, which carries no executables, never runs one. Each runs as node <script> with the hook JSON on stdin and IA_KIT_ROOT, IA_WORKSPACE_ROOT and IA_HOME set; the core merges their additionalContext at most 2,000 characters per kit; a pre block is honoured only in a workspace with .ia/governance.json; with no handler declared every hook is a silent no-op. onwrite.json runs as tool post handlers. handlers.json is a sidecar the sources digest covers, and its scripts must be declared assets."
+    rationale "Governance, Studio and work engines become kit scripts, so the public core runs them and no private plugin is needed; opting in per workspace keeps a kit from blocking work nobody asked it to govern."
+
+@decision public-kit-dependencies
+  meaning
+    says "A kit release's .ia/release.json dependencies other than inventarch/language name a kit id and range. Adoption (kit.mjs add), add --from and the restored read root resolve each dependency, transitively and dependencies first, from the kits this plugin carries, then <IA home>/kits, then the dependency's own folder next to the kit; the first whose latest release satisfies the range wins. Its sources must pack to that recorded release, and its archive goes with the language base into the copy's or the workspace's vendor catalog, so ia install --catalog and ia restore --catalog resolve it. A missing dependency, a cycle or two releases of one kit is refused before anything is written."
+  work
+    title "Vendor the kits a kit depends on"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "How does a kit that requires another kit's system install and restore?"
+    decider "Operator"
+    choice "A kit release's .ia/release.json dependencies other than inventarch/language name a kit id and range. Adoption (kit.mjs add), add --from and the restored read root resolve each dependency, transitively and dependencies first, from the kits this plugin carries, then <IA home>/kits, then the dependency's own folder next to the kit; the first whose latest release satisfies the range wins. Its sources must pack to that recorded release, and its archive goes with the language base into the copy's or the workspace's vendor catalog, so ia install --catalog and ia restore --catalog resolve it. A missing dependency, a cycle or two releases of one kit is refused before anything is written."
+    rationale "A method kit that mints no words requires the vocabulary kit that does; adoption has to bring that kit along, or the native install refuses."
+
+@decision public-delegate
+  meaning
+    says "Only through the user-invoked ia:delegate (disable-model-invocation), off by default until the person sets delegation true in ~/.ia/config.json or IA_DELEGATION=1. scripts/delegate.mjs builds a codex exec or claude -p command that gets the IA door (--mcp-config for claude -p, -c mcp_servers.ia for codex exec) and the brief with the packet inline on stdin, sets IA_DELEGATION_DEPTH one higher, refuses when it is already 1 or more, applies a timeout (900 seconds by default, at most 3,600) and runs only with --run."
+  work
+    title "Delegate across models only on the person's word"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-30"
+    ended "2026-10-30"
+    source "docs/decisions.md"
+  decision
+    question "May the core hand a step to another model's command line?"
+    decider "Operator"
+    choice "Only through the user-invoked ia:delegate (disable-model-invocation), off by default until the person sets delegation true in ~/.ia/config.json or IA_DELEGATION=1. scripts/delegate.mjs builds a codex exec or claude -p command that gets the IA door (--mcp-config for claude -p, -c mcp_servers.ia for codex exec) and the brief with the packet inline on stdin, sets IA_DELEGATION_DEPTH one higher, refuses when it is already 1 or more, applies a timeout (900 seconds by default, at most 3,600) and runs only with --run."
+    rationale "Cross-model delegation spends another account and reaches outside the session, so the person turns it on and starts it, and one level deep keeps it from fanning out."
+
+@decision public-kit-trust
+  meaning
+    says "A kit may run code (a handlers.json run script, an onwrite.json command or a checks.json command) only when its publisher, the kit id's namespace, with which a .ia/release.json publisher field must agree, is on the plugin's config/trusted-publishers.json, which ships as inventarch alone, and its sources digest equals its latest release's recorded sources, with .ia/release.json naming that release; a handler's run script must also be a declared asset. Any other kit, and a kit with no recorded release, is data only: a handler entry may carry a context text, delivered as additionalContext with no process; its run entries and onwrite.json commands are skipped, its checks are refused with IA-CORE-KIT-UNTRUSTED, and the SessionStart answer names each such kit once, with why. A pre handler of a kit whose publisher is not on the list never blocks. In a governed workspace a trusted pre handler that fails, times out or answers past the output cap refuses the call, and an altered gate refuses every pre-tool call: while a kit whose id names a trusted publisher declares a pre handler whose code the trust check refuses (its bytes are not its recorded release, or its script is not a declared asset), each such call is refused, naming the kit and the fix, which is to reinstall its recorded release with node <ia plugin>/scripts/kit.mjs add --from <release> --apply or to remove .ia/governance.json. Nothing extends the list at run time. Every child the three runners start gets an allowlisted environment (never NODE_OPTIONS or NODE_PATH), its process tree is killed on its deadline, and a hook child keeps at most 256 KiB of stdout and of stderr: hygiene, not a sandbox."
+  work
+    title "Trust kit code by publisher and recorded digest"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-31"
+    ended "2026-10-31"
+    source "docs/decisions.md"
+  decision
+    question "Which kits may run code through handlers.json, onwrite.json and checks.json, and with what around it?"
+    decider "Operator"
+    choice "A kit may run code (a handlers.json run script, an onwrite.json command or a checks.json command) only when its publisher, the kit id's namespace, with which a .ia/release.json publisher field must agree, is on the plugin's config/trusted-publishers.json, which ships as inventarch alone, and its sources digest equals its latest release's recorded sources, with .ia/release.json naming that release; a handler's run script must also be a declared asset. Any other kit, and a kit with no recorded release, is data only: a handler entry may carry a context text, delivered as additionalContext with no process; its run entries and onwrite.json commands are skipped, its checks are refused with IA-CORE-KIT-UNTRUSTED, and the SessionStart answer names each such kit once, with why. A pre handler of a kit whose publisher is not on the list never blocks. In a governed workspace a trusted pre handler that fails, times out or answers past the output cap refuses the call, and an altered gate refuses every pre-tool call: while a kit whose id names a trusted publisher declares a pre handler whose code the trust check refuses (its bytes are not its recorded release, or its script is not a declared asset), each such call is refused, naming the kit and the fix, which is to reinstall its recorded release with node <ia plugin>/scripts/kit.mjs add --from <release> --apply or to remove .ia/governance.json. Nothing extends the list at run time. Every child the three runners start gets an allowlisted environment (never NODE_OPTIONS or NODE_PATH), its process tree is killed on its deadline, and a hook child keeps at most 256 KiB of stdout and of stderr: hygiene, not a sandbox."
+    rationale "An adversarial review of making runtime/local's restricted worker a sandbox for kit handlers found that Node's permission model leaves the network open, lets child processes run unconfined and lets a debugger attach to another of the person's Node processes, so no handler sandbox exists to approve. Trust therefore rests on who published a kit and whether its bytes are the release they recorded, the same for every runner, and until the execution-binding release only InventArch-published kits run code. The list is not extensible at run time, because an agent with a shell can write any setting, environment variable or file in the IA home and so could approve itself. The publisher is a claim, not a signature, and the digest is checked against the kit's own release record and covers its declared entry scripts, not every module they import: this stops drift and other publishers' kits, not a deliberate impersonation, which signed releases will close. An altered gate fails closed (operator ruling, 2026-10-31): a governance kit whose bytes drifted must not leave a governed repository silently ungoverned, and a kit from a publisher that is not on the list cannot block, so installing one never stops a person's work."
+
+@decision public-kits-package
+  meaning
+    says "@inventarch/public-kits carries the kits the core bundles as one npm package, generated in packages/public-kits/ by node tools/kit.mjs package from plugins/ia/config/kits and kits/index.json. Its committed package.json holds its own semver, raised whenever a carried release changes (consistency --base checks it), and ia.kits: each kit's id, latest version, IA archive and manifest sha256, sources digest and folder; it has no scripts, dependencies, entry points or exports. The built files, gitignored, are archives/<archive>.ia.tgz (each recorded release packed again with the pinned CLI, refused unless it is that release) with archives/<archive>.distribution.json (its manifest), kits/<folder>/ byte for byte, index.json, LICENSE and NOTICE; the kit folders stay because an archive carries no sidecars. package --check is a gate in lefthook, npm run check and the gates workflow. .github/workflows/publish-public-kits.yml, started only by workflow_dispatch from main, checks the package against its sources, refuses a version npm already has, builds it and runs npm publish --provenance --access public under OIDC trusted publishing with no token; running it is the operator's step."
+  work
+    title "Publish the bundled kits as @inventarch/public-kits"
+    status made
+    owner "InventArch maintainers"
+    start "2026-10-31"
+    ended "2026-10-31"
+    source "docs/decisions.md"
+  decision
+    question "How do the default kits reach a door or workspace that has no plugin, and how is that package built and published?"
+    decider "Operator"
+    choice "@inventarch/public-kits carries the kits the core bundles as one npm package, generated in packages/public-kits/ by node tools/kit.mjs package from plugins/ia/config/kits and kits/index.json. Its committed package.json holds its own semver, raised whenever a carried release changes (consistency --base checks it), and ia.kits: each kit's id, latest version, IA archive and manifest sha256, sources digest and folder; it has no scripts, dependencies, entry points or exports. The built files, gitignored, are archives/<archive>.ia.tgz (each recorded release packed again with the pinned CLI, refused unless it is that release) with archives/<archive>.distribution.json (its manifest), kits/<folder>/ byte for byte, index.json, LICENSE and NOTICE; the kit folders stay because an archive carries no sidecars. package --check is a gate in lefthook, npm run check and the gates workflow. .github/workflows/publish-public-kits.yml, started only by workflow_dispatch from main, checks the package against its sources, refuses a version npm already has, builds it and runs npm publish --provenance --access public under OIDC trusted publishing with no token; running it is the operator's step."
+    rationale "The operator's rulings rereview-ia-q1-default-kits-package, dec-122 and dec-133 (C7, C7b) send the default kits to a bare door as one npm package that a lock records as one entry, with npm as transport only: the IA engine expands each kit from its archive, so the package must carry the archives and their manifests, by the digests their releases recorded. Generating it from the bundled kits keeps it from drifting, and committing only package.json keeps the claim reviewable without a third copy of every kit's bytes in history."

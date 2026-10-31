@@ -1,0 +1,132 @@
+{
+  "format": 1,
+  "kits": [
+    {
+      "id": "inventarch/ia-authoring-kit",
+      "folder": "kits/ia-authoring",
+      "releases": "kits/ia-authoring/releases.json",
+      "latest": {
+        "version": "0.1.0",
+        "archive": "083f016a55944ed8583bbce46e5439ec74bd7cb8b5df991b9e6123829084dafe",
+        "cli": "@inventarch/cli 3.4.1",
+        "language": "inventarch/language ^3.2.0",
+        "file": "kits/ia-authoring/releases/0.1.0.json",
+        "source": {
+          "repository": "https://github.com/inventarch/marketplace.git",
+          "commit": "b3f25d39b72abd2350aece52082fba0cd706aad2"
+        }
+      },
+      "versions": [
+        "0.1.0"
+      ],
+      "offers": [
+        "delivery.*",
+        "delivery.author",
+        "delivery.catalogue",
+        "delivery.host",
+        "delivery.host-evaluate",
+        "delivery.host-project",
+        "delivery.host-qualify",
+        "delivery.probe",
+        "delivery.workspace-authoring"
+      ]
+    },
+    {
+      "id": "inventarch/ia-kb-kit",
+      "folder": "kits/ia-kb",
+      "releases": "kits/ia-kb/releases.json",
+      "latest": {
+        "version": "0.9.0",
+        "archive": "cb8ea3db9f6d7a0b8172615074a415a479f7d18be952fd8ca8611ab20ed13aa6",
+        "cli": "@inventarch/cli 3.4.1",
+        "language": "inventarch/language ^3.2.0",
+        "file": "kits/ia-kb/releases/0.9.0.json",
+        "source": {
+          "repository": "https://github.com/inventarch/marketplace.git",
+          "commit": "57ebf446990b9aa5991702291ca97a59a2d90e8c"
+        }
+      },
+      "versions": [
+        "0.1.0",
+        "0.2.0",
+        "0.3.0",
+        "0.4.0",
+        "0.5.0",
+        "0.6.0",
+        "0.7.0",
+        "0.8.0",
+        "0.9.0"
+      ],
+      "offers": [
+        "knowledge.*",
+        "knowledge.bind",
+        "knowledge.check",
+        "knowledge.explain",
+        "knowledge.find",
+        "knowledge.maintain",
+        "knowledge.migrate",
+        "knowledge.place",
+        "knowledge.review"
+      ]
+    },
+    {
+      "id": "inventarch/ia-method-kit",
+      "folder": "kits/ia-method",
+      "releases": "kits/ia-method/releases.json",
+      "latest": {
+        "version": "0.7.0",
+        "archive": "54dcfe7801c322502bed7039471b8500c46ffd4efce53be3f6bdac09f45c9109",
+        "cli": "@inventarch/cli 3.4.1",
+        "language": "inventarch/language ^3.2.0",
+        "file": "kits/ia-method/releases/0.7.0.json",
+        "source": {
+          "repository": "https://github.com/inventarch/marketplace.git",
+          "commit": "b3f25d39b72abd2350aece52082fba0cd706aad2"
+        }
+      },
+      "versions": [
+        "0.1.0",
+        "0.2.0",
+        "0.3.0",
+        "0.4.0",
+        "0.5.0",
+        "0.6.0",
+        "0.7.0"
+      ],
+      "offers": [
+        "knowledge.vocabulary",
+        "work.*",
+        "work.agent",
+        "work.agent-profile",
+        "work.authoring-guide",
+        "work.capability",
+        "work.case",
+        "work.check",
+        "work.contract",
+        "work.convention",
+        "work.decision",
+        "work.distribution",
+        "work.execution-binding",
+        "work.harness",
+        "work.hook",
+        "work.improvement",
+        "work.law",
+        "work.mandate",
+        "work.milestone",
+        "work.observation",
+        "work.operation",
+        "work.plan",
+        "work.playbook",
+        "work.principle",
+        "work.run",
+        "work.schema",
+        "work.spec",
+        "work.system",
+        "work.task",
+        "work.template",
+        "work.voice",
+        "work.workspace"
+      ]
+    }
+  ]
+}

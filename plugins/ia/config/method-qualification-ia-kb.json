@@ -1,0 +1,30 @@
+{
+  "format": "inventarch.method-qualification/1",
+  "executionContracts": {
+    "compliance-system/check/gate/kb-check-validate": {
+      "executable": "native-cli",
+      "argv": [
+        "validate",
+        "--json"
+      ],
+      "cwd": "workspace",
+      "timeoutSeconds": 120,
+      "argumentSchema": null
+    },
+    "compliance-system/check/gate/kb-check-locators": {
+      "executable": "node",
+      "profile": "kb-check-locators-v1",
+      "timeoutSeconds": 120
+    },
+    "compliance-system/check/gate/kb-check-task-locators": {
+      "executable": "node",
+      "profile": "kb-check-task-locators-v1",
+      "timeoutSeconds": 120
+    },
+    "compliance-system/check/gate/kb-check-decisions": {
+      "executable": "node",
+      "profile": "kb-check-decisions-v1",
+      "timeoutSeconds": 120
+    }
+  }
+}

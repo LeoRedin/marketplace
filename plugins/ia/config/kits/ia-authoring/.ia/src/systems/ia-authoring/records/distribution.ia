@@ -1,0 +1,8 @@
+#! ia 1.0
+
+@distribution ia-authoring-distribution
+  meaning
+    says "The release root of the IA authoring kit: its main ia-authoring system and its three part systems, ia-authoring-record, ia-authoring-host and ia-authoring-catalogue, with the probe, the governance lint, the trigger-evaluation runner, the trigger config reference and the two probe examples as kit assets."
+    answers "Which records does this release ship?"
+  distribution
+    records [@system ia-authoring, @system ia-authoring-record, @system ia-authoring-host, @system ia-authoring-catalogue]

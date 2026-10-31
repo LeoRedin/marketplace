@@ -1,0 +1,74 @@
+#! ia 1.0
+
+@principle method-capability-is-the-unit
+  meaning
+    says "The unit of understanding is the intended capability or outcome a piece of work exists for (not the IA word capability). An idea, a brief, a decision, a spec, a plan and a package contract each answer a different question about it; they are not versions of one document. Keep their relationships attached to that capability, not to a path, a plan or a file that may move. Until an owned native identity for features exists, anchor on the existing canonical idea or brief identity and link to it explicitly; never invent a feature word."
+    answers "What does an agent attach its account of a piece of work to?"
+  governance
+    severity advisory
+  subject
+    subject-word spec
+
+@principle method-locate-before-inventing
+  meaning
+    says "Before proposing a new word, system, record, skill, mechanism or document, find and explain the existing capability that may already cover it, and extend it through its owner where it can. A parallel mechanism needs a stated reason why the existing one cannot serve."
+    answers "What does an agent do before inventing something new?"
+  governance
+    severity advisory
+  subject
+    subject-word system
+
+@principle method-same-pattern-every-layer
+  meaning
+    says "Every layer follows the same pattern: declare, assess and compose, bind, consume, observe, reconcile. The shared language supplies structural meaning; systems own specialised vocabulary, rules, methods, contracts and implementations; workspaces compose them for a purpose; kits distribute reusable offerings; applications and hosts are where they run. One feature may cross several owners, and creating a feature does not require creating a system. Generated IA is admitted at the boundary that receives it, and a successful build is evidence for that build, not for later behaviour."
+    answers "How do ideas move from declaration to observed behaviour at any layer?"
+  governance
+    severity advisory
+  subject
+    subject-word system
+
+@principle method-levels-of-knowledge
+  meaning
+    says "Every claim stands at a level of knowledge, and an agent never presents it as a higher one. A captured idea has an identity, an outcome, a provisional owner and open questions. An architecturally situated proposal adds responsibilities, interfaces, reuse, affected surfaces, alternatives and named gaps. A structurally sound design passes its checks within a stated scope, resolves its references and has a review that accounts for its boundaries. Implemented, bound, available and observed behaviour come after, each with its own evidence. Architecture may precede implementation; a design is not evidence that anything works."
+    answers "How far along is a piece of work, and what may be said about it?"
+  governance
+    severity advisory
+  subject
+    subject-word spec
+
+@principle method-claims-within-evidence
+  meaning
+    says "Every meaningful state claim names its subject, facet, scope, source revision and basis, and goes no further than its evidence. A passing check is evidence for that check, a build for that build; a declared case is not an executed one, and an installation is not observed behaviour. Intent, review, architectural assessment, structural validity, implementation coverage, binding, observed behaviour and freshness are separate answers, never one status. An unknown is named as unknown, never disguised as an empty implementation, an invented record or a planned status; a missing status is unknown, not active, obsolete or complete. A failed run is attributed to its cause: to incomplete instructions or packet, to the work itself, or to the environment (a port in use, the network down); an environment failure leaves the claim unrun, not failed, and is retried once. On the same target and revision, a failed run outweighs a passing one. A review or verdict is evidence for the revision it covered, not for later ones."
+    answers "What may an agent claim about the state of work, and how?"
+  governance
+    severity blocking
+  subject
+    subject-word spec
+    subject-kind definition
+
+@principle method-lineage-accountable
+  meaning
+    says "Replacement is accountable and may be partial: it names the predecessor, the successor, exactly which requirements or surfaces are replaced, why, the deciding source and the effective revision, and it carries forward the obligations and open work it does not replace. Moving a file, writing a newer spec, merging code or renaming supersedes nothing. When sources contradict each other, the agent raises a review item with an owner; the newest file never wins by default."
+    answers "How does one piece of work replace another?"
+  governance
+    severity advisory
+  subject
+    subject-word decision
+
+@principle method-ask-while-continuing
+  meaning
+    says "An agent asks the person for a missing consequential decision, with its recommendation first, and continues the independent work already authorised while it waits. It distinguishes missing information from an actual contradiction. A recommendation is not a ruling, and silence is not approval."
+    answers "What does an agent do when a decision it needs has not been made?"
+  governance
+    severity advisory
+  subject
+    subject-word decision
+
+@principle method-one-account
+  meaning
+    says "Keep one connected account assembled from authoritative sources. Never build a hand-kept register that copies statuses from documents, issues and records; improve source identity and explicit links instead, and derive views from them. A search result or a graph walk cannot prove the impact of undeclared relationships, so what was not assessed stays a stated frontier."
+    answers "Where does the account of work live?"
+  governance
+    severity advisory
+  subject
+    subject-word plan

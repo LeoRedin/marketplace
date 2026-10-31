@@ -1,0 +1,33 @@
+#! ia 1.0
+
+@playbook catalogue-author
+  meaning
+    says "How a plugin is authored for a catalogue: read the catalogue's house rules and its validator, plan the change within every rule, make it, run the validator through the catalogue-validate check, and have it reviewed by someone who did not write it. The rules are the catalogue-* conventions, each citing the symbol or message tools/validate.py or the manifest schema carries."
+    answers "What does an agent do to add or change a plugin in a catalogue?"
+  subject
+    subject-word capability
+  cognition
+    orient
+      primary Attention
+      Attention means "Read the plugin and the catalogue: the plugin's manifests, skills, agents and any hooks, and the catalogue's tools/validate.py and schemas/plugin-manifest.schema.json."
+      Inference means "Read the nine catalogue conventions and check each against the validator's current text: a rule is cited by its symbol or message, never by a line number, and the validator is the truth when the two differ."
+      Decision means "Decide whether the change is in scope: a plugin built from IA records goes through host-lower and host-project first; a new word, system, workspace or kit is out of this kit's scope (authoring-scope)."
+      Learning means "Read the catalogue's earlier validator runs and review findings for this plugin."
+    plan
+      primary Inference
+      Attention means "Restate the budgets the change must fit: every skill description at most 400 characters with a use-when phrase, at most four model-invocable skills per plugin, hidden skill descriptions at most 160 characters, the whole catalogue's skill listing within 7,500 characters."
+      Inference means "Plan each component against its rule: every skill body opens with the Codex bridge line, every agent declares a tools allowlist, no hook unless the plugin is in QUALIFIED_HOOKS and then exactly the qualified set, and the manifest's author an object with only a name and its license the catalogue's licence."
+      Decision means "Name the reviewer now: someone other than the author of any part of the change. Route a change to QUALIFIED_HOOKS or another rule to the catalogue's owner as a decision, never as a side effect of the plugin change."
+      Learning means "State which validator message each planned component could trigger, so a refusal is expected rather than discovered."
+    act
+      primary Decision
+      Attention means "Make the change inside the plugin's folder and the catalogue's listing files only."
+      Inference means "Run the catalogue's validator through the core's checker runner (check.mjs catalogue-validate, which runs python tools/validate.py in the catalogue) and read every message it prints."
+      Decision means "Fix the plugin, never the validator, when it refuses; rerun until it passes, and keep each failed run on the record."
+      Learning means "Report the validator's command, exit code and output verbatim."
+    learn
+      primary Learning
+      Attention means "Have the reviewer, who did not write the change, read it against the nine conventions and the validator output."
+      Inference means "Qualify the plugin on its hosts with host-qualify: isolated install, strict validation, component inventory and listing cost."
+      Decision means "Record the outcome: validator passed or refused, review findings and their resolution, and what remains unqualified on which host."
+      Learning means "Propose a convention change to this part's steward when the validator's rule and its convention no longer agree."

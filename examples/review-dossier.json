@@ -1,0 +1,26 @@
+{
+  "format": 1,
+  "policyStanding": "adopted",
+  "subject": "SYNTHETIC packaging change; not delivery evidence",
+  "revision": "synthetic-before",
+  "comments": [
+    {
+      "id": "SYNTHETIC-C1",
+      "reviewer": "synthetic-independent-reviewer",
+      "reviewedRevision": "synthetic-before",
+      "location": "synthetic package input",
+      "finding": "A private sentinel is selected by a broad copy operation.",
+      "severity": "Important",
+      "evidenceRef": "synthetic://failure-case",
+      "response": "Accept; replace broad copy with reviewed exact selection.",
+      "disposition": "resolved",
+      "changeRequest": "Synthetic bounded change: package only selected files.",
+      "fixRevision": "synthetic-after",
+      "verification": "Synthetic negative case rejects a selected private path.",
+      "rereview": "Synthetic reviewer checked the fix; no real approval asserted."
+    }
+  ],
+  "remainingGates": [
+    "Example only; actual review independence, authority and host qualification are not established."
+  ]
+}

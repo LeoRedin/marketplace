@@ -1,0 +1,148 @@
+# The repository gates (AGENTS.md): on Ubuntu for every pull request into main, and on Ubuntu, Windows and macOS for
+# every push to main (decision public-ci-matrix). lefthook.yml runs the same checks before a commit or push leaves a
+# machine (decision public-local-gates); the test suites run only here.
+# claude plugin validate --strict and tools/smoke-codex.mjs stay local gates: they need the hosts.
+name: Gates
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    name: Gates (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows and macOS run only once a change reaches main (decision public-ci-matrix); tests/test_gates.py
+        # holds this mapping and the gate list.
+        os: ${{ github.event_name == 'push' && fromJSON('["ubuntu-latest", "windows-latest", "macos-latest"]') || fromJSON('["ubuntu-latest"]') }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          # The version-bump check compares against the pull request's base, or the main a push replaced (every commit
+          # of a multi-commit push counts), so the history must hold that commit. A force-push's old main is gone: the
+          # check then says it cannot read the base.
+          fetch-depth: 0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22.22.0'
+      # One command per step: on Windows the default shell is pwsh, which fails a step on its last command only.
+      - name: Git identity for test fixtures (name)
+        run: git config --global user.name "Gates CI"
+      - name: Git identity for test fixtures (email)
+        run: git config --global user.email "gates-ci@example.invalid"
+      # CI is set, so lefthook's postinstall installs no Git hooks here.
+      - name: Root dependencies (lefthook, Biome, the pinned IA CLI)
+        run: npm ci
+      - name: Validate the catalogue
+        run: python tools/validate.py
+      - name: The export selection matches the shipped files
+        run: python tools/selection.py --check
+      - name: Root kits match their bundled copies
+        run: node tools/bundle-kits.mjs --check
+      - name: The kit index matches the kits
+        run: node tools/kit.mjs index --check
+      - name: The public kits package is the bundled kits' claim
+        run: node tools/kit.mjs package --check
+      - name: Repository consistency, pins and version bumps
+        run: python tools/consistency.py --base ${{ github.event.pull_request.base.sha || github.event.before }}
+      - name: Lint the JavaScript
+        run: npm run lint
+      - name: IA language admission with the pinned CLI
+        run: node tools/check-language.mjs
+      - name: Repository tests
+        run: python -m unittest discover -s tests -v
+      - name: Tool tests
+        run: node --test "tests/*.test.mjs"
+      - name: Plugin tests
+        run: node --test "plugins/*/tests/*.test.mjs"
+
+  # The mandatory native lane runs as one job per inventory shard (tools/native-inventory.json), so it fits its budget
+  # on every operating system; the verify job then accepts the shard reports only together.
+  native-plan:
+    name: Native shards
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22.22.0'
+      - name: Read the inventory's shards
+        id: plan
+        run: node tools/run-native-tests.mjs --plan >> "$GITHUB_OUTPUT"
+
+  native:
+    name: Native (${{ matrix.os }}, shard ${{ matrix.shard }})
+    needs: native-plan
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ github.event_name == 'push' && fromJSON('["ubuntu-latest", "windows-latest", "macos-latest"]') || fromJSON('["ubuntu-latest"]') }}
+        shard: ${{ fromJSON(needs.native-plan.outputs.shards) }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22.22.0'
+      - name: Git identity for native fixtures (name)
+        run: git config --global user.name "Gates CI"
+      - name: Git identity for native fixtures (email)
+        run: git config --global user.email "gates-ci@example.invalid"
+      - name: Root dependencies (the pinned IA CLI)
+        run: npm ci
+      - name: Mandatory native qualification
+        env:
+          IA_CORE_TEST_CLI: ${{ github.workspace }}/node_modules/@inventarch/cli/dist/main.js
+        run: node tools/run-native-tests.mjs --shard ${{ matrix.shard }}
+      - name: Retain native qualification reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: native-qualification-${{ matrix.os }}-shard-${{ matrix.shard }}
+          path: .qualification/native-results/
+          include-hidden-files: true
+          if-no-files-found: error
+
+  native-verify:
+    name: Native verified (${{ matrix.os }})
+    needs: native
+    if: always()
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ github.event_name == 'push' && fromJSON('["ubuntu-latest", "windows-latest", "macos-latest"]') || fromJSON('["ubuntu-latest"]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22.22.0'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: native-qualification-${{ matrix.os }}-shard-*
+          path: native-reports
+      - name: Every native case once, passed, on one source
+        run: node tools/run-native-tests.mjs --verify native-reports/*

@@ -1,0 +1,56 @@
+#! ia 1.0
+
+@contract catalogue-authoring
+  version "0.1.0"
+  meaning
+    says "What a plugin catalogue built with the IA authoring kit requires of every plugin it carries."
+    answers "What must a plugin satisfy before it joins the catalogue?"
+  invariants
+    REQ-CAT-01 "Every plugin in the catalogue passes tools/validate.py."
+  relationships
+    governs @convention catalogue-description-length
+    governs @convention catalogue-model-invocable-limit
+    governs @convention catalogue-listing-budget
+    governs @convention catalogue-hidden-description
+    governs @convention catalogue-codex-bridge
+    governs @convention catalogue-qualified-hooks
+    governs @convention catalogue-agent-allowlist
+    governs @convention catalogue-author-licence
+    governs @convention catalogue-author-is-not-reviewer
+    cites @agent catalogue-authoring-steward
+
+@check catalogue-validate
+  meaning
+    says "The catalogue validator accepts every plugin."
+    answers "Does every plugin in the catalogue pass the house rules?"
+  check
+    runs COMP-CHECK
+    scope "python tools/validate.py"
+  relationships
+    enforces @contract catalogue-authoring
+
+@case cat-req-01-success
+  meaning
+    says "A catalogue that follows the house rules passes the validator."
+    answers "Does a plugin inside the rules pass?"
+  scenario
+    kind success
+    given "A copy of the catalogue's checkout, whose plugins are inside their rules."
+    request "Run the scaffold test that builds and validates a valid bundle."
+    expected "The validator accepts the bundle and a second build is identical."
+    evaluator "tests/test_scaffold.py :: test_valid_and_repeatable_actual_zip"
+  relationships
+    implements @contract catalogue-authoring#REQ-CAT-01
+
+@case cat-req-01-failure
+  meaning
+    says "A plugin that breaks a house rule is refused by the validator."
+    answers "Does a plugin outside the rules fail?"
+  scenario
+    kind failure
+    given "A plugin with a fifth model-invocable skill."
+    request "Run the scaffold test that adds four skills to a one-skill plugin and validates."
+    expected "The validator refuses and names the model-invocable skills."
+    evaluator "tests/test_scaffold.py :: test_fifth_model_invocable_skill_refuses"
+  relationships
+    implements @contract catalogue-authoring#REQ-CAT-01

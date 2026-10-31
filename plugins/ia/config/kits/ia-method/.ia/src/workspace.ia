@@ -1,0 +1,28 @@
+#! ia 1.0
+
+@workspace ia-method-kit
+  meaning
+    says "The workspace that composes the IA methodology kit's system with the public systems they build on."
+    answers "Which systems does the methodology kit compose?"
+  composition
+    systems [@system agent-composition-system, @system agent-system, @system authoring-system, @system compliance-system, @system governance-system, @system hook-authoring-system, @system learning-system, @system session-system, @system template-system, @system work-system, @system workspace-system, @system ia-method]
+    sources [".ia/src @authored"]
+    steward @agent ia-method-kit
+
+@agent ia-method-kit
+  meaning
+    says "The IDE agent operating in the methodology kit's workspace, any vendor."
+    answers "Which participant acts in the methodology kit's workspace?"
+  governance
+    applies []
+
+@mandate ia-method-kit-mandate
+  meaning
+    says "The bounded authority of the participant in the methodology kit's workspace."
+    answers "Which moves may the participant make in the methodology kit's workspace?"
+  governance
+    requires "Claim no host permission or execution from this mandate."
+  authority
+    participant @agent ia-method-kit
+    moves [Observation, Verification, Synthesis, Delegation, Execution]
+    scope [@workspace ia-method-kit]

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "ia": {
+      "command": "node",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/scripts/door.mjs"
+      ],
+      "env": {
+        "IA_KITS_DIR": "${CLAUDE_PLUGIN_ROOT}/config/kits"
+      }
+    }
+  }
+}

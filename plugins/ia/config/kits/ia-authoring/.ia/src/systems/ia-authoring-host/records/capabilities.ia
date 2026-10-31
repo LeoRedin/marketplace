@@ -1,0 +1,40 @@
+#! ia 1.0
+
+@capability host-lower
+  meaning
+    says "Lower a Claude, Codex or Grok plugin into a new kit workspace with ia init --from: every file and frontmatter key gets one disposition in the lowering map, and any unresolved construct refuses the whole lowering."
+    answers "How does an existing plugin become IA records without losing anything?"
+  composition
+    playbooks [@playbook host-lower]
+    checks [@check host-validate]
+  execution
+    effects [read, local-write]
+
+@capability host-project
+  meaning
+    says "Render a lowered workspace back into a plugin with ia project --product plugin, into an absent or empty directory, and prove the round trip with --check --compare against the original: content-exact needs --check --compare, and the check also reports whether lowering the output again is a fixed point."
+    answers "How is a plugin rendered from records and shown to be lossless?"
+  composition
+    playbooks [@playbook host-project]
+    checks [@check host-fixed-point]
+  execution
+    effects [read, local-write]
+
+@capability host-evaluate
+  meaning
+    says "Measure whether a model-invocable skill triggers when it should and not when it should not: ten and ten prompts as cases of a contract requirement, a run manifest with a session cap first, the original and the regenerated plugin side by side in the logged-in host config."
+    answers "Does this skill trigger correctly, and is the regenerated plugin no worse?"
+  composition
+    playbooks [@playbook host-evaluate]
+    checks [@check host-trigger-eval]
+  execution
+    effects [read, local-write, external-write]
+
+@capability host-qualify
+  meaning
+    says "Qualify a plugin on its hosts: isolated install, strict validation, component inventory and listing cost, and the Codex host smoke, recording each observation as evidence for a host-feature row."
+    answers "Does this plugin load on its hosts, and at what cost?"
+  composition
+    playbooks [@playbook host-qualify]
+  execution
+    effects [read, local-write]

@@ -1,0 +1,40 @@
+{
+  "format": 1,
+  "recommend": {
+    "delivery.*": {
+      "capability": "authoring-deliver"
+    },
+    "delivery.author": {
+      "capability": "authoring-workspace-authoring"
+    },
+    "delivery.workspace-authoring": {
+      "capability": "authoring-workspace-authoring"
+    },
+    "delivery.probe": {
+      "capability": "authoring-probing-the-ia-toolchain"
+    },
+    "delivery.host": {
+      "capability": "host-lower"
+    },
+    "delivery.host-project": {
+      "capability": "host-project"
+    },
+    "delivery.host-evaluate": {
+      "capability": "host-evaluate"
+    },
+    "delivery.host-qualify": {
+      "capability": "host-qualify"
+    },
+    "delivery.catalogue": {
+      "capability": "catalogue-author"
+    }
+  },
+  "unbound": [
+    "authoring-deliver",
+    "host-lower",
+    "host-project",
+    "host-evaluate",
+    "host-qualify",
+    "catalogue-author"
+  ]
+}

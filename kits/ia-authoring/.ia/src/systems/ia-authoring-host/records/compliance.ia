@@ -1,0 +1,125 @@
+#! ia 1.0
+
+@contract host-authoring
+  version "0.1.0"
+  meaning
+    says "What the host-authoring activities of the IA authoring kit guarantee."
+    answers "What must a lowering, a projection and a trigger evaluation show?"
+  invariants
+    REQ-HOST-01 "Lowering refuses, writing nothing, when any construct is unresolved."
+    REQ-HOST-02 "A projected plugin is content-exact against its original and lowers again to the same records."
+    REQ-HOST-03 "A trigger evaluation writes its manifest and cap before any session and never exceeds the cap."
+  relationships
+    governs @playbook host-lower
+    governs @playbook host-project
+    governs @playbook host-evaluate
+    governs @playbook host-qualify
+    cites @agent host-authoring-steward
+
+@check host-validate
+  meaning
+    says "The authored records admit."
+    answers "Do the lowered or authored records admit?"
+  check
+    runs COMP-CHECK
+    scope "ia validate"
+  relationships
+    enforces @contract host-authoring
+
+@check host-fixed-point
+  meaning
+    says "The plugin rendered from the workspace lowers again to the same records."
+    answers "Is the round trip a fixed point?"
+  check
+    runs COMP-CHECK
+    scope "ia project claude --product plugin --check"
+  relationships
+    enforces @contract host-authoring
+
+@check host-trigger-eval
+  meaning
+    says "The trigger evaluation the workspace's config describes runs inside its cap."
+    answers "Does the skill trigger correctly, and is the regenerated plugin no worse?"
+  check
+    runs COMP-CHECK
+    scope "node <kit>/scripts/eval-triggers.mjs --config <workspace>/.ia/work/trigger-eval.json"
+  relationships
+    enforces @contract host-authoring
+
+@case host-req-01-success
+  meaning
+    says "A plugin with no unresolved construct lowers into a workspace that validates."
+    answers "Does a clean plugin lower?"
+  scenario
+    kind success
+    given "A sample plugin the slice-1 lowering carries in full."
+    request "Run ia init <kit> --from <plugin> to plan, then apply it, then ia validate on the new workspace."
+    expected "The dry run plans without writing; the apply lowers the sample into a workspace that ia validate admits."
+    evaluator "apps/cli/tests/host-plugin.test.ts :: plans without writing, then lowers the sample into an admitted workspace"
+  relationships
+    implements @contract host-authoring#REQ-HOST-01
+
+@case host-req-01-failure
+  meaning
+    says "A plugin with an unresolved construct is refused and nothing is written."
+    answers "Does an unresolved construct refuse the whole lowering?"
+  scenario
+    kind failure
+    given "A plugin holding a construct the lowering cannot carry, such as a hook."
+    request "Run ia init <kit> --from <plugin> without --apply."
+    expected "The lowering refuses, names the unresolved entry and writes nothing."
+    evaluator "apps/cli/tests/host-plugin.test.ts :: refuses a plugin with an unresolved construct and writes nothing"
+  relationships
+    implements @contract host-authoring#REQ-HOST-01
+
+@case host-req-02-success
+  meaning
+    says "A projected plugin is content-exact against its original and a fixed point."
+    answers "Is the round trip lossless?"
+  scenario
+    kind success
+    given "The sample plugin, lowered into a workspace."
+    request "Run ia project claude --product plugin --check --compare <original plugin> in the workspace."
+    expected "Bodies, prompts, resources and assets are byte-identical, every difference names a DIFF_RULES rule, and lowering the output again reproduces the same records."
+    evaluator "apps/cli/tests/host-plugin.test.ts :: passes on the sample: content-exact against the original and a fixed point"
+  relationships
+    implements @contract host-authoring#REQ-HOST-02
+
+@case host-req-02-failure
+  meaning
+    says "A regenerated file that no rule of DIFF_RULES explains is reported as drift by --check, so the round trip is not claimed."
+    answers "Does --check refuse a regenerated difference no rule explains?"
+  scenario
+    kind failure
+    given "A sample plugin lowered into a workspace, then its README edited, so the original differs from what the records regenerate."
+    request "Run ia project claude --product plugin --check --compare <the edited plugin> in the workspace."
+    expected "The check fails with IA-ROUNDTRIP-DRIFT, so no round trip is claimed for the plugin."
+    evaluator "apps/cli/tests/host-plugin.test.ts :: reports drift when a regenerated file cannot be explained by a rule"
+  relationships
+    implements @contract host-authoring#REQ-HOST-02
+
+@case host-req-03-success
+  meaning
+    says "The session plan stays inside the declared cap."
+    answers "Does a plan within its cap run?"
+  scenario
+    kind success
+    given "Two arms, three runs per case and a cap that equals the planned sessions."
+    request "Plan the sessions for one case."
+    expected "The plan lists exactly the planned sessions."
+    evaluator "plugins/ia/tests/kit-authoring-host.test.mjs :: the session plan refuses to exceed the declared cap ; plugins/ia/tests/kit-authoring-host.test.mjs :: a complete, equal run writes the manifest before the first session and exits 0 with intervals"
+  relationships
+    implements @contract host-authoring#REQ-HOST-03
+
+@case host-req-03-failure
+  meaning
+    says "The session plan refuses to exceed the declared cap."
+    answers "Does the runner refuse to plan past its cap?"
+  scenario
+    kind failure
+    given "Two arms, three runs per case and a cap one below the planned sessions."
+    request "Plan the sessions for one case."
+    expected "The plan throws an error naming the cap and no session starts."
+    evaluator "plugins/ia/tests/kit-authoring-host.test.mjs :: the session plan refuses to exceed the declared cap"
+  relationships
+    implements @contract host-authoring#REQ-HOST-03

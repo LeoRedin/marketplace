@@ -1,0 +1,29 @@
+{
+  "name": "inventarch-marketplace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The public InventArch plugin catalogue: the ia plugin and its public method kits",
+  "scripts": {
+    "validate": "python tools/validate.py",
+    "consistency": "python tools/consistency.py",
+    "lint": "biome lint",
+    "language": "node tools/check-language.mjs",
+    "check": "python tools/validate.py && python tools/selection.py --check && node tools/bundle-kits.mjs --check && node tools/kit.mjs index --check && node tools/kit.mjs package --check && python tools/consistency.py && biome lint && node tools/check-language.mjs",
+    "test:repo": "python -m unittest discover -s tests -v",
+    "test:tools": "node --test \"tests/*.test.mjs\"",
+    "test:plugins": "node --test \"plugins/*/tests/*.test.mjs\"",
+    "test": "npm run test:repo && npm run test:tools && npm run test:plugins",
+    "selection:propose": "python tools/selection.py",
+    "test:codex": "node tools/smoke-codex.mjs",
+    "kit": "node tools/kit.mjs"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.14",
+    "@inventarch/cli": "3.4.1",
+    "lefthook": "2.1.16"
+  },
+  "engines": {
+    "node": ">=22.22.0 <23"
+  },
+  "license": "Apache-2.0"
+}

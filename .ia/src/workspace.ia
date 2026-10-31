@@ -1,0 +1,83 @@
+#! ia 1.0
+
+@workspace inventarch-marketplace
+  meaning
+    says "The authored source boundary for the public InventArch plugin catalogue: the ia plugin and the public method kits it carries."
+    answers "Which sources and existing systems describe this catalogue?"
+  composition
+    systems [@system workspace-system, @system work-system]
+    sources [".ia/src @authored"]
+
+@spec marketplace-front-door
+  meaning
+    says "The catalogue's front door: what the core plugin and its default kits are for, how kits are named, how to install the catalogue in Claude Code and Codex, how to connect an InventArch account, and the gates a contributor runs."
+    answers "What is in this catalogue, and how does an engineer install it?"
+  work
+    title "InventArch marketplace README"
+    status draft
+    owner "InventArch maintainers"
+    source "README.md"
+
+@spec marketplace-agent-rules
+  meaning
+    says "The working rules for agents and engineers in this repository: what may ship, the plugin rules, the kit rules, the gates, and what validation never does (push, publish, invite or change access)."
+    answers "What must an agent working in this repository follow?"
+  work
+    title "Work boundaries for this repository"
+    status draft
+    owner "InventArch maintainers"
+    source "AGENTS.md"
+
+@spec marketplace-core-plugin
+  meaning
+    says "The ia plugin: the Work, Knowledge and Delivery lanes, the init and doctor skills, the resolver over ia position, the reader, checker and worker profiles, the kit lookup, install and bind verbs, the read-only session and on-write hooks, and the bundled default kits."
+    answers "What does the ia plugin do, and how is it built?"
+  work
+    title "The ia plugin"
+    status draft
+    owner "InventArch maintainers"
+    source "plugins/ia/README.md"
+    covers ["plugins/ia/"]
+
+@spec marketplace-kits
+  meaning
+    says "The kit sources: each public kit's records, sidecars and per-version release history, the bundle map into the core, the root kit index, and the maintainer workflow that packs, records and bundles a release."
+    answers "Where are the kits authored, and how is a kit released?"
+  work
+    title "Kit sources"
+    status draft
+    owner "InventArch maintainers"
+    source "kits/README.md"
+    covers ["kits/"]
+
+@spec marketplace-addition
+  meaning
+    says "How a plugin or kit is added or changed without widening authority: layout, manifests, the export selection, the validator and consistency rules, and the tests that hold them."
+    answers "How is a plugin added or changed in this catalogue?"
+  work
+    title "Add or change a plugin"
+    status draft
+    owner "InventArch maintainers"
+    source "docs/adding-plugins.md"
+    covers ["docs/adding-plugins.md", "tools/", "schemas/", "tests/", "export-selection.json", "sources.lock.json"]
+
+@spec marketplace-hosts
+  meaning
+    says "What each host (Claude Code, Codex) loads from this catalogue, which hooks run where, and what has been qualified on a real host."
+    answers "Which hosts does the catalogue support, and what is proven on each?"
+  work
+    title "Host support"
+    status draft
+    owner "InventArch maintainers"
+    source "docs/hosts.md"
+
+@spec marketplace-public-kits
+  meaning
+    says "The @inventarch/public-kits npm package: what it carries (each bundled kit's IA archive, manifest and folder, and the kit index), how tools/kit.mjs package generates and checks it, why its built files are not committed, and the operator's publish workflow."
+    answers "How are the default kits packaged for npm, and how is the package published?"
+  work
+    title "The public kits package"
+    status draft
+    owner "InventArch maintainers"
+    source "docs/public-kits-package.md"
+    covers ["packages/", ".github/workflows/publish-public-kits.yml"]

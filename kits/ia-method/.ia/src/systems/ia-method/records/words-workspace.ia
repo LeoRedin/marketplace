@@ -1,0 +1,83 @@
+#! ia 1.0
+
+@capability workspace-method
+  meaning
+    says "Work with workspace records under the IA methodology: the workspace-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking a workspace. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for a workspace?"
+  composition
+    playbooks [@playbook workspace-method]
+  execution
+    effects [read, local-write]
+
+@playbook workspace-method
+  meaning
+    says "How an agent works with workspace records, each an explicit work boundary grouping systems, whose sources name the roots its records are captured from: orient through ia position --word workspace and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with workspace records?"
+  subject
+    subject-word workspace
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word workspace at the seat the work concerns, read the workspace records it points at with ia read, and run ia vocabulary workspace --schema for the sections and fields a workspace carries."
+      Inference means "Run ia position with no seat for the workspace's systems, sources, steward and mandates."
+      Decision means "workspace is a word of workspace-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/workspace-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these workspace records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the workspace must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Decide whether the work fits the systems the workspace composes, or needs one installed first."
+      Decision means "Extend an existing workspace through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the workspace will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the workspace; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Change the existing workspace's composition through --set, for example to add an installed system; a repository with no workspace needs ia init, which is the person's call."
+      Decision means "Change the workspace record only through ia preview --set, then ia author with the digest it returned, then ia validate; designing new workspaces lies outside this kit (by hand from the public IA documentation, or with an InventArch subscription)."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Run ia validate over the whole workspace, and ia position again to see that the seats still resolve."
+      Decision means "Reconcile the records that cite or depend on the workspace, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."
+
+@capability distribution-method
+  meaning
+    says "Work with distribution records under the IA methodology: the distribution-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking a distribution. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for a distribution?"
+  composition
+    playbooks [@playbook distribution-method]
+  execution
+    effects [read, local-write]
+
+@playbook distribution-method
+  meaning
+    says "How an agent works with distribution records, each the root records from which a distributable closure is selected: orient through ia position --word distribution and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with distribution records?"
+  subject
+    subject-word distribution
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word distribution at the seat the work concerns, read the distribution records it points at with ia read, and run ia vocabulary distribution --schema for the sections and fields a distribution carries."
+      Inference means "Read the distributions the workspace pins in .ia/distributions.lock.json and the root records each ships."
+      Decision means "distribution is a word of workspace-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/workspace-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these distribution records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the distribution must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Decide which kit or distribution the work needs, and the version the workspace should pin."
+      Decision means "Extend an existing distribution through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the distribution will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the distribution; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Install with ia install <id>@<version> --catalog <catalog> --apply --yes, or reinstall the locked generation with ia restore --apply --yes, asking the person first: both write files they commit."
+      Decision means "Install, restore and read distributions; authoring a new distribution or kit lies outside this kit (by hand from the public IA documentation, or with an InventArch subscription)."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Run ia validate after the install, and report what the lock now pins."
+      Decision means "Reconcile the records that cite or depend on the distribution, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."

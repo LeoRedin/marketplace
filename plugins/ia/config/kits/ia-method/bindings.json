@@ -1,0 +1,101 @@
+{
+  "format": 1,
+  "recommend": {
+    "work.*": {
+      "capability": "method-operate"
+    },
+    "work.agent": {
+      "capability": "agent-method"
+    },
+    "work.agent-profile": {
+      "capability": "agent-profile-method"
+    },
+    "work.authoring-guide": {
+      "capability": "authoring-guide-method"
+    },
+    "work.capability": {
+      "capability": "capability-method"
+    },
+    "work.case": {
+      "capability": "case-method"
+    },
+    "work.check": {
+      "capability": "check-method"
+    },
+    "work.contract": {
+      "capability": "contract-method"
+    },
+    "work.convention": {
+      "capability": "convention-method"
+    },
+    "work.decision": {
+      "capability": "decision-method"
+    },
+    "work.distribution": {
+      "capability": "distribution-method"
+    },
+    "work.execution-binding": {
+      "capability": "execution-binding-method"
+    },
+    "work.harness": {
+      "capability": "harness-method"
+    },
+    "work.hook": {
+      "capability": "hook-method"
+    },
+    "work.improvement": {
+      "capability": "improvement-method"
+    },
+    "work.law": {
+      "capability": "law-method"
+    },
+    "work.mandate": {
+      "capability": "mandate-method"
+    },
+    "work.milestone": {
+      "capability": "milestone-method"
+    },
+    "work.observation": {
+      "capability": "observation-method"
+    },
+    "work.operation": {
+      "capability": "operation-method"
+    },
+    "work.plan": {
+      "capability": "plan-method"
+    },
+    "work.playbook": {
+      "capability": "playbook-method"
+    },
+    "work.principle": {
+      "capability": "principle-method"
+    },
+    "work.run": {
+      "capability": "run-method"
+    },
+    "work.schema": {
+      "capability": "schema-method"
+    },
+    "work.spec": {
+      "capability": "spec-method"
+    },
+    "work.system": {
+      "capability": "system-method"
+    },
+    "work.task": {
+      "capability": "task-method"
+    },
+    "work.template": {
+      "capability": "template-method"
+    },
+    "work.voice": {
+      "capability": "voice-method"
+    },
+    "work.workspace": {
+      "capability": "workspace-method"
+    },
+    "knowledge.vocabulary": {
+      "capability": "method-vocabulary"
+    }
+  }
+}

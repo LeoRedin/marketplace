@@ -1,0 +1,206 @@
+#! ia 1.0
+
+@capability capability-method
+  meaning
+    says "Work with capability records under the IA methodology: the capability-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking a capability. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for a capability?"
+  composition
+    playbooks [@playbook capability-method]
+  execution
+    effects [read, local-write]
+
+@playbook capability-method
+  meaning
+    says "How an agent works with capability records, each a grouping of operations, procedures, templates, checks and included capabilities with declared execution bounds: orient through ia position --word capability and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with capability records?"
+  subject
+    subject-word capability
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word capability at the seat the work concerns, read the capability records it points at with ia read, and run ia vocabulary capability --schema for the sections and fields a capability carries."
+      Inference means "Read the capability's playbooks, operations, templates, checks and effects, and find the capability the work belongs to before adding one."
+      Decision means "capability is a word of agent-composition-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/agent-composition-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these capability records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the capability must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Compose an existing capability where it fits; a new one names what it composes and the smallest effects it needs."
+      Decision means "Extend an existing capability through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the capability will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the capability; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Author the capability's composition and effects; a capability grants no authority, so the mandate still bounds the work."
+      Decision means "Change capability records only through ia preview capability <name> <field>=<value>..., then ia author with the same form and the digest preview returned, then ia validate; use --set or --relate the same way for one field or relationship."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Check that every record the capability composes resolves and that its effects match what its procedures do."
+      Decision means "Reconcile the records that cite or depend on the capability, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."
+
+@capability agent-profile-method
+  meaning
+    says "Work with agent-profile records under the IA methodology: the agent-profile-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking an agent-profile. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for an agent-profile?"
+  composition
+    playbooks [@playbook agent-profile-method]
+  execution
+    effects [read, local-write]
+
+@playbook agent-profile-method
+  meaning
+    says "How an agent works with agent-profile records, each a composition of an agent, capabilities, an optional mandate, voice and delegates, and installed execution contracts: orient through ia position --word agent-profile and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with agent-profile records?"
+  subject
+    subject-word agent-profile
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word agent-profile at the seat the work concerns, read the agent-profile records it points at with ia read, and run ia vocabulary agent-profile --schema for the sections and fields an agent-profile carries."
+      Inference means "Read the profile's agent, capabilities, mandate and execution role, and the records it composes."
+      Decision means "agent-profile is a word of agent-composition-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/agent-composition-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these agent-profile records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the agent-profile must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Decide which agent, capabilities, mandate and voice the profile composes, and its execution role and limits."
+      Decision means "Extend an existing agent-profile through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the agent-profile will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the agent-profile; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Author the profile's composition and execution; every record it names must already exist."
+      Decision means "Change agent-profile records only through ia preview agent-profile <name> <field>=<value>..., then ia author with the same form and the digest preview returned, then ia validate; use --set or --relate the same way for one field or relationship."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Resolve each record the profile composes and confirm its role and limits are what the host runs."
+      Decision means "Reconcile the records that cite or depend on the agent-profile, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."
+
+@capability execution-binding-method
+  meaning
+    says "Work with execution-binding records under the IA methodology: the execution-binding-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking an execution-binding. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for an execution-binding?"
+  composition
+    playbooks [@playbook execution-binding-method]
+  execution
+    effects [read, local-write]
+
+@playbook execution-binding-method
+  meaning
+    says "How an agent works with execution-binding records, each a connection from a native target to a host-installed entry or operation descriptor: orient through ia position --word execution-binding and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with execution-binding records?"
+  subject
+    subject-word execution-binding
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word execution-binding at the seat the work concerns, read the execution-binding records it points at with ia read, and run ia vocabulary execution-binding --schema for the sections and fields an execution-binding carries."
+      Inference means "Read the binding's native target and the host entry or operation it connects to."
+      Decision means "execution-binding is a word of agent-composition-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/agent-composition-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these execution-binding records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the execution-binding must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Name the target and the host-installed entry it binds; the binding declares the connection and the host installs the entry."
+      Decision means "Extend an existing execution-binding through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the execution-binding will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the execution-binding; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Author the binding with its target and entry; installing the entry stays with the host."
+      Decision means "Change execution-binding records only through ia preview execution-binding <name> <field>=<value>..., then ia author with the same form and the digest preview returned, then ia validate; use --set or --relate the same way for one field or relationship."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Check that the target resolves and that the host reports the entry installed; a declared binding is not an installed one."
+      Decision means "Reconcile the records that cite or depend on the execution-binding, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."
+
+@capability harness-method
+  meaning
+    says "Work with harness records under the IA methodology: the harness-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking a harness. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for a harness?"
+  composition
+    playbooks [@playbook harness-method]
+  execution
+    effects [read, local-write]
+
+@playbook harness-method
+  meaning
+    says "How an agent works with harness records, each a composition of profiles and execution bindings in a workspace under a host contract: orient through ia position --word harness and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with harness records?"
+  subject
+    subject-word harness
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word harness at the seat the work concerns, read the harness records it points at with ia read, and run ia vocabulary harness --schema for the sections and fields a harness carries."
+      Inference means "Read the harness's profiles, execution bindings and host contract."
+      Decision means "harness is a word of agent-composition-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/agent-composition-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these harness records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the harness must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Decide which profiles and execution bindings the harness composes, under which host contract."
+      Decision means "Extend an existing harness through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the harness will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the harness; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Author the harness's composition; every profile and binding it names must already exist."
+      Decision means "Change harness records only through ia preview harness <name> <field>=<value>..., then ia author with the same form and the digest preview returned, then ia validate; use --set or --relate the same way for one field or relationship."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Check that the harness's records resolve, and say which host behaviour remains unobserved."
+      Decision means "Reconcile the records that cite or depend on the harness, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."
+
+@capability voice-method
+  meaning
+    says "Work with voice records under the IA methodology: the voice-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking a voice. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for a voice?"
+  composition
+    playbooks [@playbook voice-method]
+  execution
+    effects [read, local-write]
+
+@playbook voice-method
+  meaning
+    says "How an agent works with voice records, each communication attributes kept apart from authority and procedure: orient through ia position --word voice and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with voice records?"
+  subject
+    subject-word voice
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word voice at the seat the work concerns, read the voice records it points at with ia read, and run ia vocabulary voice --schema for the sections and fields a voice carries."
+      Inference means "Read the voice's attributes and the profiles that compose it."
+      Decision means "voice is a word of agent-composition-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/agent-composition-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these voice records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the voice must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Describe how the participant communicates, apart from what it may do and how it works."
+      Decision means "Extend an existing voice through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the voice will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the voice; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Author the voice's attributes; authority stays in mandates and procedure in playbooks."
+      Decision means "Change voice records only through ia preview voice <name> <field>=<value>..., then ia author with the same form and the digest preview returned, then ia validate; use --set or --relate the same way for one field or relationship."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Check that the profiles composing the voice still fit it."
+      Decision means "Reconcile the records that cite or depend on the voice, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."

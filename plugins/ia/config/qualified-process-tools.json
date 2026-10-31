@@ -1,0 +1,7 @@
+{
+  "format": "inventarch.process-tools/1",
+  "win32": {
+    "taskkillSha256": ["1249717315fc8f4d2df17d5db9da0444795fdb9fb83dfb1f763c3f39282244f7"],
+    "qualification": "Local Windows process-tree termination probe; other binary revisions refuse until inspected and tested."
+  }
+}

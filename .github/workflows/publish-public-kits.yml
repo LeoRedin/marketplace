@@ -1,0 +1,66 @@
+# Publishes @inventarch/public-kits (decision public-kits-package, docs/public-kits-package.md). Only an operator starts
+# it, by hand: there is no other trigger. It checks the package against its sources, refuses a version npm already has,
+# builds the package with the pinned CLI (every archive must be its kit's recorded release), and publishes it with npm
+# provenance through OIDC trusted publishing: no token is stored or passed. tests/test_gates.py holds its shape.
+name: Publish public kits
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-public-kits
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish @inventarch/public-kits
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Publish only from main
+        shell: bash
+        run: test "$GITHUB_REF" = refs/heads/main || { echo "publish from main, not $GITHUB_REF" >&2; exit 1; }
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22.22.0'
+          registry-url: 'https://registry.npmjs.org'
+      # Trusted publishing needs npm 11.5.1 or later; Node 22.22.0 ships npm 10.
+      - name: npm with trusted publishing
+        run: npm install -g npm@11.6.2
+      # The pinned IA CLI packs the archives. No install script runs.
+      - name: Root dependencies (the pinned IA CLI)
+        run: npm ci --ignore-scripts
+      - name: The bundled kits match their sources
+        run: node tools/bundle-kits.mjs --check
+      - name: The kit index matches the kits
+        run: node tools/kit.mjs index --check
+      - name: package.json is the claim the bundled kits make
+        run: node tools/kit.mjs package --check
+      - name: Refuse a version npm already has
+        shell: bash
+        env:
+          # An anonymous read: the .npmrc setup-node wrote holds only a placeholder token.
+          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/anonymous.npmrc
+        run: |
+          version="$(node -p "require('./packages/public-kits/package.json').version")"
+          if found="$(npm view "@inventarch/public-kits@${version}" version 2>&1)"; then
+            if [ -n "$found" ]; then echo "@inventarch/public-kits@${version} is already published; bump packages/public-kits/package.json" >&2; exit 1; fi
+          elif ! printf '%s' "$found" | grep -q E404; then
+            printf '%s\n' "$found" >&2; exit 1
+          fi
+          echo "@inventarch/public-kits@${version} is not published yet"
+      - name: Build the package (each archive is its kit's recorded release)
+        run: node tools/kit.mjs package --build
+      - name: The built package matches its sources
+        run: node tools/kit.mjs package --check --built
+      - name: The packed files and their integrity
+        run: npm pack --dry-run --json
+        working-directory: packages/public-kits
+      - name: Publish with provenance (OIDC, no token)
+        run: npm publish --provenance --access public
+        working-directory: packages/public-kits

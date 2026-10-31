@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+.scratch/
+build/
+review-private/
+.env
+.env.*
+.ia/work/
+.ia/distributions/
+.ia/distributions.lock.json
+node_modules/
+.qualification/
+# The @inventarch/public-kits build (node tools/kit.mjs package --build): generated from plugins/ia/config/kits and
+# kits/index.json, and bound by the committed package.json's digests (decision public-kits-package).
+packages/public-kits/index.json
+packages/public-kits/kits/
+packages/public-kits/archives/
+packages/public-kits/LICENSE
+packages/public-kits/NOTICE

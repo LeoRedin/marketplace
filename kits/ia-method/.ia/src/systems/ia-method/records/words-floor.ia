@@ -1,0 +1,83 @@
+#! ia 1.0
+
+@capability schema-method
+  meaning
+    says "Work with schema records under the IA methodology: the schema-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking a schema. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for a schema?"
+  composition
+    playbooks [@playbook schema-method]
+  execution
+    effects [read, local-write]
+
+@playbook schema-method
+  meaning
+    says "How an agent works with schema records, each the structural contract of exactly one registered word: orient through ia position --word schema and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with schema records?"
+  subject
+    subject-word schema
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word schema at the seat the work concerns, read the schema records it points at with ia read, and run ia vocabulary schema --schema for the sections and fields a schema carries."
+      Inference means "Read the word's schema with ia vocabulary <word> --schema: its sections, required fields and edges."
+      Decision means "schema is a floor word that every workspace admits; seat the work at the system that owns the records it touches."
+      Learning means "Read the observations and improvements earlier work left on these schema records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the schema must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Fit the records to the schema; a change to a schema belongs to the system that owns its word."
+      Decision means "Extend an existing schema through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the schema will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the schema; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Fill each record's required sections and fields from the schema, and propose a schema change to its owner rather than authoring around it."
+      Decision means "Use schemas, never author one here: a new schema registers a word, which is authoring a system and lies outside this kit (by hand from the public IA documentation, or with an InventArch subscription)."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Run ia validate; a schema finding names the section or field to fix."
+      Decision means "Reconcile the records that cite or depend on the schema, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."
+
+@capability system-method
+  meaning
+    says "Work with system records under the IA methodology: the system-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking a system. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for a system?"
+  composition
+    playbooks [@playbook system-method]
+  execution
+    effects [read, local-write]
+
+@playbook system-method
+  meaning
+    says "How an agent works with system records, each a registration of vocabulary, direct system dependencies, a local steward and consent for relationships: orient through ia position --word system and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with system records?"
+  subject
+    subject-word system
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word system at the seat the work concerns, read the system records it points at with ia read, and run ia vocabulary system --schema for the sections and fields a system carries."
+      Inference means "Read the systems the workspace composes, the words each owns and its steward, with ia position --seat <system>."
+      Decision means "system is a floor word that every workspace admits; seat the work at the system that owns the records it touches."
+      Learning means "Read the observations and improvements earlier work left on these system records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the system must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Decide which system owns each word the work needs, and seat the work there."
+      Decision means "Extend an existing system through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the system will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the system; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Use the system: author records of its words at its seat, through its steward, as those words' own playbooks say."
+      Decision means "Use, read and seat at systems; authoring a new system or extending a system's vocabulary lies outside this kit (by hand from the public IA documentation, or with an InventArch subscription)."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Check that each record sits in the system that owns its word, and that the system's requires still cover what it uses."
+      Decision means "Reconcile the records that cite or depend on the system, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."
