@@ -597,7 +597,7 @@
     },
     {
       "path": "plugins/ia/scripts/lib/handlers.mjs",
-      "sha256": "57c2ffa632162bcd5422627669d848a9b8efdd1f2b7edd9b7d3a9bc2fc294782"
+      "sha256": "5c60fc0789a983f9e6ae3d950a0a901a600170322af14725b87363767d2c2ecb"
     },
     {
       "path": "plugins/ia/scripts/lib/home.mjs",

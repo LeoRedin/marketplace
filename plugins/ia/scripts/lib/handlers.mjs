@@ -166,8 +166,16 @@ export function runHandlers(picked, { event, raw = '{}', cwd = process.cwd(), wo
       cwd, input: raw, encoding: 'utf8', timeout: Math.min(handler.timeout * 1000, left), maxBuffer: 4 * 1024 * 1024, windowsHide: true,
       env: { ...env, IA_KIT_ROOT: kit.dir, IA_WORKSPACE_ROOT: workspace ?? '', IA_HOME: home },
     });
-    const answer = child.error || child.status !== 0 ? null : answerOf(child.stdout);
+    const failed = Boolean(child.error) || child.status !== 0;
+    const answer = failed ? null : answerOf(child.stdout);
     ran.push({ kit: kit.id, run: handler.run, status: child.error ? 'error' : child.status === 0 ? 'ran' : `exit ${child.status}`, answered: Boolean(answer) });
+    // A pre handler that could not decide (it failed to start, crashed, timed out or exited non-zero) refuses the
+    // call in a governed workspace: a gate that fails must not read as allow.
+    if (failed && event === 'pre' && governed) {
+      const detail = child.error?.message ?? (String(child.stderr ?? '').split('\n').map((l) => l.trim()).find((l) => /^\w*Error\b/.test(l)) || `exit ${child.status ?? child.signal}`);
+      block = { kit: kit.id, reason: `its pre-tool handler failed, so the call is refused (fail closed): ${detail}` };
+      break;
+    }
     if (!answer) continue;
     const parts = byKit.get(kit.id) ?? [];
     if (answer.context) parts.push(answer.context);

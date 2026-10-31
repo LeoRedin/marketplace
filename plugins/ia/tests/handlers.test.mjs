@@ -125,6 +125,17 @@ test('a pre handler blocks only in a workspace opted in through .ia/governance.j
   assert.equal(hook('post', { hook_event_name: 'PostToolUse', tool_name: 'Write', tool_input: {} }).stdout, '', 'a pre handler is not a post handler');
 });
 
+test('a pre handler that crashes refuses the call in a governed workspace (fail closed), and only there', t => {
+  const { kitsDir, env, repo } = setup(t);
+  handlerKit(kitsDir, 'crash', { tool: [{ run: 'scripts/crash.mjs', phase: 'pre' }] }, { 'scripts/crash.mjs': "throw new Error('cannot read the ledger');\n" });
+  const pre = () => run('handlers.mjs', ['pre'], env, { input: JSON.stringify({ cwd: repo, hook_event_name: 'PreToolUse', tool_name: 'Write', tool_input: {} }) });
+  assert.equal(pre().stdout, '', 'not governed: a crash neither blocks nor speaks');
+  writeFileSync(join(repo, '.ia', 'governance.json'), '{}\n');
+  const governed = pre().json.hookSpecificOutput;
+  assert.equal(governed.permissionDecision, 'deny');
+  assert.match(governed.permissionDecisionReason, /^inventarch\/crash-kit: its pre-tool handler failed, so the call is refused \(fail closed\): Error: cannot read the ledger$/);
+});
+
 test('a handler whose script the kit does not hold never runs (a fetched release carries no executables)', t => {
   const { kitsDir, hook } = setup(t);
   const dir = handlerKit(kitsDir, 'fetched', { session: [{ run: 'scripts/echo.mjs' }] });
