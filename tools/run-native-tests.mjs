@@ -15,14 +15,17 @@ function sourceSnapshot() {
   return hash.digest('hex');
 }
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
+// The one CLI version the native lane qualifies; tools/consistency.py holds it to sources.lock.json.
+const CLI_VERSION = '3.4.1';
 export function inspectCli(entry) {
   assert(entry, 'IA_CORE_TEST_CLI is required; use the installed @inventarch/cli/dist/main.js');
   const cli = resolve(entry);
   assert(existsSync(cli), `native CLI missing: ${cli}`);
   const pkg = JSON.parse(readFileSync(join(dirname(cli), '..', 'package.json'), 'utf8'));
   assert.equal(pkg.name, '@inventarch/cli');
-  assert.equal(pkg.version, '3.4.1', 'required native CLI version');
-  assert.match(execFileSync(process.execPath, [cli, '--version'], { encoding: 'utf8', timeout: 30000 }), /\b3\.4\.0\b/);
+  assert.equal(pkg.version, CLI_VERSION, 'required native CLI version');
+  const reported = execFileSync(process.execPath, [cli, '--version'], { encoding: 'utf8', timeout: 30000 });
+  assert.match(reported, new RegExp(`\\b${CLI_VERSION.replaceAll('.', '\\.')}\\b`), 'the native CLI reports another version');
   return { entry: cli, version: pkg.version, entrySha256: digest(readFileSync(cli)) };
 }
 export function reconcile(cases, results) {

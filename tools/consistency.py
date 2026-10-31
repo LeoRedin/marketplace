@@ -50,6 +50,8 @@ PIN_CONSTANTS = (
     ('tools/verify-native.mjs', r"\bcli: '([^']*)'", 'cli'),
     ('tools/verify-native.mjs', r"\blanguage: \{ version: '([^']*)'", 'languageVersion'),
     ('tools/verify-native.mjs', r"\barchive: '([^']*)'", 'languageArchiveSha256'),
+    ('tools/run-native-tests.mjs', r"^const CLI_VERSION = '([^']*)';$", 'cli'),
+    ('tools/run-native-tests.mjs', r"language: 'inventarch/language ([^']*)'", 'languageVersion'),
     ('plugins/ia/scripts/lib/cli.mjs', r"^export const PINNED = '([^']*)';$", 'cli'),
     *((CORE_LIB + 'closure-runtime.mjs', pattern, key) for pattern, key in CLOSURE_RUNTIME),
     *((CORE_LIB + 'method-closure.mjs', pattern, key) for pattern, key in METHOD_CLOSURE),
