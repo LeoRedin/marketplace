@@ -19,7 +19,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { declaresGovernance, governanceKits, handlerKits } from './handlers.mjs';
+import { alteredGates, declaresGovernance, gateRemedy, governanceKits, handlerKits } from './handlers.mjs';
 import { iaHome } from './home.mjs';
 
 export const MCP_URL = 'https://api.inventarch.dev/mcp';
@@ -67,10 +67,15 @@ export function governanceInstalled({ kits } = {}) {
 }
 
 // The governance notice for a workspace root, or null. A kit that declares a
-// governance handler but may not run it (lib/trust.mjs) is named, with why.
+// governance handler but may not run it (lib/trust.mjs) is named, with why; an
+// altered gate (a trusted publisher's kit, lib/handlers.mjs alteredGates) is
+// named with the fix, since every tool call is refused until it is mended.
 export function governanceNotice({ source, root, kits } = {}) {
   if (source !== 'startup' || !root || !existsSync(join(root, '.ia', 'governance.json'))) return null;
-  const declared = governanceKits(handlerKits({ kits }).kits);
+  const found = handlerKits({ kits }).kits;
+  const altered = alteredGates(found);
+  if (altered.length) return `InventArch: this repository is governed (.ia/governance.json), and an installed governance gate may not run: ${altered.map(g => `${g.kit.id}, because ${g.reason}`).join('; ')}. Every edit and shell command is refused until it is mended (fail closed). ${altered.map(g => gateRemedy(g.kit)).find(Boolean)}`;
+  const declared = governanceKits(found);
   if (declared.some(g => g.trusted)) return null;
   if (declared.length) return `InventArch: this repository is governed (.ia/governance.json), but no installed governance handler may run: ${declared.map(g => `${g.kit.id}, because ${g.reason}`).join('; ')}. Reinstall the kit's recorded release (\`ia kit add\`). Nothing here enforces its rules: say so before changing anything, and do not treat the repository as ungoverned.`;
   return 'InventArch: this repository is governed (.ia/governance.json); add the ia-governance kit (`ia kit add`). No installed kit declares governance handlers, so nothing here enforces its rules: say so before changing anything, and do not treat the repository as ungoverned.';

@@ -184,7 +184,7 @@ test('the governance probe names the ia-governance kit until an installed kit de
   assert.doesNotMatch(notice, /plugin/);
   assert.equal(governanceNotice({ source: 'resume', root: repo, kits: kits() }), null, 'startup only');
   writeFileSync(join(kitsDir, 'gov', 'handlers.json'), JSON.stringify({ format: 1, tool: [{ run: 'scripts/echo.mjs', phase: 'pre' }] }));
-  assert.match(governanceNotice({ source: 'startup', root: repo, kits: kits() }), /no installed governance handler may run: inventarch\/gov-kit, because its bytes are not its recorded release/, 'a changed handlers.json is not the recorded release');
+  assert.match(governanceNotice({ source: 'startup', root: repo, kits: kits() }), /an installed governance gate may not run: inventarch\/gov-kit, because its bytes are not its recorded release.*Every edit and shell command is refused/s, 'a changed handlers.json is not the recorded release');
   recordSources(join(kitsDir, 'gov'));
   assert.equal(governanceNotice({ source: 'startup', root: repo, kits: kits() }), null, 'a kit with a pre handler governs');
 });

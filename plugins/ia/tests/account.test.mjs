@@ -109,7 +109,7 @@ test('a governed repository is named once at startup until an installed kit decl
   writeFileSync(join(kit, 'scripts', 'gate.mjs'), 'process.stdout.write("{}");\n');
   writeFileSync(join(kit, 'handlers.json'), JSON.stringify({ format: 1, tool: [{ run: 'scripts/gate.mjs', phase: 'pre' }] }));
   // Until its bytes, handler script included, are its recorded release it may not run (lib/trust.mjs), and the notice says so.
-  assert.match(JSON.parse(hook(repo, env, 'startup').stdout).systemMessage, /no installed governance handler may run: inventarch\/gov-kit, because its bytes are not its recorded release/);
+  assert.match(JSON.parse(hook(repo, env, 'startup').stdout).systemMessage, /an installed governance gate may not run: inventarch\/gov-kit, because its bytes are not its recorded release.*Every edit and shell command is refused until it is mended \(fail closed\)/s);
   declareAssets(kit, ['scripts/gate.mjs']);
   recordSources(kit);
   const installed = JSON.parse(hook(repo, env, 'startup').stdout);

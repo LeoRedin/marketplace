@@ -37,7 +37,7 @@
     },
     {
       "path": "plugins/ia/CHANGELOG.md",
-      "sha256": "7175d87fdce597beebd062d66fb231edb6aa92f9f56c41f9d7356bd289d0c61b"
+      "sha256": "4d58fb59ead94829cda9ade2677b708cf7e61f27b346715d414c97a309ac02a7"
     },
     {
       "path": "plugins/ia/CODEX.md",
@@ -505,7 +505,7 @@
     },
     {
       "path": "plugins/ia/README.md",
-      "sha256": "508bb30b64bbb90af97bacbdf99f0f7c57b81e55222ef82be01aa1adb7bf8f36"
+      "sha256": "cdd4100fc031f490a7d757f900562a0c7ba02d20a2d7bde54ad058cd52154cd2"
     },
     {
       "path": "plugins/ia/references/design-service.md",
@@ -545,7 +545,7 @@
     },
     {
       "path": "plugins/ia/scripts/handlers.mjs",
-      "sha256": "f6dc12e0068c1789c353fbf5dc0c6dbbf33f68edc838c8f18d3624170248ddb5"
+      "sha256": "bb0533b1755f364d0a28b6d7b42f27a0eaa00cde348de928fd9718c8c46209fc"
     },
     {
       "path": "plugins/ia/scripts/ia.mjs",
@@ -557,7 +557,7 @@
     },
     {
       "path": "plugins/ia/scripts/lib/account.mjs",
-      "sha256": "3f7ce14ea459c761b398626ba4c00f7206f2a87cddff7dad289566aa4fbb4280"
+      "sha256": "c62e4325cbe54a0c8cf4ce9f11eb07d03edc1e2bd64b9d6f07133093e3466094"
     },
     {
       "path": "plugins/ia/scripts/lib/binding.mjs",
@@ -601,7 +601,7 @@
     },
     {
       "path": "plugins/ia/scripts/lib/handlers.mjs",
-      "sha256": "6eac3f96aa1cccd5f86fdd7cbe27d45aced326d2f8a078fd196f5db406fa460c"
+      "sha256": "0a068dec5460f3a3d1deac2c19d7a5a3fa92cc133a07099611827695be6c6de1"
     },
     {
       "path": "plugins/ia/scripts/lib/home.mjs",
@@ -681,7 +681,7 @@
     },
     {
       "path": "plugins/ia/scripts/lib/trust.mjs",
-      "sha256": "134f25856f1b17dbc92ef493671d34c845a878625bc32b8844e23e9e44ece89b"
+      "sha256": "7d77f7e14978eea1d42f9095f1cf6b39ac24c74fbc624d3832df2cb91447b453"
     },
     {
       "path": "plugins/ia/scripts/lib/workspace.mjs",

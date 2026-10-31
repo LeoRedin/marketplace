@@ -56,20 +56,27 @@ export function publisherOf(kit) {
   return { publisher: match[1], problem: null, descriptor };
 }
 
-// Whether one kit may run code: { trusted, publisher, reason }. reason says why
-// not, in a phrase that follows "because".
+// Whether one kit may run code: { trusted, publisher, publisherTrusted,
+// reason }. reason says why not, in a phrase that follows "because".
+// publisherTrusted says whether the kit id's namespace is on the list, whatever
+// else fails: a kit that claims a trusted publisher but whose bytes, descriptor
+// or release record do not hold up is an altered kit, not another publisher's,
+// and a governed workspace refuses tool calls while its gate cannot run
+// (lib/handlers.mjs alteredGates).
 export function kitTrust(kit, { publishers = trustedPublishers() } = {}) {
   const { publisher, problem, descriptor } = publisherOf(kit);
-  const no = reason => ({ trusted: false, publisher, reason });
+  const publisherTrusted = publisher !== null && publishers.includes(publisher);
+  const no = reason => ({ trusted: false, publisher, publisherTrusted, reason });
+  if (!publisher) return no(problem);
+  if (!publisherTrusted) return no(`its publisher ${publisher} is not on this plugin's trusted list (config/trusted-publishers.json)`);
   if (problem) return no(problem);
-  if (!publishers.includes(publisher)) return no(`its publisher ${publisher} is not on this plugin's trusted list (config/trusted-publishers.json)`);
   const latest = kit.latest;
   if (!latest || !DIGEST.test(latest.sources ?? '')) return no('it records no release with a sources digest');
   if (descriptor.version !== latest.version) return no(`its .ia/release.json is version ${descriptor.version}, not its latest release ${latest.version}`);
   let digest;
   try { digest = sourcesDigest(kit.dir); } catch (error) { return no(`its sources cannot be digested: ${error.message}`); }
   if (digest !== latest.sources) return no(`its bytes are not its recorded release ${latest.version} (the sources digest differs)`);
-  return { trusted: true, publisher, reason: null };
+  return { trusted: true, publisher, publisherTrusted, reason: null };
 }
 
 // Is a kit-relative script one of the kit's declared assets, so its recorded

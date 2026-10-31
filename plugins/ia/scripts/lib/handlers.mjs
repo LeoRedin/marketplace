@@ -24,10 +24,15 @@
 // kit. A tool `pre` handler's block is honoured only in a workspace that opted
 // in through .ia/governance.json; elsewhere it is reported, never applied.
 // There, a trusted pre handler that cannot decide refuses the call (fail
-// closed); an untrusted kit's pre handler never runs, so it never blocks. A
-// kit's onwrite.json stays supported as tool post handlers (scripts/on-write.mjs).
+// closed), and so does an altered gate: while a kit from a trusted publisher
+// declares a pre handler whose code the trust check refuses (its bytes are not
+// its release, or its script is not a declared asset), every pre-tool call is
+// refused, naming the kit and the fix (alteredGates). A kit from a publisher
+// that is not on the list never blocks: its pre handler never runs. A kit's
+// onwrite.json stays supported as tool post handlers (scripts/on-write.mjs).
 import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { iaHome } from './home.mjs';
 import { childEnv, runChild } from './hygiene.mjs';
 import { KitError, listKits } from './kit.mjs';
@@ -38,6 +43,7 @@ export const SESSION_EVENTS = ['startup', 'resume', 'compact', 'clear'];
 export const KIT_CONTEXT_CAP = 2000;
 export const MAX_TIMEOUT = 25;
 const DEFAULT_TIMEOUT = { session: 20, prompt: 10, tool: 20, stop: 20 };
+const KIT_SCRIPT = resolve(fileURLToPath(new URL('../kit.mjs', import.meta.url)));
 const KINDS = Object.keys(DEFAULT_TIMEOUT);
 
 const plainObject = v => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -151,6 +157,41 @@ export function governanceKits(found = handlerKits().kits) {
 // governance probe asks this (lib/account.mjs governanceNotice).
 export function declaresGovernance(found = handlerKits().kits) {
   return governanceKits(found).some(g => g.trusted);
+}
+
+// The altered gates: each kit whose id names a trusted publisher and that
+// declares a tool `pre` handler with a run script the trust check refuses (its
+// bytes are not its recorded release, its script is not a declared asset, or
+// the script is not a file inside the kit), whatever the handler's tool match:
+// [{ kit, reason }], one per kit. A kit from a publisher that is not on the
+// list is never one. In a governed workspace each refuses every pre-tool call.
+export function alteredGates(found) {
+  const out = [];
+  for (const entry of found) {
+    const pre = entry.handlers.tool.filter(h => h.phase === 'pre' && h.run);
+    if (!pre.length || !trustOf(entry).publisherTrusted) continue;
+    const reason = pre.map(h => codeRefusal(entry, h) ?? (scriptPresent(entry.kit, h) ? null : `its handler script ${h.run} is not a file inside the kit`)).find(Boolean);
+    if (reason) out.push({ kit: entry.kit, reason });
+  }
+  return out;
+}
+
+// How to mend an altered gate, in a sentence: reinstall the kit's recorded
+// release, or stop governing the workspace.
+export function gateRemedy(kit) {
+  const add = `\`node "${KIT_SCRIPT}" add --from <its release folder or archive> --apply\``;
+  const reinstall = kit.origin === 'plugin' ? `reinstall the ia plugin, which carries it, or install its recorded release with ${add}` : `reinstall its recorded release with ${add}`;
+  return `To fix it, ${reinstall}, or remove .ia/governance.json to stop governing this repository.`;
+}
+
+// The refusal for a governed workspace's pre-tool call while an altered gate
+// is installed: { kit, reason } for the first, or null. Nothing runs first:
+// with its gate unable to run, no call may pass.
+export function alteredGateBlock(found, workspace) {
+  if (!workspace || !existsSync(join(workspace, '.ia', 'governance.json'))) return null;
+  const [first] = alteredGates(found);
+  if (!first) return null;
+  return { kit: first.kit.id, reason: `its pre-tool gate may not run, because ${first.reason}, so every tool call in this governed repository is refused (fail closed). ${gateRemedy(first.kit)}` };
 }
 
 // The kits that ship handler code which does not run here, with why:

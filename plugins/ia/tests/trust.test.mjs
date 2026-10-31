@@ -5,9 +5,10 @@
 // is killed on its deadline and its output is capped. Hygiene, not a sandbox.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { governanceNotice } from '../scripts/lib/account.mjs';
 import { childEnv, killTree, OUTPUT_CAP, runChild } from '../scripts/lib/hygiene.mjs';
 import { findKit, sourcesDigest } from '../scripts/lib/kit.mjs';
 import { kitTrust, trustedPublishers } from '../scripts/lib/trust.mjs';
@@ -82,13 +83,70 @@ test('an untrusted pre handler never blocks, even in a governed workspace', t =>
   assert.equal(ran(acme), false);
 });
 
+// An altered gate (the operator's ruling, 2026-10-31): in a governed workspace,
+// a kit from a trusted publisher whose pre handler the trust check refuses
+// refuses every pre-tool call, naming the kit and the fix. Nothing of it runs.
+const preCall = (env, repo, tool = 'Write') => run('handlers.mjs', ['pre'], env, { input: JSON.stringify({ cwd: repo, hook_event_name: 'PreToolUse', tool_name: tool, tool_input: {} }) });
+const denial = out => out.json?.hookSpecificOutput?.permissionDecision === 'deny' ? out.json.hookSpecificOutput.permissionDecisionReason : null;
+
+test('an altered governed pre kit refuses every tool call, naming the kit and the fix', t => {
+  const { kitsDir, repo, env, hook } = setup(t);
+  const gate = kit(kitsDir, 'gate', { handlers: { tool: [{ run: 'scripts/marker.mjs', phase: 'pre', match: 'Write' }] } });
+  writeFileSync(join(repo, '.ia', 'governance.json'), '{}\n');
+  assert.equal(denial(preCall(env, repo)), null, 'its recorded release runs and allows');
+  assert.equal(ran(gate), true);
+  rmSync(join(gate.dir, 'ran'));
+  writeFileSync(join(gate.dir, 'scripts', 'marker.mjs'), MARKER + '// edited after the release\n');
+  for (const tool of ['Write', 'Bash', 'Edit']) {
+    const reason = denial(preCall(env, repo, tool));
+    assert.ok(reason, `${tool} is refused, matched or not`);
+    assert.match(reason, /^inventarch\/gate-kit: its pre-tool gate may not run, because its bytes are not its recorded release 0\.1\.0 \(the sources digest differs\), so every tool call in this governed repository is refused \(fail closed\)\. To fix it, /);
+    assert.match(reason, /`node "[^"]+[\\/]scripts[\\/]kit\.mjs" add --from <its release folder or archive> --apply`/);
+    assert.match(reason, /or remove \.ia\/governance\.json to stop governing this repository\.$/);
+  }
+  assert.equal(ran(gate), false, 'the altered gate never ran');
+  assert.match(governanceNotice({ source: 'startup', root: repo, kits: [findKit('inventarch/gate-kit', kitsDir)] }), /an installed governance gate may not run: inventarch\/gate-kit, because its bytes are not its recorded release.*Every edit and shell command is refused until it is mended \(fail closed\)\. To fix it, .*kit\.mjs" add --from/s);
+  assert.match(context(hook('session', { hook_event_name: 'SessionStart', source: 'startup' })), /inventarch\/gate-kit: its handlers did not run, because its bytes are not its recorded release/);
+  // A pre script that is not a declared asset is refused the same way.
+  const loose = kit(kitsDir, 'loose', { handlers: { tool: [{ run: 'scripts/marker.mjs', phase: 'pre' }] }, declare: false });
+  writeFileSync(join(gate.dir, 'scripts', 'marker.mjs'), MARKER);
+  assert.equal(kitTrust(findKit('inventarch/gate-kit', kitsDir)).trusted, true, 'the gate is mended');
+  assert.match(denial(preCall(env, repo)), /^inventarch\/loose-kit: its pre-tool gate may not run, because its handler script scripts\/marker\.mjs is not a declared asset/);
+  assert.equal(ran(loose), false);
+  rmSync(join(loose.dir, 'handlers.json'));
+  assert.equal(denial(preCall(env, repo)), null, 'mended: the calls pass again');
+});
+
+test('an altered pre kit in an ungoverned workspace does not block', t => {
+  const { kitsDir, repo, env } = setup(t);
+  const gate = kit(kitsDir, 'gate', { handlers: { tool: [{ run: 'scripts/marker.mjs', phase: 'pre' }] } });
+  writeFileSync(join(gate.dir, 'scripts', 'marker.mjs'), MARKER + '// edited after the release\n');
+  const pre = preCall(env, repo);
+  assert.equal(pre.status, 0);
+  assert.equal(pre.stdout, '', 'no block and no refusal without .ia/governance.json');
+  assert.equal(ran(gate), false, 'and its code still does not run');
+});
+
+test('an altered pre kit from an untrusted publisher never blocks a governed workspace', t => {
+  const { kitsDir, repo, env } = setup(t);
+  const acme = kit(kitsDir, 'acme', { id: 'acme/acme-kit', handlers: { tool: [{ run: 'scripts/marker.mjs', phase: 'pre' }] } });
+  kit(kitsDir, 'acmeloose', { id: 'acme/acmeloose-kit', handlers: { tool: [{ run: 'scripts/marker.mjs', phase: 'pre' }] }, declare: false });
+  writeFileSync(join(acme.dir, 'scripts', 'marker.mjs'), MARKER + '// edited after the release\n');
+  writeFileSync(join(repo, '.ia', 'governance.json'), '{}\n');
+  assert.equal(kitTrust(findKit('acme/acme-kit', kitsDir)).publisherTrusted, false);
+  const pre = preCall(env, repo);
+  assert.equal(pre.status, 0);
+  assert.equal(pre.stdout, '', 'neither a block nor a refusal');
+  assert.equal(ran(acme), false);
+});
+
 test('a trusted kit whose sources were changed after their release runs nothing, and says why', t => {
   const { kitsDir, hook } = setup(t);
   const gate = kit(kitsDir, 'gate', { handlers: { session: [{ run: 'scripts/marker.mjs' }] } });
   assert.equal(kitTrust(findKit('inventarch/gate-kit', kitsDir)).trusted, true);
   writeFileSync(join(gate.dir, 'scripts', 'marker.mjs'), MARKER + '// edited after the release\n');
   const trust = kitTrust(findKit('inventarch/gate-kit', kitsDir));
-  assert.deepEqual(trust, { trusted: false, publisher: 'inventarch', reason: 'its bytes are not its recorded release 0.1.0 (the sources digest differs)' });
+  assert.deepEqual(trust, { trusted: false, publisher: 'inventarch', publisherTrusted: true, reason: 'its bytes are not its recorded release 0.1.0 (the sources digest differs)' });
   const started = hook('session', { hook_event_name: 'SessionStart', source: 'startup' });
   assert.match(context(started), /inventarch\/gate-kit: its handlers did not run, because its bytes are not its recorded release 0\.1\.0/);
   assert.equal(ran(gate), false);
@@ -308,9 +366,12 @@ test('the ia-governance kit installed with add --from still gates a governed rep
   assert.equal(decision(read), null, 'a read is allowed');
   const post = hook('post', { hook_event_name: 'PostToolUse', tool_name: 'Bash', tool_use_id: 'b2', tool_input: { command: 'cat README.md' }, tool_response: { stdout: 'readme', stderr: '', interrupted: false } });
   assert.equal(post.status, 0, post.stderr);
-  // A changed engine entry script is not the recorded release: the gate is not run, never blocks, and the session says why.
+  // A changed engine entry script is not the recorded release: the gate does not run, every call is refused until
+  // it is reinstalled (fail closed), and the session says why.
   const pre = join(home, 'kits', 'ia-governance', added.json.version, 'scripts', 'handlers', 'pre-tool.mjs');
   writeFileSync(pre, readFileSync(pre, 'utf8') + '\n// changed\n');
-  assert.equal(decision(hook('pre', { hook_event_name: 'PreToolUse', tool_name: 'Write', tool_use_id: 'w2', tool_input: { file_path: join(repo, 'src', 'a.js'), content: 'x' } })), null);
+  const altered = hook('pre', { hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_use_id: 'b3', tool_input: { command: 'cat README.md' } });
+  assert.equal(decision(altered), 'deny');
+  assert.match(reason(altered), /^inventarch\/ia-governance-kit: its pre-tool gate may not run, because its bytes are not its recorded release .*kit\.mjs" add --from/s);
   assert.match(context(hook('session', { hook_event_name: 'SessionStart', source: 'startup' })), /inventarch\/ia-governance-kit: its handlers did not run, because its bytes are not its recorded release/);
 });

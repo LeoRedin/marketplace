@@ -12,13 +12,15 @@
 // silent. Only trusted kits run code (lib/trust.mjs); at session start the
 // answer names, once per kit, each installed kit whose handler or on-write
 // code does not run, and why. A `pre` block is applied only in a workspace
-// with .ia/governance.json. Any error exits 0 silently: these hooks never fail
+// with .ia/governance.json; there, while a trusted publisher's kit declares a
+// pre handler whose code may not run (an altered gate), every pre call is
+// refused, naming the kit and the fix. Any error exits 0 silently: these hooks never fail
 // a session, and each stays inside its budget (BUDGET_MS, under the hook's own
 // timeout); a governed gate still running when the budget ends refuses the
 // call.
 import { readFileSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { gate, handlerKits, runHandlers, selectHandlers, untrustedHandlerKits } from './lib/handlers.mjs';
+import { alteredGateBlock, gate, handlerKits, runHandlers, selectHandlers, untrustedHandlerKits } from './lib/handlers.mjs';
 import { killRunning } from './lib/hygiene.mjs';
 import { trustNote } from './lib/trust.mjs';
 import { findWorkspace } from './lib/workspace.mjs';
@@ -51,6 +53,11 @@ export async function answer(event, raw, { env = process.env, kits } = {}) {
   const picked = selectHandlers(found, event, { source: hook.source, toolName: hook.tool_name });
   const cwd = typeof hook.cwd === 'string' && hook.cwd ? hook.cwd : process.cwd();
   const workspace = findWorkspace(cwd);
+  if (event === 'pre') {
+    // An altered gate (a trusted publisher's pre handler whose code may not run) refuses every call, before anything runs.
+    const altered = alteredGateBlock(found, workspace);
+    if (altered) return { hookSpecificOutput: { hookEventName: hookEvent, permissionDecision: 'deny', permissionDecisionReason: `${altered.kit}: ${altered.reason}` } };
+  }
   const parts = [];
   const started = Date.now();
   let block = null;
