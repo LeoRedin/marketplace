@@ -21,7 +21,7 @@ Keep a body close to code when changes should be reviewed atomically with implem
 |---|---|
 | `~/Documents/ia/<name>` | A user's workspace, one folder per workspace named for its domain: `~/Documents/ia/studio`, `~/Documents/ia/music`, `~/Documents/ia/design`. The default; the user can point a workspace anywhere else. |
 | `~/.ia` | The IA home only: config, state, the location registry and installed kits. Never a workspace: the IA CLI refuses a workspace inside its home, so work on a copy outside it. |
-| A knowledge repository's root | One workspace (`.ia/src` at the root), with scope folders inside it for its areas. |
-| `workspaces/<name>/` in a repository | Only a workspace that needs its own identity: its own seat, participant and mandates, with its own `.ia/src`. |
+| A knowledge repository | One `.ia/src`, at the root. A personal or single-team KB declares one `@workspace` there. An organisation store declares one `@workspace` per department, each declaring its own scope folders, plus an organisation `@workspace` that also declares the repository root (`". @authored"`). |
+| `workspaces/<name>/` in a repository | Only a workspace released or adopted on its own, with its own `.ia/src`. |
 
-The nearest `.ia/src` decides which workspace a file belongs to, so keep the root workspace's scope folders and any `workspaces/<name>/` folder apart.
+The nearest `.ia/src` decides which store a file belongs to, so keep any `workspaces/<name>/` folder apart from the scope folders the root's workspaces declare.

@@ -90,7 +90,7 @@ test('built files are checked when present, and required with --built', t => {
   const problems = builtProblems(root).join('\n');
   assert.match(problems, /LICENSE is missing/);
   assert.match(problems, /kits\/ia-kb is not plugins\/ia\/config\/kits\/ia-kb: missing /);
-  assert.match(problems, /archives\/3e9c2330[0-9a-f]+\.ia\.tgz \(inventarch\/ia-kb-kit 0\.9\.0\) is missing/);
+  assert.match(problems, /archives\/[0-9a-f]{64}\.ia\.tgz \(inventarch\/ia-kb-kit 0\.9\.0\) is missing/);
   assert.equal(run(root, '--check').status, 1);
   assert.equal(run(root, '--bogus').status, 2);
 });

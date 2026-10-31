@@ -37,13 +37,13 @@
       "releases": "kits/ia-kb/releases.json",
       "latest": {
         "version": "0.9.0",
-        "archive": "3e9c2330416197b602c3cd5f6dda12a3cfb313959684079ac2bfe8b5a1f7dc8c",
+        "archive": "cb8ea3db9f6d7a0b8172615074a415a479f7d18be952fd8ca8611ab20ed13aa6",
         "cli": "@inventarch/cli 3.4.1",
         "language": "inventarch/language ^3.2.0",
         "file": "kits/ia-kb/releases/0.9.0.json",
         "source": {
           "repository": "https://github.com/inventarch/marketplace.git",
-          "commit": "b3f25d39b72abd2350aece52082fba0cd706aad2"
+          "commit": "57ebf446990b9aa5991702291ca97a59a2d90e8c"
         }
       },
       "versions": [
