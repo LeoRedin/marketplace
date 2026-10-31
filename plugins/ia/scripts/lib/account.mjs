@@ -19,7 +19,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { declaresGovernance, handlerKits } from './handlers.mjs';
+import { declaresGovernance, governanceKits, handlerKits } from './handlers.mjs';
 import { iaHome } from './home.mjs';
 
 export const MCP_URL = 'https://api.inventarch.dev/mcp';
@@ -66,8 +66,12 @@ export function governanceInstalled({ kits } = {}) {
   return declaresGovernance(handlerKits({ kits }).kits);
 }
 
-// The governance notice for a workspace root, or null.
+// The governance notice for a workspace root, or null. A kit that declares a
+// governance handler but may not run it (lib/trust.mjs) is named, with why.
 export function governanceNotice({ source, root, kits } = {}) {
-  if (source !== 'startup' || !root || !existsSync(join(root, '.ia', 'governance.json')) || governanceInstalled({ kits })) return null;
+  if (source !== 'startup' || !root || !existsSync(join(root, '.ia', 'governance.json'))) return null;
+  const declared = governanceKits(handlerKits({ kits }).kits);
+  if (declared.some(g => g.trusted)) return null;
+  if (declared.length) return `InventArch: this repository is governed (.ia/governance.json), but no installed governance handler may run: ${declared.map(g => `${g.kit.id}, because ${g.reason}`).join('; ')}. Reinstall the kit's recorded release (\`ia kit add\`). Nothing here enforces its rules: say so before changing anything, and do not treat the repository as ungoverned.`;
   return 'InventArch: this repository is governed (.ia/governance.json); add the ia-governance kit (`ia kit add`). No installed kit declares governance handlers, so nothing here enforces its rules: say so before changing anything, and do not treat the repository as ungoverned.';
 }

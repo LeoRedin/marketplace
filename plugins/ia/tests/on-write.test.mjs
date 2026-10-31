@@ -11,7 +11,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { MAX_CONTEXT } from '../scripts/on-write.mjs';
-import { envFor, fakeCli, makeKit, run, sandbox } from './helpers/fixtures.mjs';
+import { envFor, fakeCli, makeKit, recordSources, run, sandbox } from './helpers/fixtures.mjs';
 
 // A check that answers as a hook would, naming the file from its stdin payload.
 const ANSWER = `let raw = ''; process.stdin.on('data', d => raw += d).on('end', () => { const p = JSON.parse(raw); process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: process.argv[2] + ' checked ' + p.tool_input.file_path } }) + '\\n'); });\n`;
@@ -25,6 +25,8 @@ function world(t) {
   for (const kit of [cards, other]) writeFileSync(join(kit.dir, 'answer.mjs'), ANSWER);
   writeFileSync(join(cards.dir, 'onwrite.json'), JSON.stringify({ format: 1, onWrite: [{ name: 'card', extensions: ['.md'], marker: 'design.index.md', maxDepth: 2, argv: ['${NODE}', '${KIT}/answer.mjs', 'cards'] }] }));
   writeFileSync(join(other.dir, 'onwrite.json'), JSON.stringify({ format: 1, onWrite: [{ name: 'any-md', extensions: ['.MD'], argv: ['${NODE}', '${KIT}/answer.mjs', 'other'] }] }));
+  // onwrite.json is a sidecar the sources digest covers: record it, so both kits are trusted (lib/trust.mjs).
+  for (const kit of [cards, other]) recordSources(kit.dir);
   const design = join(dir, 'repo', 'design');
   mkdirSync(join(design, 'systems', 'a'), { recursive: true });
   writeFileSync(join(design, 'design.index.md'), '# index\n');
@@ -75,8 +77,10 @@ test('no match is silent: another extension, a Markdown file outside the marker,
 test('a check that fails, answers in plain text or cannot start is dropped; a malformed sidecar skips that kit only', t => {
   const { cards, other, hook } = world(t);
   writeFileSync(join(other.dir, 'onwrite.json'), JSON.stringify({ format: 1, onWrite: [{ name: 'plain', extensions: ['.md'], argv: ['${NODE}', '-e', "process.stdout.write('not a hook answer\\n')"] }, { name: 'gone', extensions: ['.md'], argv: ['no-such-binary-for-on-write'] }] }));
+  recordSources(other.dir);
   assert.equal(context(hook('design/x.md')).additionalContext, 'cards checked design/x.md');
   writeFileSync(join(cards.dir, 'onwrite.json'), '{"format":1,"onWrite":[{"name":"Bad"}]}');
+  recordSources(cards.dir);
   const out = hook('design/x.md');
   assert.equal(out.status, 0);
   assert.equal(out.stdout, '', 'nothing else matched, so the hook stays silent');

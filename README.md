@@ -146,7 +146,9 @@ A repository adopted for governance (it has `.ia/governance.json`) needs a kit t
 
 ### Kit handlers
 
-A kit may declare handlers in a `handlers.json` beside its records: scripts the core runs at session start, on each prompt, before or after an edit or shell command, and when a turn stops. Only installed kits whose folder holds the script run them (a kit fetched as a release carries no executables); each kit adds at most 2,000 characters of context; a handler may block a tool call only in a repository that opted in with `.ia/governance.json`. With no kit declaring a handler, the hooks do nothing.
+A kit may declare handlers in a `handlers.json` beside its records: scripts the core runs at session start, on each prompt, before or after an edit or shell command, and when a turn stops, or a plain `context` text it adds at those moments without running anything. Only installed kits whose folder holds the script run them (a kit fetched as a release carries no executables); each kit adds at most 2,000 characters of context; a handler may block a tool call only in a repository that opted in with `.ia/governance.json`. With no kit declaring a handler, the hooks do nothing.
+
+Only trusted kits run code, through `handlers.json`, `onwrite.json` or `checks.json` alike (decision `public-kit-trust`): the kit's publisher, the first part of its id (`inventarch/…`), is on the plugin's list (`plugins/ia/config/trusted-publishers.json`, `inventarch` alone for now), and its files are the release it recorded. Any other kit is data only: its handlers' `context` text still arrives, its scripts and commands are skipped, and the session says so once at its start. You cannot add a publisher to the list yourself; an agent with a shell could then approve itself. Every script the core starts gets a short list of environment variables instead of all of yours, is stopped with everything it started when its time runs out, and has its output capped. That is hygiene, not a sandbox: a trusted kit's code runs as you. [docs/hosts.md](docs/hosts.md#kit-trust-and-process-hygiene) has the details.
 
 ### Delegating to another model
 

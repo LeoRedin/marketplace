@@ -8,6 +8,7 @@ import { assembleMethodPacket } from './method-packet.mjs';
 import { readMethodPin } from './method-pin.mjs';
 import { canonicalMethod, methodDigest, methodError } from './method-json.mjs';
 import { executorProfile, executorSubjectsChanged, prepareExecutor } from './closure-executors.mjs';
+import { childEnv } from './hygiene.mjs';
 import { executeMethodProcess } from './method-process.mjs';
 import { copyWorkspace } from './scratch.mjs';
 import { snapshotInventory } from './method-subject.mjs';
@@ -52,7 +53,7 @@ export async function runMethodCheck({ input, activityKey, pinRoot, workspaceRoo
   writeFileSync(join(directory, 'subject-inventory.json'), canonicalMethod(snapshot.files) + '\n', { flag: 'wx', mode: 0o600 });
   const execution = prepareExecutor({ check, closure, workspaceRoot: executionRoot, inputRoot: workspaceRoot, cli, arguments: input.arguments, directory });
   const result = await executeMethodProcess({ ...execution, directory, processGroup, timeoutSeconds: check.timeoutSeconds, outputLimit: limit,
-    env: { ...process.env, NODE_OPTIONS: '', NODE_PATH: '', IA_CLI_PATH: cli.argv[1], IA_METHOD_CLI: cli.argv[1], IA_CORE_NO_NPX: '1', IA_CLI_NO_NPX: '1', IA_METHOD_NO_NPX: '1' } });
+    env: childEnv(process.env, { IA_CLI_PATH: cli.argv[1], IA_METHOD_CLI: cli.argv[1], IA_CORE_NO_NPX: '1', IA_CLI_NO_NPX: '1', IA_METHOD_NO_NPX: '1' }) });
   const after = await resolveConsumerSubject({ root: workspaceRoot, workspaceIdentity: pin.workspace.identity, importNative: runtime.importNative });
   loadMethodClosure(input.closureSha256, { storeRoot });
   let pinChanged = true;

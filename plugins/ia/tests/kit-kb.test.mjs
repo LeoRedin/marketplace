@@ -25,6 +25,7 @@ import { basename, join, relative } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { findKit, kitDelivery, releaseRecords, sourcesDigest } from '../scripts/lib/kit.mjs';
+import { recordSources } from './helpers/fixtures.mjs';
 
 const KIT = fileURLToPath(new URL('../config/kits/ia-kb/', import.meta.url));
 const PLUGIN = fileURLToPath(new URL('../', import.meta.url));
@@ -648,6 +649,8 @@ test('REQ-KB-06 failure: the locator checker refuses a mutable revision', t => {
   assert.equal(ran.status, 1);
   assert.match(ran.stderr, /commit must be an exact object ID/);
   assert.equal(ran.stdout, '');
+  // The changed copy is no longer the recorded release, so it runs no code (lib/trust.mjs) until it is recorded as one.
+  recordSources(copy);
   const viaRunner = runChecker('kb-check-locators', bareWorkspace(t), { IA_CORE_KITS_DIR: kits });
   assert.equal(viaRunner.code, 3, viaRunner.stdout + viaRunner.stderr);
   assert.equal(viaRunner.json.exitCode, 1);

@@ -1,27 +1,37 @@
-// Kit handlers (contract C2, decision public-kit-handlers): a kit may ship
-// handlers.json at its root,
+// Kit handlers (contract C2, decisions public-kit-handlers and
+// public-kit-trust): a kit may ship handlers.json at its root,
 //   { format: 1,
-//     session: [ { run: "scripts/<file>.mjs", events?: ["startup","resume","compact","clear"], timeout?: 20 } ],
-//     prompt:  [ { run, timeout?: 10 } ],
-//     tool:    [ { run, phase: "pre"|"post", match?: "Write|Edit|Bash", timeout?: 20 } ],
-//     stop:    [ { run, timeout?: 20 } ] }
-// and the core's hooks run them (scripts/handlers.mjs). Only installed kits
+//     session: [ { run?: "scripts/<file>.mjs", context?: "<text>", events?: ["startup","resume","compact","clear"], timeout?: 20 } ],
+//     prompt:  [ { run?, context?, timeout?: 10 } ],
+//     tool:    [ { run?, context?, phase: "pre"|"post", match?: "Write|Edit|Bash", timeout?: 20 } ],
+//     stop:    [ { run?, context?, timeout?: 20 } ] }
+// and the core's hooks run them (scripts/handlers.mjs). Each entry carries a
+// `run` script, a `context` text, or both. `context` is data: the core
+// delivers it as additionalContext and starts no process. `run` is code: it
+// runs only for a kit lib/trust.mjs trusts (a publisher on the plugin's list,
+// bytes that are its recorded release) and only when its script is one of the
+// kit's declared assets, so that digest covers it; otherwise it is skipped,
+// and scripts/handlers.mjs says why once at session start. Only installed kits
 // run: the kits the core can resolve (its own config/kits, then
 // <IA home>/kits/<kit>/<version>/, lib/kit.mjs listKits) whose folder holds
 // the script. A fetched release carries no executables, so its handlers never
-// run. Each handler runs as `node <script>` with the host's hook JSON on stdin
-// and IA_KIT_ROOT, IA_WORKSPACE_ROOT and IA_HOME in its environment; its stdout
-// is one JSON value { additionalContext?, decision?: "block"|"allow", reason? }.
-// The core merges every handler's additionalContext, at most KIT_CONTEXT_CAP
-// characters per kit. A tool `pre` handler's block is honoured only in a
-// workspace that opted in through .ia/governance.json; elsewhere it is
-// reported, never applied. A kit's onwrite.json stays supported as tool post
-// handlers (scripts/on-write.mjs).
-import { spawnSync } from 'node:child_process';
+// run. Each handler runs as `node <script>` with the host's hook JSON on stdin,
+// the allowlisted environment of lib/hygiene.mjs plus IA_KIT_ROOT,
+// IA_WORKSPACE_ROOT and IA_HOME, its process tree killed on its deadline and
+// its output capped; its stdout is one JSON value
+// { additionalContext?, decision?: "block"|"allow", reason? }. The core merges
+// every handler's additionalContext, at most KIT_CONTEXT_CAP characters per
+// kit. A tool `pre` handler's block is honoured only in a workspace that opted
+// in through .ia/governance.json; elsewhere it is reported, never applied.
+// There, a trusted pre handler that cannot decide refuses the call (fail
+// closed); an untrusted kit's pre handler never runs, so it never blocks. A
+// kit's onwrite.json stays supported as tool post handlers (scripts/on-write.mjs).
 import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { iaHome } from './home.mjs';
+import { childEnv, runChild } from './hygiene.mjs';
 import { KitError, listKits } from './kit.mjs';
+import { coversScript, kitTrust } from './trust.mjs';
 
 export const HANDLERS_FORMAT = 1;
 export const SESSION_EVENTS = ['startup', 'resume', 'compact', 'clear'];
@@ -33,7 +43,8 @@ const KINDS = Object.keys(DEFAULT_TIMEOUT);
 const plainObject = v => typeof v === 'object' && v !== null && !Array.isArray(v);
 
 // The handlers a kit declares, checked: { session, prompt, tool, stop }, each a
-// list of { run, timeout, ... }. Without handlers.json every list is empty.
+// list of { run, context, timeout, ... } (run or context may be null, never
+// both). Without handlers.json every list is empty.
 export function kitHandlers(kit) {
   const path = join(kit.dir, 'handlers.json');
   const none = { session: [], prompt: [], tool: [], stop: [] };
@@ -51,12 +62,17 @@ export function kitHandlers(kit) {
     result[kind] = parsed[kind].map((entry, i) => {
       const where = `${path}: ${kind}[${i}]`;
       if (!plainObject(entry)) throw new KitError(`${where} is an object`);
-      const run = entry.run;
-      const rel = typeof run === 'string' ? relative(root, resolve(root, run)).replace(/\\/g, '/') : '';
-      if (typeof run !== 'string' || !/\.mjs$/.test(run) || isAbsolute(run) || /^[A-Za-z]:/.test(run) || rel === '' || rel.startsWith('../') || rel === '..') throw new KitError(`${where}: run is a .mjs script inside the kit, such as scripts/<file>.mjs`);
+      if (entry.run === undefined && entry.context === undefined) throw new KitError(`${where} needs a run script, a context text, or both`);
+      let rel = null;
+      if (entry.run !== undefined) {
+        const run = entry.run;
+        rel = typeof run === 'string' ? relative(root, resolve(root, run)).replace(/\\/g, '/') : '';
+        if (typeof run !== 'string' || !/\.mjs$/.test(run) || isAbsolute(run) || /^[A-Za-z]:/.test(run) || rel === '' || rel.startsWith('../') || rel === '..') throw new KitError(`${where}: run is a .mjs script inside the kit, such as scripts/<file>.mjs`);
+      }
+      if (entry.context !== undefined && !(typeof entry.context === 'string' && entry.context.trim() && entry.context.length <= KIT_CONTEXT_CAP)) throw new KitError(`${where}: context is a non-empty text of at most ${KIT_CONTEXT_CAP} characters`);
       if (entry.timeout !== undefined && !(Number.isInteger(entry.timeout) && entry.timeout > 0 && entry.timeout <= MAX_TIMEOUT)) throw new KitError(`${where}: timeout is a whole number of seconds from 1 to ${MAX_TIMEOUT}`);
-      const handler = { run: rel, timeout: entry.timeout ?? DEFAULT_TIMEOUT[kind] };
-      const allowed = { session: ['run', 'timeout', 'events'], prompt: ['run', 'timeout'], tool: ['run', 'timeout', 'phase', 'match'], stop: ['run', 'timeout'] }[kind];
+      const handler = { run: rel, context: entry.context?.trim() ?? null, timeout: entry.timeout ?? DEFAULT_TIMEOUT[kind] };
+      const allowed = { session: ['run', 'context', 'timeout', 'events'], prompt: ['run', 'context', 'timeout'], tool: ['run', 'context', 'timeout', 'phase', 'match'], stop: ['run', 'context', 'timeout'] }[kind];
       const extra = Object.keys(entry).filter(k => !allowed.includes(k));
       if (extra.length) throw new KitError(`${where}: unknown key ${extra.join(', ')}`);
       if (kind === 'session') {
@@ -78,9 +94,17 @@ export function kitHandlers(kit) {
   return result;
 }
 
-// The kits whose handlers may run: every installed kit (lib/kit.mjs listKits)
-// that ships handlers.json. A kit whose handlers.json is malformed is skipped
-// and named in `skipped`, so a hook never fails because of one kit.
+// One kit's trust, computed once per found entry and only when asked: the
+// sources digest is read only when a handler of that kit has code to run.
+export function trustOf(found) {
+  if (!found.trustResult) found.trustResult = kitTrust(found.kit);
+  return found.trustResult;
+}
+
+// The kits whose handlers may run or speak: every installed kit (lib/kit.mjs
+// listKits) that ships handlers.json, as [{ kit, handlers }]. A kit whose
+// handlers.json is malformed is skipped and named in `skipped`, so a hook
+// never fails because of one kit.
 export function handlerKits({ kits } = {}) {
   let all = kits;
   if (!all) { try { all = listKits(); } catch { all = []; } }
@@ -96,6 +120,7 @@ export function handlerKits({ kits } = {}) {
 // links are followed: a run path is checked inside the kit when it is read,
 // and a link must not carry it out.
 const scriptPresent = (kit, handler) => {
+  if (!handler.run) return false;
   try {
     const root = realpathSync(kit.dir);
     const path = realpathSync(join(kit.dir, handler.run));
@@ -105,25 +130,56 @@ const scriptPresent = (kit, handler) => {
   } catch { return false; }
 };
 
-// Does any installed kit declare a governance handler, a tool `pre` handler
-// whose script is present? The governance probe asks this
-// (lib/account.mjs governanceNotice).
-export function declaresGovernance(found = handlerKits().kits) {
-  return found.some(({ kit, handlers }) => handlers.tool.some(h => h.phase === 'pre' && scriptPresent(kit, h)));
+// Why a handler's script does not run, or null when it runs.
+function codeRefusal(found, handler) {
+  const trust = trustOf(found);
+  if (!trust.trusted) return trust.reason;
+  if (!coversScript(found.kit, handler.run)) return `its handler script ${handler.run} is not a declared asset, so its recorded release does not cover it`;
+  return null;
 }
 
-// The handlers one hook event selects, in kit order: [{ kit, handler }].
-// event: session (with source), prompt, pre, post or stop; toolName for pre and post.
+// The kits that declare a governance handler (a tool `pre` handler with a run
+// script that is present), each with whether it may run: [{ kit, trusted, reason }].
+export function governanceKits(found = handlerKits().kits) {
+  return found.filter(({ kit, handlers }) => handlers.tool.some(h => h.phase === 'pre' && scriptPresent(kit, h))).map(entry => {
+    const refusals = entry.handlers.tool.filter(h => h.phase === 'pre' && scriptPresent(entry.kit, h)).map(h => codeRefusal(entry, h));
+    return { kit: entry.kit, trusted: refusals.some(r => r === null), reason: refusals.find(Boolean) ?? null };
+  });
+}
+
+// Does any installed kit declare a governance handler that may run? The
+// governance probe asks this (lib/account.mjs governanceNotice).
+export function declaresGovernance(found = handlerKits().kits) {
+  return governanceKits(found).some(g => g.trusted);
+}
+
+// The kits that ship handler code which does not run here, with why:
+// [{ kit, reason }], one per kit. Code is a run entry whose script is present.
+export function untrustedHandlerKits(found) {
+  const out = [];
+  for (const entry of found) {
+    const scripts = Object.values(entry.handlers).flat().filter(h => scriptPresent(entry.kit, h));
+    const reason = scripts.map(h => codeRefusal(entry, h)).find(Boolean);
+    if (reason) out.push({ kit: entry.kit, reason });
+  }
+  return out;
+}
+
+// The handlers one hook event selects, in kit order: [{ kit, handler, found }].
+// event: session (with source), prompt, pre, post or stop; toolName for pre
+// and post. An entry is selected when it has context to deliver or a script
+// that is present.
 export function selectHandlers(found, event, { source, toolName } = {}) {
   const picked = [];
-  for (const { kit, handlers } of found) {
+  for (const entry of found) {
+    const { kit, handlers } = entry;
     let list;
     if (event === 'session') list = handlers.session.filter(h => h.events.includes(source));
     else if (event === 'prompt') list = handlers.prompt;
     else if (event === 'stop') list = handlers.stop;
     else if (event === 'pre' || event === 'post') list = handlers.tool.filter(h => h.phase === event && (h.match === null || new RegExp(`^(?:${h.match})$`).test(toolName ?? '')));
     else list = [];
-    for (const handler of list) if (scriptPresent(kit, handler)) picked.push({ kit, handler });
+    for (const handler of list) if (handler.context || scriptPresent(kit, handler)) picked.push({ kit, handler, found: entry });
   }
   return picked;
 }
@@ -147,48 +203,68 @@ function answerOf(stdout) {
   return { context: context.trim(), decision, reason: reason.trim() };
 }
 
-// Runs the selected handlers for one event. Returns { context, block, ran }:
-// context is every kit's merged additionalContext (each prefixed with its kit
-// id and capped per kit); block is { kit, reason } when a pre handler blocked in
-// a governed workspace, else null. Handlers after a block do not run. The
-// whole run stays inside budgetMs.
-export function runHandlers(picked, { event, raw = '{}', cwd = process.cwd(), workspace = null, env = process.env, budgetMs = 25_000 } = {}) {
+// While a trusted pre handler runs in a governed workspace, the kit it belongs
+// to: an entry point that has to exit before it answers refuses the call
+// instead of allowing it (scripts/handlers.mjs).
+export const gate = { kit: null };
+
+// Runs the selected handlers for one event. Resolves { context, block, ran,
+// skipped }: context is every kit's merged additionalContext (each prefixed
+// with its kit id and capped per kit); block is { kit, reason } when a pre
+// handler blocked in a governed workspace, else null; skipped lists the kits
+// whose run entries did not run, with why. Handlers after a block do not run.
+// The whole run stays inside budgetMs.
+export async function runHandlers(picked, { event, raw = '{}', cwd = process.cwd(), workspace = null, env = process.env, budgetMs = 25_000 } = {}) {
   const started = Date.now();
   const governed = Boolean(workspace && existsSync(join(workspace, '.ia', 'governance.json')));
   let home = '';
   try { home = iaHome(env); } catch { /* a relative IA_HOME reaches no handler */ }
-  const byKit = new Map(), ran = [];
+  const byKit = new Map(), ran = [], skipped = [];
   let block = null;
-  for (const { kit, handler } of picked) {
+  for (const item of picked) {
+    const { kit, handler } = item;
+    const parts = byKit.get(kit.id) ?? [];
+    byKit.set(kit.id, parts);
+    if (handler.context) parts.push(handler.context);
+    if (!scriptPresent(kit, handler)) continue;
+    const refusal = codeRefusal(item.found ?? (item.found = { kit }), handler);
+    if (refusal) {
+      ran.push({ kit: kit.id, run: handler.run, status: 'untrusted', reason: refusal });
+      if (!skipped.some(s => s.kit === kit.id)) skipped.push({ kit: kit.id, reason: refusal });
+      continue;
+    }
     const left = budgetMs - (Date.now() - started);
     if (left <= 0) { ran.push({ kit: kit.id, run: handler.run, status: 'skipped', reason: 'hook budget spent' }); continue; }
-    const child = spawnSync(process.execPath, [join(kit.dir, handler.run)], {
-      cwd, input: raw, encoding: 'utf8', timeout: Math.min(handler.timeout * 1000, left), maxBuffer: 4 * 1024 * 1024, windowsHide: true,
-      env: { ...env, IA_KIT_ROOT: kit.dir, IA_WORKSPACE_ROOT: workspace ?? '', IA_HOME: home },
+    const gating = event === 'pre' && governed;
+    const timeoutMs = Math.min(handler.timeout * 1000, left);
+    if (gating) gate.kit = kit.id;
+    const child = await runChild({
+      argv: [process.execPath, join(kit.dir, handler.run)], cwd, input: raw, timeoutMs,
+      env: childEnv(env, { IA_KIT_ROOT: kit.dir, IA_WORKSPACE_ROOT: workspace ?? '', IA_HOME: home }),
     });
-    const failed = Boolean(child.error) || child.status !== 0;
-    const answer = failed ? null : answerOf(child.stdout);
-    ran.push({ kit: kit.id, run: handler.run, status: child.error ? 'error' : child.status === 0 ? 'ran' : `exit ${child.status}`, answered: Boolean(answer) });
-    // A pre handler that could not decide (it failed to start, crashed, timed out or exited non-zero) refuses the
-    // call in a governed workspace: a gate that fails must not read as allow.
-    if (failed && event === 'pre' && governed) {
-      const detail = child.error?.message ?? (String(child.stderr ?? '').split('\n').map((l) => l.trim()).find((l) => /^\w*Error\b/.test(l)) || `exit ${child.status ?? child.signal}`);
+    if (gating) gate.kit = null;
+    const failed = Boolean(child.error) || child.timedOut || child.status !== 0;
+    // Output cut at the cap may have lost a gate's answer, so a governed gate's cut output decides nothing.
+    const answer = failed || (gating && child.truncated.stdout) ? null : answerOf(child.stdout);
+    ran.push({ kit: kit.id, run: handler.run, status: child.error ? 'error' : child.timedOut ? 'timed out' : child.status === 0 ? 'ran' : `exit ${child.status ?? child.signal}`, answered: Boolean(answer), truncated: child.truncated.stdout || child.truncated.stderr });
+    // A pre handler that could not decide (it failed to start, crashed, timed out, exited non-zero, or said more than
+    // the cap) refuses the call in a governed workspace: a gate that fails must not read as allow.
+    if (gating && !answer && (failed || child.truncated.stdout)) {
+      const stderr = String(child.stderr ?? '').split('\n').map(l => l.trim()).find(l => /^\w*Error\b/.test(l));
+      const detail = child.error?.message ?? (child.timedOut ? `it did not answer within ${Math.ceil(timeoutMs / 1000)} s` : child.status === 0 ? 'its answer was cut at the output cap' : (stderr || `exit ${child.status ?? child.signal}`));
       block = { kit: kit.id, reason: `its pre-tool handler failed, so the call is refused (fail closed): ${detail}` };
       break;
     }
     if (!answer) continue;
-    const parts = byKit.get(kit.id) ?? [];
     if (answer.context) parts.push(answer.context);
     if (event === 'pre' && answer.decision === 'block') {
       if (governed) {
-        byKit.set(kit.id, parts);
         block = { kit: kit.id, reason: answer.reason || `${kit.id} blocked this tool call` };
         break;
       }
       parts.push(`(${kit.id} asked to block this tool call${answer.reason ? `: ${answer.reason}` : ''}; not applied, because this workspace has not opted in through .ia/governance.json.)`);
     }
-    byKit.set(kit.id, parts);
   }
   const context = [...byKit].filter(([, parts]) => parts.length).map(([id, parts]) => capContext(`${id}: ${parts.join('\n')}`)).join('\n\n');
-  return { context, block, ran };
+  return { context, block, ran, skipped };
 }

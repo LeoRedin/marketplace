@@ -12,23 +12,28 @@ import { governanceNotice } from '../scripts/lib/account.mjs';
 import { declaresGovernance, handlerKits, KIT_CONTEXT_CAP, kitHandlers } from '../scripts/lib/handlers.mjs';
 import { findKit } from '../scripts/lib/kit.mjs';
 import { kitProblems } from '../scripts/lib/kit-ops.mjs';
-import { envFor, fakeCli, makeKit, makeRepo, run, sandbox } from './helpers/fixtures.mjs';
+import { declareAssets, envFor, fakeCli, makeKit, makeRepo, recordSources, run, sandbox } from './helpers/fixtures.mjs';
 
 // A handler script: echoes what it saw as additionalContext, or answers `answer`.
 const ECHO = `import { readFileSync } from 'node:fs';
 const hook = JSON.parse(readFileSync(0, 'utf8') || '{}');
 const seen = { event: hook.hook_event_name, source: hook.source ?? null, tool: hook.tool_name ?? null, kit: process.env.IA_KIT_ROOT ? 'set' : 'unset', workspace: process.env.IA_WORKSPACE_ROOT || '', home: process.env.IA_HOME ? 'set' : 'unset' };
-process.stdout.write(JSON.stringify(process.env.HANDLER_ANSWER ? JSON.parse(process.env.HANDLER_ANSWER) : { additionalContext: 'saw ' + JSON.stringify(seen) }) + '\\n');
+process.stdout.write(JSON.stringify(process.env.IA_TEST_HANDLER_ANSWER ? JSON.parse(process.env.IA_TEST_HANDLER_ANSWER) : { additionalContext: 'saw ' + JSON.stringify(seen) }) + '\\n');
 `;
 
-// A kit carrying handlers.json and the scripts it names, declared as assets.
-function handlerKit(kitsDir, folder, handlers, scripts = { 'scripts/echo.mjs': ECHO }) {
-  const { dir } = makeKit(kitsDir, { folder, id: `inventarch/${folder}-kit` });
+// A kit carrying handlers.json and the scripts it names, declared as assets
+// (unless declare is false), with its sources recorded as its release, so it
+// is trusted. The environment passes only allowlisted names, so the test
+// answer travels as IA_TEST_HANDLER_ANSWER.
+function handlerKit(kitsDir, folder, handlers, scripts = { 'scripts/echo.mjs': ECHO }, { declare = true, id = `inventarch/${folder}-kit` } = {}) {
+  const { dir } = makeKit(kitsDir, { folder, id });
   for (const [rel, text] of Object.entries(scripts)) {
     mkdirSync(join(dir, rel, '..'), { recursive: true });
     writeFileSync(join(dir, rel), text);
   }
   writeFileSync(join(dir, 'handlers.json'), JSON.stringify({ format: 1, ...handlers }, null, 2) + '\n');
+  if (declare) declareAssets(dir, Object.keys(scripts));
+  recordSources(dir);
   return dir;
 }
 
@@ -49,10 +54,10 @@ test('kitHandlers reads a well-formed handlers.json and refuses a malformed one'
     tool: [{ run: 'scripts/echo.mjs', phase: 'pre', match: 'Write|Edit' }, { run: 'scripts/echo.mjs', phase: 'post' }], stop: [{ run: 'scripts/echo.mjs' }],
   });
   const read = kitHandlers({ dir });
-  assert.deepEqual(read.session, [{ run: 'scripts/echo.mjs', timeout: 20, events: ['compact'] }]);
-  assert.deepEqual(read.prompt, [{ run: 'scripts/echo.mjs', timeout: 5 }]);
+  assert.deepEqual(read.session, [{ run: 'scripts/echo.mjs', context: null, timeout: 20, events: ['compact'] }]);
+  assert.deepEqual(read.prompt, [{ run: 'scripts/echo.mjs', context: null, timeout: 5 }]);
   assert.deepEqual(read.tool.map(h => [h.phase, h.match, h.timeout]), [['pre', 'Write|Edit', 20], ['post', null, 20]]);
-  assert.deepEqual(read.stop, [{ run: 'scripts/echo.mjs', timeout: 20 }]);
+  assert.deepEqual(read.stop, [{ run: 'scripts/echo.mjs', context: null, timeout: 20 }]);
   for (const [bad, message] of [
     [{ format: 2 }, /format 1/],
     [{ format: 1, session: [{ run: '../escape.mjs' }] }, /inside the kit/],
@@ -62,6 +67,9 @@ test('kitHandlers reads a well-formed handlers.json and refuses a malformed one'
     [{ format: 1, session: [{ run: 'scripts/echo.mjs', events: ['fork'] }] }, /events/],
     [{ format: 1, notify: [] }, /unknown key notify/],
     [{ format: 1, prompt: [{ run: 'scripts/echo.mjs', argv: ['x'] }] }, /unknown key argv/],
+    [{ format: 1, prompt: [{ timeout: 5 }] }, /needs a run script, a context text, or both/],
+    [{ format: 1, prompt: [{ context: '  ' }] }, /context is a non-empty text/],
+    [{ format: 1, prompt: [{ context: 'x'.repeat(KIT_CONTEXT_CAP + 1) }] }, /at most 2000 characters/],
   ]) {
     writeFileSync(join(dir, 'handlers.json'), JSON.stringify(bad));
     assert.throws(() => kitHandlers({ dir }), message, JSON.stringify(bad));
@@ -113,7 +121,7 @@ test('every kit\'s context is merged, each capped at its own limit', t => {
 test('a pre handler blocks only in a workspace opted in through .ia/governance.json, and only for its tools', t => {
   const { kitsDir, env, repo, hook } = setup(t);
   handlerKit(kitsDir, 'gate', { tool: [{ run: 'scripts/echo.mjs', phase: 'pre', match: 'Write|Edit' }] });
-  const blocking = { ...env, HANDLER_ANSWER: JSON.stringify({ decision: 'block', reason: 'no ledger entry for this change' }) };
+  const blocking = { ...env, IA_TEST_HANDLER_ANSWER: JSON.stringify({ decision: 'block', reason: 'no ledger entry for this change' }) };
   const pre = (tool, e = blocking) => run('handlers.mjs', ['pre'], e, { input: JSON.stringify({ cwd: repo, hook_event_name: 'PreToolUse', tool_name: tool, tool_input: {} }) });
   const open = pre('Write');
   assert.equal(open.json.hookSpecificOutput.permissionDecision, undefined, 'not governed: not blocked');
@@ -157,7 +165,7 @@ test('a handler whose script a link carries outside its kit never runs', t => {
 
 test('kit check refuses a handler script that is not a declared asset', t => {
   const { kitsDir, env } = setup(t);
-  handlerKit(kitsDir, 'loose', { stop: [{ run: 'scripts/echo.mjs' }] });
+  handlerKit(kitsDir, 'loose', { stop: [{ run: 'scripts/echo.mjs' }] }, undefined, { declare: false });
   const saved = process.env.IA_CORE_KITS_DIR;
   process.env.IA_CORE_KITS_DIR = env.IA_CORE_KITS_DIR;
   t.after(() => { if (saved === undefined) delete process.env.IA_CORE_KITS_DIR; else process.env.IA_CORE_KITS_DIR = saved; });
@@ -176,5 +184,7 @@ test('the governance probe names the ia-governance kit until an installed kit de
   assert.doesNotMatch(notice, /plugin/);
   assert.equal(governanceNotice({ source: 'resume', root: repo, kits: kits() }), null, 'startup only');
   writeFileSync(join(kitsDir, 'gov', 'handlers.json'), JSON.stringify({ format: 1, tool: [{ run: 'scripts/echo.mjs', phase: 'pre' }] }));
+  assert.match(governanceNotice({ source: 'startup', root: repo, kits: kits() }), /no installed governance handler may run: inventarch\/gov-kit, because its bytes are not its recorded release/, 'a changed handlers.json is not the recorded release');
+  recordSources(join(kitsDir, 'gov'));
   assert.equal(governanceNotice({ source: 'startup', root: repo, kits: kits() }), null, 'a kit with a pre handler governs');
 });

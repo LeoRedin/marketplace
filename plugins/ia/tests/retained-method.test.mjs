@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { envFor, fakeCli, makeKit, makeRepo, run, sandbox } from './helpers/fixtures.mjs';
+import { envFor, fakeCli, makeKit, makeRepo, recordSources, run, sandbox } from './helpers/fixtures.mjs';
 
 function fixture(t, installed = false) {
   const dir = sandbox(t, 'ia-retained-method-'), kitsDir = join(dir, 'kits');
@@ -51,7 +51,7 @@ assert.equal(result.terminationFailed, false);
   assert.equal(first.status, 0, first.stdout + first.stderr);
   const snapshot = join(f.env.IA_CORE_CLOSURES_DIR, first.json.closure.retained);
   const manifest = JSON.parse(readFileSync(join(snapshot, 'manifest.json')));
-  for (const path of ['.claude-plugin/plugin.json', 'config/qualified-process-tools.json']) assert.ok(manifest.files.some(file => file.path === path), path);
+  for (const path of ['.claude-plugin/plugin.json', 'config/qualified-process-tools.json', 'config/trusted-publishers.json']) assert.ok(manifest.files.some(file => file.path === path), path);
   rmSync(f.kit.dir, { recursive: true });
   const checked = f.check();
   assert.equal(checked.status, 0, checked.stdout + checked.stderr);
@@ -136,6 +136,7 @@ test('check-only native composition needs no playbook and never inherits unrelat
   composition.fields = composition.fields.filter(field => field.key !== 'playbooks');
   for (const cell of canned.position.cells) cell.text = 'UNRELATED POSITION INSTRUCTION';
   writeFileSync(path, JSON.stringify(canned));
+  recordSources(f.kit.dir);
   const good = f.resolve();
   assert.equal(good.status, 0, good.stdout + good.stderr);
   assert.deepEqual(good.json.instructions, []);
@@ -164,6 +165,7 @@ test('retained inventory globally sorts shared-prefix systems and file-directory
   mkdirSync(join(f.kit.dir, 'resources', 'note'), { recursive: true });
   writeFileSync(join(f.kit.dir, 'resources', 'note', 'body.txt'), 'nested');
   writeFileSync(join(f.kit.dir, 'resources', 'note.txt'), 'sibling');
+  recordSources(f.kit.dir);
   const first = f.resolve();
   assert.equal(first.status, 0, first.stdout + first.stderr);
   const snapshot = join(f.env.IA_CORE_CLOSURES_DIR, first.json.closure.retained);

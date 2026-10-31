@@ -9,7 +9,7 @@ import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { accountFound, accountOffer, governanceNotice, MCP_URL, offerDisabled } from '../scripts/lib/account.mjs';
-import { envFor, fakeCli, makeKit, makeRepo, run, sandbox } from './helpers/fixtures.mjs';
+import { declareAssets, envFor, fakeCli, makeKit, makeRepo, recordSources, run, sandbox } from './helpers/fixtures.mjs';
 
 // An environment with its own IA home, Claude config dir and Codex home, so nothing on this machine leaks in.
 function isolated(dir, extra = {}) {
@@ -108,6 +108,10 @@ test('a governed repository is named once at startup until an installed kit decl
   mkdirSync(join(kit, 'scripts'), { recursive: true });
   writeFileSync(join(kit, 'scripts', 'gate.mjs'), 'process.stdout.write("{}");\n');
   writeFileSync(join(kit, 'handlers.json'), JSON.stringify({ format: 1, tool: [{ run: 'scripts/gate.mjs', phase: 'pre' }] }));
+  // Until its bytes, handler script included, are its recorded release it may not run (lib/trust.mjs), and the notice says so.
+  assert.match(JSON.parse(hook(repo, env, 'startup').stdout).systemMessage, /no installed governance handler may run: inventarch\/gov-kit, because its bytes are not its recorded release/);
+  declareAssets(kit, ['scripts/gate.mjs']);
+  recordSources(kit);
   const installed = JSON.parse(hook(repo, env, 'startup').stdout);
   assert.equal(installed.systemMessage, undefined);
 });

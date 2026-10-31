@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, renameSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { envFor, fakeCli, makeKit, makeRepo, run, sandbox } from './helpers/fixtures.mjs';
+import { envFor, fakeCli, makeKit, makeRepo, recordSources, run, sandbox } from './helpers/fixtures.mjs';
 import { readRetainedCheckStream } from '../scripts/lib/check-output.mjs';
 
 function world(t) {
@@ -29,7 +29,7 @@ function manifestWorld(t) {
   const script = join(state.alpha.dir, 'manifest.mjs');
   writeFileSync(script, "import { writeFileSync } from 'node:fs'; writeFileSync('executed', 'yes'); console.log(JSON.stringify(process.argv.slice(2)));\n");
   const spec = { argv: ['${NODE}', script, '${ARG:manifest}'], arguments: { manifest: 'workspace-file' } };
-  const declare = value => writeFileSync(join(state.alpha.dir, 'checks.json'), JSON.stringify({ format: 1, checks: { 'alpha-gate': value } }));
+  const declare = value => { writeFileSync(join(state.alpha.dir, 'checks.json'), JSON.stringify({ format: 1, checks: { 'alpha-gate': value } })); recordSources(state.alpha.dir); };
   declare(spec);
   const invoke = args => check(['alpha-gate', '--root', repo, '--kit', state.alpha.id, ...args], state.env());
   return { ...state, repo, marker, spec, declare, invoke };
@@ -147,6 +147,7 @@ test('a check runs under its declared timeout, in seconds: a slower command is k
   const { dir, alpha, env } = world(t);
   const repo = makeRepo(join(dir, 'repo'), { bindings: { format: 1, bindings: { 'delivery.review': { kit: alpha.id, capability: alpha.capability } } } });
   writeFileSync(join(alpha.dir, 'checks.json'), JSON.stringify({ format: 1, checks: { 'alpha-gate': { argv: ['${NODE}', '-e', 'setTimeout(() => {}, 30000)'], timeout: 1 } } }));
+  recordSources(alpha.dir);
   const started = Date.now();
   const slow = check(['alpha-gate', '--root', repo], env());
   assert.ok(Date.now() - started < 20000, 'the runner waited for the whole command');

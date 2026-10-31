@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { ENTRIES, readBindings, writeBindings } from './binding.mjs';
 import { adopt, declaredAssets, findKit, homeKitsDir, installedKits, KitError, kitBindings, kitChecks, kitDelivery, kitDependencies, listKits, readDescriptor, readReleases, releaseRecords, sourcesDigest } from './kit.mjs';
 import { kitHandlers } from './handlers.mjs';
+import { kitTrust } from './trust.mjs';
 import { isVersion } from './releases.mjs';
 import { kitUpdate, pinRootFor, readPin } from './pin.mjs';
 import { readMethodPin } from './method-pin.mjs';
@@ -81,7 +82,7 @@ export function kitProblems(kit) {
     const handlers = kitHandlers(kit);
     let assets = [];
     try { assets = declaredAssets(kit.dir).map(a => a.rel); } catch { /* reported by the sources digest */ }
-    const runs = [...new Set(Object.values(handlers).flat().map(h => h.run))];
+    const runs = [...new Set(Object.values(handlers).flat().map(h => h.run).filter(Boolean))];
     const undeclared = runs.filter(run => !assets.includes(run));
     if (undeclared.length) problems.push(`handlers.json runs scripts that are not declared assets in .ia/release.json: ${undeclared.join(', ')}`);
   } catch (error) { problems.push(error.message); }
@@ -90,7 +91,8 @@ export function kitProblems(kit) {
 
 export function checkOp(ref) {
   const kits = ref ? [findKit(ref)] : listKits();
-  const rows = kits.map(k => ({ kit: k.id, origin: k.origin, version: k.latest?.version ?? null, problems: kitProblems(k) }));
+  // trust says whether the kit may run code here (decision public-kit-trust); an untrusted kit is not a problem.
+  const rows = kits.map(k => { const trust = kitTrust(k); return { kit: k.id, origin: k.origin, version: k.latest?.version ?? null, problems: kitProblems(k), runsCode: trust.trusted, ...(trust.trusted ? {} : { untrusted: trust.reason }) }; });
   return { status: rows.every(r => r.problems.length === 0) ? 'passed' : 'refused', kits: rows };
 }
 

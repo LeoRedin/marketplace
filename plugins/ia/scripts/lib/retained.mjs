@@ -41,11 +41,12 @@ function files(root) {
 }
 const byPath = (a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0;
 function inventory(root) { return files(root).map(({ data, ...entry }) => entry).sort(byPath); }
-// Ordinary retained runners use the core identity and the process helper's
-// qualified Windows supervisor data. Retain these exact dependencies too;
-// do not copy the other kits or silently consult a current installation.
+// Ordinary retained runners use the core identity, the process helper's
+// qualified Windows supervisor data and the trusted publishers (lib/trust.mjs).
+// Retain these exact dependencies too; do not copy the other kits or silently
+// consult a current installation.
 function supportFiles() {
-  return ['.claude-plugin/plugin.json', 'config/qualified-process-tools.json'].map(path => {
+  return ['.claude-plugin/plugin.json', 'config/qualified-process-tools.json', 'config/trusted-publishers.json'].map(path => {
     let current = PLUGIN;
     for (const [index, part] of path.split('/').entries()) {
       current = join(current, part);

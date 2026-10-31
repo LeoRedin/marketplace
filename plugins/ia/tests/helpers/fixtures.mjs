@@ -4,10 +4,11 @@
 // tests set IA_CORE_TEST_CLI).
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { sourcesDigest } from '../../scripts/lib/kit.mjs';
 
 export const PLUGIN = fileURLToPath(new URL('../..', import.meta.url));
 export const SCRIPTS = join(PLUGIN, 'scripts');
@@ -179,7 +180,28 @@ export function makeKit(kitsDir, o = {}) {
     read: Object.fromEntries(declared.map(c => [`${playbookId}#${c.phase}/${c.primitive}`, { body: c.text, digest: sha256(c.text) }])),
   };
   writeFileSync(join(dir, '.ia', 'fake-cli.json'), JSON.stringify(canned, null, 2) + '\n');
+  if (o.recorded !== false) recordSources(dir);
   return { dir, folder, id, version, archive, capability, playbook, profile, checks, runnerChecks, capId, playbookId, profileId, mandateId, positionPlaybookId, playbookCells };
+}
+
+// Records a kit's current sources digest as its latest release's, so the kit
+// is trusted to run code (lib/trust.mjs) when its publisher is. Call it again
+// after changing anything the digest covers (.ia/, declared assets, sidecars).
+export function recordSources(dir) {
+  const path = join(dir, 'releases.json');
+  const index = JSON.parse(readFileSync(path, 'utf8'));
+  const row = index.latest ? index.releases.find(r => r.version === index.latest) : index.releases.at(-1);
+  row.sources = sourcesDigest(dir);
+  writeFileSync(path, JSON.stringify(index, null, 2) + '\n');
+  return row.sources;
+}
+
+// Declares kit-relative files as assets in .ia/release.json.
+export function declareAssets(dir, paths) {
+  const path = join(dir, '.ia', 'release.json');
+  const descriptor = JSON.parse(readFileSync(path, 'utf8'));
+  for (const rel of paths) if (!descriptor.assets.some(a => a.path === rel)) descriptor.assets.push({ path: rel, role: 'asset' });
+  writeFileSync(path, JSON.stringify(descriptor, null, 2) + '\n');
 }
 
 // A repository that is an IA workspace, with optional bindings and lock.

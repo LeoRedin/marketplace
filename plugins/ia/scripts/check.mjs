@@ -16,6 +16,12 @@
 // arguments: { manifest: "workspace-file" }, filled by --manifest. No shell.
 // The check's environment carries IA_CORE_CHECK (its name) and, when --cli is
 // given, IA_CLI_PATH, so a script that resolves the CLI itself uses the same one.
+// Only a kit lib/trust.mjs trusts runs a check (decision public-kit-trust):
+// another kit's check is refused with IA-CORE-KIT-UNTRUSTED and runs nothing.
+// Every child gets lib/hygiene.mjs's allowlisted environment, not the whole
+// of this process's; the check's process tree is killed on its deadline and
+// its output is bounded (lib/check-output.mjs keeps it as evidence, up to its
+// own limit).
 // Prints { check, kit, record, argv, exitCode, stdout, stderr, durationMs,
 // output, timedOut, outputLimitExceeded, terminationFailed, qualification }.
 // stdout/stderr remain tails; output retains bounded full logs and digests.
@@ -27,6 +33,8 @@ import { lstatSync, readFileSync, realpathSync } from 'node:fs';
 import { join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveCli } from './lib/cli.mjs';
+import { childEnv } from './lib/hygiene.mjs';
+import { kitTrust } from './lib/trust.mjs';
 import { checkArguments } from './lib/check-arguments.mjs';
 import { readBindings } from './lib/binding.mjs';
 import { assertPinnedKit, findKit, installedKits, kitChecks, listKits } from './lib/kit.mjs';
@@ -101,10 +109,12 @@ async function main() {
   }
   if (!found) throw new CheckError(`${name} is not a check the ${via === 'option' ? 'named' : 'bound'} kit${kits.length === 1 ? '' : 's'} declare${kits.length === 1 ? 's' : ''} (${kits.map(k => k.id).join(', ') || 'no kit is bound, pinned or installed'}); declared checks: ${declared.join(', ') || 'none'}. The runner runs only declared @check records with their fixed argv`, 'IA-CORE-CHECK-UNKNOWN', { candidates: declared });
   const { kit, spec } = found;
+  const trust = kitTrust(kit);
+  if (!trust.trusted) throw new CheckError(`${name} is declared by ${kit.id}, whose code does not run here, because ${trust.reason}. Only kits from a trusted publisher whose bytes are their recorded release run checks (decision public-kit-trust)`, 'IA-CORE-KIT-UNTRUSTED', { kit: kit.id });
   // Execute the retained runner itself, so future core upgrades cannot change
   // argument validation or checker dispatch under an existing task pin.
   if (kit.pluginDir && realpathSync(kit.pluginDir) !== realpathSync(PLUGIN)) {
-    const delegated = spawnSync(process.execPath, [join(kit.pluginDir, 'scripts', 'check.mjs'), ...args], { cwd: workspaceRoot, env: process.env, encoding: 'utf8', windowsHide: true, maxBuffer: 64 * 1024 * 1024 });
+    const delegated = spawnSync(process.execPath, [join(kit.pluginDir, 'scripts', 'check.mjs'), ...args], { cwd: workspaceRoot, env: childEnv(process.env), encoding: 'utf8', windowsHide: true, maxBuffer: 64 * 1024 * 1024 });
     if (delegated.error) throw new CheckError(`retained checker did not start: ${delegated.error.message}`, 'IA-CORE-CHECK-FAILED');
     process.stdout.write(delegated.stdout ?? '');
     process.stderr.write(delegated.stderr ?? '');
@@ -124,7 +134,7 @@ async function main() {
   });
   const started = Date.now();
   // A script the check runs that resolves its own CLI (lib/scratch.mjs) gets the --cli given here, as IA_CLI_PATH.
-  const env = { ...process.env, IA_CORE_CHECK: name, ...(options.cli ? { IA_CLI_PATH: resolve(options.cli) } : {}) };
+  const env = childEnv(process.env, { IA_CORE_CHECK: name, ...(options.cli ? { IA_CLI_PATH: resolve(options.cli) } : {}) });
   let ran;
   try { ran = await runOrdinaryCheck({ argv, cwd, timeoutSeconds: spec.timeout ?? 600, env }); }
   catch (error) { throw new CheckError(`check ${name} could not retain execution evidence: ${error.message}`, error.code === 'IA-CORE-CHECK-OUTPUT' ? error.code : 'IA-CORE-CHECK-FAILED'); }
