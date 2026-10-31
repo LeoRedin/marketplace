@@ -146,7 +146,7 @@
 
 @decision public-workspace-placement
   meaning
-    says "User-facing workspaces default to ~/Documents/ia/<domain> (studio, music, design and so on), and the user can point elsewhere. ~/.ia is the IA home only: config, state, the location registry and installed kits. A knowledge repository holds one workspace at its root with scope folders, and a workspaces/<name>/ folder only for a workspace that needs its own identity."
+    says "User-facing workspaces default to ~/Documents/ia/<domain> (studio, music, design and so on), and the user can point elsewhere. ~/.ia is the IA home only: config, state, the location registry and installed kits. A knowledge repository holds one .ia/src: a personal or single-team KB has one @workspace; an organisation store has one @workspace per department, each declaring its scope folders, plus an organisation @workspace that also declares the repository root (. @authored); a workspaces/<name>/ folder is only for a workspace released or adopted on its own."
   work
     title "Place user workspaces under ~/Documents/ia"
     status made
@@ -157,8 +157,8 @@
   decision
     question "Where do a user's workspaces live?"
     decider "Operator"
-    choice "User-facing workspaces default to ~/Documents/ia/<domain> (studio, music, design and so on), and the user can point elsewhere. ~/.ia is the IA home only: config, state, the location registry and installed kits. A knowledge repository holds one workspace at its root with scope folders, and a workspaces/<name>/ folder only for a workspace that needs its own identity."
-    rationale "The CLI refuses a workspace inside its home, and a predictable default keeps workspaces easy to find."
+    choice "User-facing workspaces default to ~/Documents/ia/<domain> (studio, music, design and so on), and the user can point elsewhere. ~/.ia is the IA home only: config, state, the location registry and installed kits. A knowledge repository holds one .ia/src: a personal or single-team KB has one @workspace; an organisation store has one @workspace per department, each declaring its scope folders, plus an organisation @workspace that also declares the repository root (. @authored); a workspaces/<name>/ folder is only for a workspace released or adopted on its own."
+    rationale "The CLI refuses a workspace inside its home, and a predictable default keeps workspaces easy to find. The knowledge-repository layout is the operator's ruling dec-132 (2026-10-31), which replaced the earlier one-workspace-at-the-root wording."
 
 @decision public-plugin-components
   meaning

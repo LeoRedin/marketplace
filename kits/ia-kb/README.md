@@ -50,7 +50,7 @@ The example's `anchor.ia` sits under `assets/`, outside `.ia/src`, so it is neve
 
 ### Where workspaces live
 
-`@convention kb-workspace-location` sets the default: a user's workspaces live in `~/Documents/ia/<name>` (for example `~/Documents/ia/studio`, `~/Documents/ia/music`, `~/Documents/ia/design`), and the user can point a workspace anywhere else. `~/.ia` is the IA home only (config, state, the location registry and installed kits) and never holds a workspace: the CLI refuses a workspace inside its home. A knowledge repository holds one workspace at its root, with scope folders inside it; a `workspaces/<name>/` folder is only for a workspace that needs its own identity. The `kb-place-content` plan cell applies it where placement is decided.
+`@convention kb-workspace-location` sets the default: a user's workspaces live in `~/Documents/ia/<name>` (for example `~/Documents/ia/studio`, `~/Documents/ia/music`, `~/Documents/ia/design`), and the user can point a workspace anywhere else. `~/.ia` is the IA home only (config, state, the location registry and installed kits) and never holds a workspace: the CLI refuses a workspace inside its home. A knowledge repository holds one `.ia/src`, at its root: a personal or single-team KB declares one `@workspace` there, and an organisation store declares one `@workspace` per department, each declaring its scope folders, plus an organisation `@workspace` that also declares the repository root (`". @authored"`). A `workspaces/<name>/` folder is only for a workspace released or adopted on its own. The `kb-place-content` plan cell applies it where placement is decided.
 
 ## Roles
 
