@@ -442,7 +442,7 @@ test('the workspace location convention is the place stage\'s rule where placeme
   assert.equal(field(convention, 'subject', 'subject-word'), 'workspace');
   assert.equal(field(convention, 'governance', 'severity'), 'advisory');
   const says = unquote(field(convention, 'meaning', 'says'));
-  for (const fact of ['~/Documents/ia/<name>', '~/Documents/ia/studio', '~/Documents/ia/music', '~/Documents/ia/design', 'the user can point a workspace anywhere else', '~/.ia is the IA home only', 'the location registry and the installed kits', 'refuses a workspace inside its home', 'one workspace, at the repository root', 'scope folders', 'workspaces/<name>/', 'its own identity']) assert.ok(says.includes(fact), fact);
+  for (const fact of ['~/Documents/ia/<name>', '~/Documents/ia/studio', '~/Documents/ia/music', '~/Documents/ia/design', 'the user can point a workspace anywhere else', '~/.ia is the IA home only', 'the location registry and the installed kits', 'refuses a workspace inside its home', 'one .ia/src, at the repository root', 'A personal or single-team KB declares one @workspace', 'one @workspace per department, each declaring its own scope folders', 'declares the repository root as a source (. @authored)', 'workspaces/<name>/', 'released or adopted on its own']) assert.ok(says.includes(fact), fact);
   assert.match(unquote(field(convention, 'governance', 'requires')), /never inside ~\/\.ia/);
   // The plan cell of kb-place-content decides the placement and cites it.
   const place = records.find(r => r.word === 'playbook' && r.name === 'kb-place-content').body.join('\n');
