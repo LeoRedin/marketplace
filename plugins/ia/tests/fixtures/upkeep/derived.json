@@ -1,0 +1,17 @@
+{
+  "format": 1,
+  "outputs": [
+    {
+      "id": "architecture-map",
+      "inputs": [".ia/src/**/*.ia"],
+      "generator": { "script": "scripts/mermaid-map.mjs" },
+      "output": "docs/architecture.mmd"
+    },
+    {
+      "id": "spec-plain-voice",
+      "inputs": ["docs/spec.md"],
+      "generator": { "capability": "render-voice" },
+      "output": "docs/spec.plain.md"
+    }
+  ]
+}
