@@ -4,11 +4,11 @@
 // readers accept both formats, and recording a release appends the file and
 // the index row with latest and never rewrites another version's file.
 import assert from 'node:assert/strict';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { expandReleases, listKits, readReleases, releaseRecords } from '../scripts/lib/kit.mjs';
-import { convertFolder, expandFolder, recordRelease, releaseText } from '../scripts/lib/releases.mjs';
+import { checkFile, checkIndex, convertFolder, expandFolder, isVersion, recordRelease, releaseText, split } from '../scripts/lib/releases.mjs';
 import { sandbox } from './helpers/fixtures.mjs';
 
 const row = (version, n) => ({ version, archive: String(n).repeat(64), manifest: 'm'.repeat(64), sources: 's'.repeat(64), language: 'inventarch/language ^3.2.0', cli: '@inventarch/cli 3.4.1', records: [{ system: 'x', word: 'law', name: `law-${n}` }] });
@@ -69,4 +69,30 @@ test('recording a release appends its file and row, sets latest, adds source and
   const { records: again, ...changed } = row('0.1.0', 9);
   assert.throws(() => recordRelease(dir, changed, again), /bump the version/);
   assert.equal(readFileSync(join(dir, 'releases', '0.1.0.json'), 'utf8'), published);
+});
+
+test('a version is strict semver: the index, its rows, the per-version file and a recorded release refuse a version that names a path', t => {
+  for (const version of ['1.2.0', '0.1.0-rc.1', '1.0.0+build.7']) assert.equal(isVersion(version), true, version);
+  for (const version of ['../../../escaped-kit', '..', '1.0', '01.0.0', '1.0.0/..', '1.0.0\\..\\x', '', null, 'x'.repeat(65)]) assert.equal(isVersion(version), false, String(version));
+  const escaped = '../../../escaped-kit';
+  const { records, ...rest } = row(escaped, 1);
+  const index = { format: 2, kit: 'inventarch/x-kit', latest: escaped, releases: [{ ...rest, file: `releases/${escaped}.json` }] };
+  assert.throws(() => checkIndex(index), /release 0's version "\.\.\/\.\.\/\.\.\/escaped-kit" is not a semver version/);
+  // The file names exactly releases/<version>.json, nothing that resolves to it.
+  const good = row('0.1.0', 1);
+  delete good.records;
+  assert.throws(() => checkIndex({ format: 2, kit: 'inventarch/x-kit', latest: '0.1.0', releases: [{ ...good, file: 'releases/../releases/0.1.0.json' }] }), /names file releases\/\.\.\/releases\/0\.1\.0\.json, expected releases\/0\.1\.0\.json/);
+  assert.throws(() => checkIndex({ format: 2, kit: 'inventarch/x-kit', latest: '0.1.0', releases: [{ ...good, file: 'releases/0.1.0.json' }, { ...good, file: 'releases/0.1.0.json' }] }), /recorded twice/);
+  assert.throws(() => checkFile({ kit: 'inventarch/x-kit' }, { ...rest, version: escaped }, { format: 2, kit: 'inventarch/x-kit', version: escaped, archive: rest.archive, records }), /is not a semver version/);
+  assert.throws(() => split({ kit: 'inventarch/x-kit', releases: [row(escaped, 1)] }), /no semver version/);
+  // A kit folder whose index (either format) carries such a version is refused by the readers, before any file is read.
+  const { dir } = kitFolder(t);
+  writeFileSync(join(dir, 'releases.json'), releaseText(index));
+  assert.throws(() => readReleases(dir), e => e.code === 'IA-CORE-KIT' && /not a semver version/.test(e.message));
+  writeFileSync(join(dir, 'releases.json'), releaseText({ kit: 'inventarch/x-kit', releases: [row(escaped, 1)] }));
+  assert.throws(() => readReleases(dir), e => e.code === 'IA-CORE-KIT' && /not a semver version/.test(e.message));
+  const other = kitFolder(t);
+  convertFolder(other.dir);
+  assert.throws(() => recordRelease(other.dir, rest, records), /the recorded release version "\.\.\/\.\.\/\.\.\/escaped-kit" is not a semver version/);
+  assert.equal(existsSync(join(other.dir, '..', '..', 'escaped-kit.json')), false, 'nothing is written outside the kit');
 });

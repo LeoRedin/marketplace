@@ -7,7 +7,7 @@
 // with the real CLI are opt-in: IA_CORE_TEST_CLI=<@inventarch/cli dist/main.js>.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { adopt, findKit, kitDependencies, readRoot, satisfies } from '../scripts/lib/kit.mjs';
@@ -88,6 +88,29 @@ test('add --from installs a kit into the IA home only once its dependency is fou
   assert.equal(app.target, join(home, 'kits', 'fx-app', '0.1.0'));
   // Installed in the home, fx-app finds fx-base there too.
   assert.deepEqual(kitDependencies(findKit(APP_ID)).map(k => [k.id, k.origin]), [[BASE_ID, 'home']]);
+});
+
+test('add --from of a kit whose dependency sits next to it in a source tree installs the dependency alongside, so the installed kit resolves it', t => {
+  const dir = sandbox(t, 'ia-core-deps-');
+  const home = join(dir, 'home');
+  isolate(t, dir, home);
+  const pair = writePair(dir);
+  const preview = addFromOp(pair.app);
+  assert.equal(preview.wouldInstall, true);
+  assert.deepEqual(preview.dependencies.map(d => [d.kit, d.origin]), [[BASE_ID, 'source']]);
+  assert.deepEqual(preview.alongside, [{ kit: BASE_ID, version: '0.1.0', target: join(home, 'kits', 'fx-base', '0.1.0'), wouldInstall: true }]);
+  assert.equal(existsSync(join(home, 'kits')), false, 'a preview writes nothing');
+  const app = addFromOp(pair.app, { apply: true });
+  assert.equal(app.installed, true);
+  assert.deepEqual(app.alongside.map(a => [a.kit, a.installed]), [[BASE_ID, true]]);
+  // The reviewer's probe: the installed kit, not its source, resolves its dependency from the home.
+  const installed = findKit(APP_ID);
+  assert.equal(installed.origin, 'home');
+  assert.equal(installed.dir, join(home, 'kits', 'fx-app', '0.1.0'));
+  assert.deepEqual(kitDependencies(installed).map(k => [k.id, k.origin, k.dir]), [[BASE_ID, 'home', join(home, 'kits', 'fx-base', '0.1.0')]]);
+  // Again: fx-app is already there, fx-base is now found in the home, and nothing is written.
+  const again = addFromOp(pair.app, { apply: true });
+  assert.deepEqual([again.already, again.applied, again.alongside, again.dependencies.map(d => d.origin)], [true, false, [], ['home']]);
 });
 
 test('real CLI: fx-app restores and adopts with fx-base vendored, and the lock pins both releases (opt-in: IA_CORE_TEST_CLI)', { skip: SKIP }, t => {

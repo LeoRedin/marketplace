@@ -5,11 +5,12 @@
 import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, realpathSync, renameSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ENTRIES, readBindings, writeBindings } from './binding.mjs';
 import { adopt, declaredAssets, findKit, homeKitsDir, installedKits, KitError, kitBindings, kitChecks, kitDelivery, kitDependencies, listKits, readDescriptor, readReleases, releaseRecords, sourcesDigest } from './kit.mjs';
 import { kitHandlers } from './handlers.mjs';
+import { isVersion } from './releases.mjs';
 import { kitUpdate, pinRootFor, readPin } from './pin.mjs';
 import { readMethodPin } from './method-pin.mjs';
 import { kitRecordNames } from './records.mjs';
@@ -61,6 +62,7 @@ export function kitProblems(kit) {
   if (!latest) return ['records no release'];
   let descriptor = {};
   try { descriptor = readDescriptor(kit.dir); } catch (error) { problems.push(error.message); }
+  if (!isVersion(descriptor.version)) problems.push(`.ia/release.json version ${JSON.stringify(descriptor.version)} is not a semver version`);
   if (descriptor.id && descriptor.id !== index.kit) problems.push(`.ia/release.json id ${descriptor.id} is not the release index's ${index.kit}`);
   if (descriptor.version !== latest.version) problems.push(`.ia/release.json version ${descriptor.version} is not the latest release ${latest.version}`);
   if (latest.sources !== sourcesDigest(kit.dir)) problems.push(`the sources are not release ${latest.version} (sources digest differs)`);
@@ -86,9 +88,6 @@ export function kitProblems(kit) {
   return problems;
 }
 
-// A kit's dependencies as rows, or a KitError naming the one that is missing.
-const dependencyRows = kit => kitDependencies(kit).map(d => ({ kit: d.id, version: d.latest.version, archive: d.latest.archive, origin: d.origin }));
-
 export function checkOp(ref) {
   const kits = ref ? [findKit(ref)] : listKits();
   const rows = kits.map(k => ({ kit: k.id, origin: k.origin, version: k.latest?.version ?? null, problems: kitProblems(k) }));
@@ -111,8 +110,69 @@ function source(from) {
   return { dir, origin: 'archive', cleanup: () => rmSync(work, { recursive: true, force: true }) };
 }
 
+// What an install leaves out of a kit folder: its node_modules, .git and the
+// generated .ia/distributions and .ia/work.
+const NOT_INSTALLED = /[\\/](?:node_modules|\.git|\.ia[\\/](?:distributions|work))$/;
+
+// A kit installs only as regular files and folders: a link would point the
+// installed kit (its handlers, its records) outside its own folder.
+function assertRegularTree(dir) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (NOT_INSTALLED.test(path)) continue;
+    if (entry.isSymbolicLink() || !(entry.isDirectory() || entry.isFile())) throw new KitError(`${path} is a link or another kind of entry; a kit installs only regular files and folders`, 'IA-CORE-KIT-INVALID');
+    if (entry.isDirectory()) assertRegularTree(path);
+  }
+}
+
+// The home folder of a kit id: inventarch/<name>-kit installs as <name>.
+function homeFolder(id) {
+  const folder = String(id ?? '').split('/').at(-1).replace(/-kit$/, '');
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(folder)) throw new KitError(`kit id ${id} does not give a folder name`, 'IA-CORE-KIT-INVALID');
+  return folder;
+}
+
+// <IA home>/kits/<folder>/<version>, refused unless the version is strict
+// semver and the folder resolves to exactly that place inside the home.
+export function installTarget(home, folder, version) {
+  if (!isVersion(version)) throw new KitError(`kit version ${JSON.stringify(version)} is not a semver version; nothing is installed`, 'IA-CORE-KIT-INVALID');
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(folder ?? '')) throw new KitError(`kit folder ${JSON.stringify(folder)} is not a plain folder name; nothing is installed`, 'IA-CORE-KIT-INVALID');
+  const root = resolve(home);
+  const target = resolve(root, folder, version);
+  const rel = relative(root, target);
+  if (isAbsolute(rel) || rel === '..' || rel.startsWith(`..${sep}`) || rel.split(sep).join('/') !== `${folder}/${version}`) throw new KitError(`${target} is not inside the IA home kit folder ${root}; nothing is installed`, 'IA-CORE-KIT-INVALID');
+  return target;
+}
+
+// One kit's place in the home, checked before anything is written: its
+// problems, its folders' entries and what already sits at its target.
+function installPlan(kit, home, { checked = false } = {}) {
+  const problems = checked ? [] : kitProblems(kit);
+  if (problems.length) throw Object.assign(new KitError(`${kit.dir} is not an installable kit: ${problems.join('; ')}`, 'IA-CORE-KIT-INVALID'), { problems });
+  const descriptor = readDescriptor(kit.dir);
+  assertRegularTree(kit.dir);
+  const target = installTarget(home, homeFolder(descriptor.id ?? kit.id), descriptor.version);
+  let already = false;
+  if (existsSync(target)) {
+    if (sourcesDigest(target) !== kit.latest.sources) throw new KitError(`${target} already holds other bytes for ${kit.id} ${descriptor.version}; an installed version is never overwritten`, 'IA-CORE-KIT-CONFLICT');
+    already = true;
+  }
+  return { kit, version: descriptor.version, target, already };
+}
+
+function install({ kit, target }) {
+  mkdirSync(dirname(target), { recursive: true });
+  const staging = `${target}.installing-${process.pid}`;
+  rmSync(staging, { recursive: true, force: true });
+  cpSync(kit.dir, staging, { recursive: true, filter: p => !NOT_INSTALLED.test(p) });
+  renameSync(staging, target);
+}
+
 // Installs a kit folder into <IA home>/kits/<folder>/<version>/ once it
-// validates; an installed version is never overwritten.
+// validates; an installed version is never overwritten. A dependency found
+// only next to the kit in a source tree is installed alongside it, first: an
+// installed kit looks for its dependencies among the plugin's kits and the
+// home's (C3), not next to the folder it came from. `alongside` lists them.
 export function addFromOp(from, { apply = false, home = homeKitsDir() } = {}) {
   if (!home) throw new KitError('the IA home kit folder is turned off here (IA_CORE_NO_HOME_KITS, or IA_CORE_KITS_DIR without IA_HOME)', 'IA-CORE-KIT-HOME');
   const src = source(from);
@@ -120,26 +180,23 @@ export function addFromOp(from, { apply = false, home = homeKitsDir() } = {}) {
     const releases = readReleases(src.dir);
     const latest = (releases.latest ? releases.releases.find(r => r.version === releases.latest) : releases.releases.at(-1)) ?? null;
     const descriptor = readDescriptor(src.dir);
-    const folder = (descriptor.id ?? releases.kit).split('/').at(-1).replace(/-kit$/, '');
-    if (!/^[a-z0-9][a-z0-9-]*$/.test(folder)) throw new KitError(`kit id ${descriptor.id} does not give a folder name`);
+    const folder = homeFolder(descriptor.id ?? releases.kit);
     const kit = { folder, dir: src.dir, id: releases.kit, version: descriptor.version, latest, releases: releases.releases, origin: src.origin };
     const problems = kitProblems(kit);
     if (problems.length) throw Object.assign(new KitError(`${from} is not an installable kit: ${problems.join('; ')}`, 'IA-CORE-KIT-INVALID'), { problems });
     // A kit that depends on other kits installs only once they are found (C3): carried, in the IA home, or next to it.
-    const dependencies = dependencyRows(kit);
-    const target = join(home, folder, descriptor.version);
-    if (existsSync(target)) {
-      const there = sourcesDigest(target);
-      if (there !== latest.sources) throw new KitError(`${target} already holds other bytes for ${kit.id} ${descriptor.version}; an installed version is never overwritten`, 'IA-CORE-KIT-CONFLICT');
-      return { kit: kit.id, version: descriptor.version, target, dependencies, already: true, applied: false };
-    }
-    if (!apply) return { kit: kit.id, version: descriptor.version, target, dependencies, wouldInstall: true, applied: false };
-    mkdirSync(dirname(target), { recursive: true });
-    const staging = `${target}.installing-${process.pid}`;
-    rmSync(staging, { recursive: true, force: true });
-    cpSync(src.dir, staging, { recursive: true, filter: p => !/[\\/](?:node_modules|\.git|\.ia[\\/](?:distributions|work))$/.test(p) });
-    renameSync(staging, target);
-    return { kit: kit.id, version: descriptor.version, target, dependencies, installed: true, applied: true };
+    const found = kitDependencies(kit);
+    const dependencies = found.map(d => ({ kit: d.id, version: d.latest.version, archive: d.latest.archive, origin: d.origin }));
+    const plans = [...found.filter(d => d.origin === 'source').map(d => installPlan(d, home)), installPlan(kit, home, { checked: true })];
+    const self = plans.at(-1);
+    const alongside = plans.slice(0, -1);
+    const row = p => ({ kit: p.kit.id, version: p.version, target: p.target, ...(p.already ? { already: true } : apply ? { installed: true } : { wouldInstall: true }) });
+    const applied = apply && plans.some(plan => !plan.already);
+    if (apply) for (const plan of plans) if (!plan.already) install(plan);
+    const result = { kit: kit.id, version: self.version, target: self.target, dependencies, alongside: alongside.map(row) };
+    if (self.already) return { ...result, already: true, applied };
+    if (!apply) return { ...result, wouldInstall: true, applied: false };
+    return { ...result, installed: true, applied: true };
   } finally { src.cleanup(); }
 }
 

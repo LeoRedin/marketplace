@@ -37,7 +37,7 @@
     },
     {
       "path": "plugins/ia/CHANGELOG.md",
-      "sha256": "7501cb169ba843c2ade0fc21ea07198e24ff558bc3871c797f64a7a0b26e2c82"
+      "sha256": "4c3e606e2e87dfd80ebd3d697b01bc1ed099afa101bd0dd53a57fcbad875b9fa"
     },
     {
       "path": "plugins/ia/CODEX.md",
@@ -501,7 +501,7 @@
     },
     {
       "path": "plugins/ia/README.md",
-      "sha256": "711a4a56d67291032c30f69e72aef6838dbaa30a20415a201b3644ef8e17e28a"
+      "sha256": "13beefbb8e36b1b7cfd61d1a368c2a5c047c133e1dd7dcd867089f77ade3bb39"
     },
     {
       "path": "plugins/ia/references/design-service.md",
@@ -597,7 +597,7 @@
     },
     {
       "path": "plugins/ia/scripts/lib/handlers.mjs",
-      "sha256": "7b135fdda4b847c82eae38f12d151212f2e6a49cfa138254534475a6b4ede6d4"
+      "sha256": "57c2ffa632162bcd5422627669d848a9b8efdd1f2b7edd9b7d3a9bc2fc294782"
     },
     {
       "path": "plugins/ia/scripts/lib/home.mjs",
@@ -605,11 +605,11 @@
     },
     {
       "path": "plugins/ia/scripts/lib/kit-ops.mjs",
-      "sha256": "a6998d6e0c1b6540477d6c583365b93579f51f53cc654651dbceffe44b922a1f"
+      "sha256": "824de5a5b5fd74f8f41b8083143e256b1b3e2afa25aa400f0fa6579a1bc15d5d"
     },
     {
       "path": "plugins/ia/scripts/lib/kit.mjs",
-      "sha256": "cad3631e0dee0cfef656fb926c9f254b4ecea639d92928579ba855d2bb8080da"
+      "sha256": "9a4b52b76b64e3d034987a9e8307d87132a6c0f011ad15ac4782774d72873c91"
     },
     {
       "path": "plugins/ia/scripts/lib/method-check.mjs",
@@ -661,7 +661,7 @@
     },
     {
       "path": "plugins/ia/scripts/lib/releases.mjs",
-      "sha256": "1e202f1a842bb39fca7ce82b2dc3227c1447d0eeae5542bdff074e8d4477631a"
+      "sha256": "3d2654c59f26cbe5257f944a72bc0869d847608e3d7431ca9b59d177d3306ae1"
     },
     {
       "path": "plugins/ia/scripts/lib/retained.mjs",

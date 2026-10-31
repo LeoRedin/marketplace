@@ -9,17 +9,39 @@
 // (replacing "file" by the file's records) rebuilds the format 1 document
 // byte for byte. A per-version file is immutable once published; its kit,
 // version and archive must match its row, so it cannot be paired with another.
+// Every version is strict semver (isVersion) and every row's file is exactly
+// releases/<version>.json: a version names a folder and a file, so one such as
+// ../../x would reach outside the kit, and the IA home an install writes to.
 import { deepStrictEqual } from 'node:assert/strict';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 export const FORMAT = 2;
-const VERSION = /^(?!\.{1,2}$)[0-9A-Za-z][0-9A-Za-z.+-]{0,63}$/;
+// Semantic Versioning 2.0.0, at most 64 characters: no separator, no "..".
+const SEMVER = /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
+export const isVersion = value => typeof value === 'string' && value.length <= 64 && SEMVER.test(value);
 export const releaseText = value => JSON.stringify(value, null, 2) + '\n';
 export const releaseFile = version => `releases/${version}.json`;
 
 export class ReleaseError extends Error {
   constructor(message, code = 'IA-CORE-RELEASES') { super(message); this.code = code; }
+}
+
+// Refuses a version that is not strict semver; returns it.
+export function assertVersion(value, what = 'version') {
+  if (!isVersion(value)) throw new ReleaseError(`${what} ${JSON.stringify(value)} is not a semver version such as 1.2.0`);
+  return value;
+}
+
+// Checks release rows (either format): each version strict semver, each once.
+export function checkRows(rows) {
+  const seen = new Set();
+  for (const [i, row] of rows.entries()) {
+    assertVersion(row?.version, `release ${i}'s version`);
+    if (seen.has(row.version)) throw new ReleaseError(`version ${row.version} is recorded twice`);
+    seen.add(row.version);
+  }
+  return rows;
 }
 
 const readJson = path => JSON.parse(readFileSync(path, 'utf8'));
@@ -34,7 +56,7 @@ export function split(original) {
   const files = new Map();
   const rows = original.releases.map((release, i) => {
     const { version } = release ?? {};
-    if (typeof version !== 'string' || !VERSION.test(version)) throw new ReleaseError(`release ${i} has no safe version: ${JSON.stringify(version)}`);
+    if (!isVersion(version)) throw new ReleaseError(`release ${i} has no semver version: ${JSON.stringify(version)}`);
     if (!Array.isArray(release.records)) throw new ReleaseError(`release ${version} has no records list`);
     if (Object.hasOwn(release, 'file')) throw new ReleaseError(`release ${version} already has a "file" field`);
     if (typeof release.archive !== 'string') throw new ReleaseError(`release ${version} has no archive`);
@@ -46,9 +68,12 @@ export function split(original) {
   return { index: { format: FORMAT, kit: original.kit, latest: rows.at(-1).version, releases: rows }, files };
 }
 
-// Checks a format 2 index's shape: latest is its last row, every row names its own file.
+// Checks a format 2 index's shape: every version strict semver, latest is its
+// last row, every row names exactly its own file, releases/<version>.json.
 export function checkIndex(index) {
   if (index?.format !== FORMAT || typeof index.kit !== 'string' || !Array.isArray(index.releases)) throw new ReleaseError('not a format 2 releases.json index');
+  checkRows(index.releases);
+  if (index.latest !== null || index.releases.length) assertVersion(index.latest, 'index latest');
   if (index.latest !== (index.releases.at(-1)?.version ?? null)) throw new ReleaseError(`index latest ${index.latest} is not its last release ${index.releases.at(-1)?.version}`);
   for (const row of index.releases) if (row.file !== releaseFile(row.version)) throw new ReleaseError(`release ${row.version} names file ${row.file}, expected ${releaseFile(row.version)}`);
   return index;
@@ -56,6 +81,7 @@ export function checkIndex(index) {
 
 // One per-version file, checked against its index row.
 export function checkFile(index, row, file) {
+  assertVersion(row?.version, 'release version');
   if (file?.format !== FORMAT || file.kit !== index.kit || file.version !== row.version || file.archive !== row.archive || !Array.isArray(file.records)) {
     throw new ReleaseError(`${row.file} does not belong to ${index.kit} ${row.version} ${row.archive}`);
   }
@@ -119,6 +145,7 @@ export function convertFolder(dir, { check = false } = {}) {
 // semver-sorted. A per-version file that exists with other bytes is refused
 // unless `replace` is set (a version not yet published).
 export function recordRelease(dir, row, records, { offers, replace = false } = {}) {
+  assertVersion(row?.version, 'the recorded release version');
   const indexPath = join(dir, 'releases.json');
   const index = checkIndex(readJson(indexPath));
   const file = releaseFile(row.version);

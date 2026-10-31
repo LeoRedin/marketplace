@@ -5,7 +5,7 @@
 // no-op when no kit declares a handler. The governance probe asks whether an
 // installed kit declares governance handlers.
 import assert from 'node:assert/strict';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { governanceNotice } from '../scripts/lib/account.mjs';
@@ -129,6 +129,18 @@ test('a handler whose script the kit does not hold never runs (a fetched release
   const { kitsDir, hook } = setup(t);
   const dir = handlerKit(kitsDir, 'fetched', { session: [{ run: 'scripts/echo.mjs' }] });
   rmSync(join(dir, 'scripts'), { recursive: true });
+  assert.equal(hook('session', { hook_event_name: 'SessionStart', source: 'startup' }).stdout, '');
+});
+
+test('a handler whose script a link carries outside its kit never runs', t => {
+  const { dir, kitsDir, hook } = setup(t);
+  const kit = handlerKit(kitsDir, 'linked', { session: [{ run: 'scripts/echo.mjs' }] });
+  // scripts/ becomes a link to a folder outside the kit that holds the same script.
+  const outside = join(dir, 'outside');
+  mkdirSync(outside);
+  writeFileSync(join(outside, 'echo.mjs'), ECHO);
+  rmSync(join(kit, 'scripts'), { recursive: true });
+  try { symlinkSync(outside, join(kit, 'scripts'), 'junction'); } catch (error) { return t.skip(`cannot create a folder link here: ${error.code}`); }
   assert.equal(hook('session', { hook_event_name: 'SessionStart', source: 'startup' }).stdout, '');
 });
 

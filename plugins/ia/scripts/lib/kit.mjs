@@ -31,7 +31,7 @@ import { fileURLToPath } from 'node:url';
 import { ENTRIES } from './binding.mjs';
 import { PINNED, resolveCli, runIa } from './cli.mjs';
 import { kitRecordNames } from './records.mjs';
-import { checkFile, checkIndex, compareVersions, expandDocument, FORMAT as RELEASES_FORMAT } from './releases.mjs';
+import { checkFile, checkIndex, checkRows, compareVersions, expandDocument, FORMAT as RELEASES_FORMAT } from './releases.mjs';
 import { iaHome } from './home.mjs';
 
 export const DEFAULT_KITS_DIR = fileURLToPath(new URL('../../config/kits/', import.meta.url));
@@ -128,16 +128,18 @@ export function implementationDigest(kit, plugin = kit.pluginDir ?? fileURLToPat
 
 // The kit's release index: format 1 (every row embeds its records) or format
 // 2 (each row names releases/<version>.json in place of its records). Either
-// way the rows carry version, archive, manifest, sources, language and cli.
+// way the rows carry version, archive, manifest, sources, language and cli,
+// and every version is strict semver (releases.mjs checkRows): a version names
+// a per-version file and an install folder, so it never holds a path.
 export function readReleases(kitDir) {
   const path = join(kitDir, 'releases.json');
   if (!existsSync(path)) throw new KitError(`${kitDir} carries no releases.json`);
   const releases = JSON.parse(readFileSync(path, 'utf8'));
   if (!releases.kit || !Array.isArray(releases.releases)) throw new KitError(`${path} is malformed`);
   if (releases.format !== undefined && releases.format !== RELEASES_FORMAT) throw new KitError(`${path} has format ${releases.format}; this core reads formats 1 and ${RELEASES_FORMAT}`);
-  if (releases.format === RELEASES_FORMAT) {
-    try { checkIndex(releases); } catch (error) { throw new KitError(`${path}: ${error.message}`); }
-  }
+  try {
+    if (releases.format === RELEASES_FORMAT) checkIndex(releases); else checkRows(releases.releases);
+  } catch (error) { throw new KitError(`${path}: ${error.message}`); }
   return releases;
 }
 
@@ -272,11 +274,14 @@ function quietFolderKits(dir, origin) {
 // plugin carries, the kits installed in the IA home (every version, newest
 // first), then the dependency's own folder next to the depending kit (a source
 // tree such as app kits/). The first whose latest release satisfies the range wins.
+// A kit installed in the home finds its dependencies among the home's kits:
+// kit.mjs add installs a dependency it found next to the kit alongside it.
 export function findDependency(dep, kit) {
   let home = [];
   try { home = homeKits(); } catch { /* an unreadable home holds nothing */ }
-  // An archive's extracted folder has no neighbours to look in.
-  const beside = kit.origin === 'archive' ? [] : quietFolderKits(dirname(kit.dir), 'source');
+  // An archive's extracted folder has no neighbours to look in, and next to a
+  // home kit sit only its own other versions.
+  const beside = kit.origin === 'archive' || kit.origin === 'home' ? [] : quietFolderKits(dirname(kit.dir), 'source');
   const candidates = [...quietFolderKits(kitsDir(), 'plugin'), ...home, ...beside];
   const named = candidates.filter(k => k.id === dep.id);
   const match = named.find(k => k.latest && satisfies(k.latest.version, dep.range));

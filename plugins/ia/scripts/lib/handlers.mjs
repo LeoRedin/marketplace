@@ -18,8 +18,8 @@
 // reported, never applied. A kit's onwrite.json stays supported as tool post
 // handlers (scripts/on-write.mjs).
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, statSync } from 'node:fs';
-import { isAbsolute, join, relative, resolve } from 'node:path';
+import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { iaHome } from './home.mjs';
 import { KitError, listKits } from './kit.mjs';
 
@@ -92,9 +92,17 @@ export function handlerKits({ kits } = {}) {
   return { kits: found, skipped };
 }
 
+// A handler's script is present when it is a file inside its kit's folder once
+// links are followed: a run path is checked inside the kit when it is read,
+// and a link must not carry it out.
 const scriptPresent = (kit, handler) => {
-  const path = join(kit.dir, handler.run);
-  try { return statSync(path).isFile(); } catch { return false; }
+  try {
+    const root = realpathSync(kit.dir);
+    const path = realpathSync(join(kit.dir, handler.run));
+    const rel = relative(root, path);
+    if (rel === '' || rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)) return false;
+    return statSync(path).isFile();
+  } catch { return false; }
 };
 
 // Does any installed kit declare a governance handler, a tool `pre` handler

@@ -5,10 +5,11 @@
 // installed version; bind, rebind and upgrade preview unless --apply; check
 // reports a kit whose sources are not its latest release.
 import assert from 'node:assert/strict';
-import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { cpSync, existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { sourcesDigest } from '../scripts/lib/kit.mjs';
+import { installTarget } from '../scripts/lib/kit-ops.mjs';
 import { kitRecordNames } from '../scripts/lib/records.mjs';
 import { envFor, fakeCli, makeKit, makeRepo, run, sandbox } from './helpers/fixtures.mjs';
 
@@ -75,6 +76,61 @@ test('add --from validates, previews, installs once into <IA home>/kits/<kit>/<v
   assert.equal(drifted.json.error.code, 'IA-CORE-KIT-INVALID', 'sources that are not the latest release are refused before anything is written');
   const unreleased = makeKit(join(s.dir, 'raw'), { folder: 'delta', id: 'inventarch/delta-kit' });
   assert.match(s.kit('add', '--from', unreleased.dir).json.error.message, /sources digest differs|lists other records/);
+});
+
+// A crafted kit folder: its index, per-version file and descriptor all name `version`, and the sources digest is
+// recomputed, so only the version itself can refuse it.
+function crafted(kit, version) {
+  const descriptorPath = join(kit.dir, '.ia', 'release.json');
+  writeFileSync(descriptorPath, JSON.stringify({ ...JSON.parse(readFileSync(descriptorPath, 'utf8')), version }, null, 2) + '\n');
+  const index = JSON.parse(readFileSync(join(kit.dir, 'releases.json'), 'utf8'));
+  const [row] = index.releases;
+  const file = `releases/${version}.json`;
+  mkdirSync(join(kit.dir, file, '..'), { recursive: true });
+  writeFileSync(join(kit.dir, file), JSON.stringify({ format: 2, kit: index.kit, version, archive: row.archive, records: kitRecordNames(kit.dir) }) + '\n');
+  writeFileSync(join(kit.dir, 'releases.json'), JSON.stringify({ format: 2, kit: index.kit, latest: version, releases: [{ ...row, version, sources: sourcesDigest(kit.dir), file }] }) + '\n');
+  return kit;
+}
+
+test('add --from refuses a release version that names a path, and writes nothing outside the IA home', t => {
+  const s = setup(t);
+  const escaped = '../../../escaped-kit';
+  const kit = crafted(released(makeKit(join(s.dir, 'incoming'), { folder: 'evil', id: 'inventarch/evil-kit' })), escaped);
+  for (const args of [['add', '--from', kit.dir], ['add', '--from', kit.dir, '--apply']]) {
+    const refused = s.kit(...args);
+    assert.equal(refused.status, 1, refused.stdout);
+    assert.match(refused.json.error.message, /release 0's version "\.\.\/\.\.\/\.\.\/escaped-kit" is not a semver version/);
+  }
+  assert.equal(existsSync(join(s.home, 'kits')), false);
+  assert.equal(existsSync(join(s.home, '..', 'escaped-kit')), false, 'nothing lands where the version points');
+  // A sound release index with a descriptor that names a path is refused too.
+  const other = released(makeKit(join(s.dir, 'other'), { folder: 'odd', id: 'inventarch/odd-kit' }));
+  const descriptorPath = join(other.dir, '.ia', 'release.json');
+  writeFileSync(descriptorPath, JSON.stringify({ ...JSON.parse(readFileSync(descriptorPath, 'utf8')), version: escaped }, null, 2) + '\n');
+  const odd = s.kit('add', '--from', other.dir, '--apply');
+  assert.equal(odd.json.error.code, 'IA-CORE-KIT-INVALID', odd.stdout);
+  assert.match(odd.json.error.message, /\.ia\/release\.json version "\.\.\/\.\.\/\.\.\/escaped-kit" is not a semver version/);
+  assert.equal(existsSync(join(s.home, 'kits')), false);
+});
+
+test('an install target is <IA home>/kits/<folder>/<semver version> and nothing else', () => {
+  const home = join('ia-home', 'kits');
+  assert.equal(installTarget(home, 'gamma', '1.2.0'), resolve(home, 'gamma', '1.2.0'));
+  for (const [folder, version] of [['gamma', '../../../escaped-kit'], ['gamma', '..'], ['gamma', '1.2'], ['..', '1.2.0'], ['../outside', '1.2.0'], ['gamma/../..', '1.2.0']]) {
+    assert.throws(() => installTarget(home, folder, version), e => e.code === 'IA-CORE-KIT-INVALID', `${folder} ${version}`);
+  }
+});
+
+test('add --from refuses a kit folder that holds a link, before anything is written', t => {
+  const s = setup(t);
+  const kit = released(makeKit(join(s.dir, 'incoming'), { folder: 'linked', id: 'inventarch/linked-kit' }));
+  const outside = join(s.dir, 'outside');
+  mkdirSync(outside);
+  try { symlinkSync(outside, join(kit.dir, 'docs'), 'junction'); } catch (error) { return t.skip(`cannot create a folder link here: ${error.code}`); }
+  const refused = s.kit('add', '--from', kit.dir, '--apply');
+  assert.equal(refused.json.error.code, 'IA-CORE-KIT-INVALID', refused.stdout);
+  assert.match(refused.json.error.message, /is a link or another kind of entry/);
+  assert.equal(existsSync(join(s.home, 'kits')), false);
 });
 
 test('bind recommends a kit\'s keys and writes only with --apply; one key can be set and must name a record of the kit', t => {
