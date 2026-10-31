@@ -1,0 +1,8 @@
+#! ia 1.0
+
+@spec intake-spec
+  source docs/spec.md
+  uses intake-law
+
+@law intake-law
+  grounded-by intake-spec

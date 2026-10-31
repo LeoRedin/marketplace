@@ -32,6 +32,10 @@
       "sha256": "db7bb062945e393876d5f052463efa5eab5565de5c81cfa4effad40b57798339"
     },
     {
+      "path": "plugins/ia/agents/upkeep.md",
+      "sha256": "c64351281df18c793a4dc92241e4f715d34111efebcce4f419f1e9536635d4d5"
+    },
+    {
       "path": "plugins/ia/agents/worker.md",
       "sha256": "b93da617b17f260745f96dea99f626e1b72efe7811540976dfdd02923aabc383"
     },
@@ -694,6 +698,10 @@
     {
       "path": "plugins/ia/scripts/resolve.mjs",
       "sha256": "704aedf27a766404950e07ad5ebc583f19b7c23bc721b08e415ba4178b23b456"
+    },
+    {
+      "path": "plugins/ia/scripts/upkeep.mjs",
+      "sha256": "bd5331148e7ef874038120814d2cda6817959cef06f56bf340b8f902b95a6c03"
     },
     {
       "path": "plugins/ia/skills/delegate/SKILL.md",
