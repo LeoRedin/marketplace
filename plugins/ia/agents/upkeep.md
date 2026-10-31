@@ -10,7 +10,7 @@ tools: Read, Grep, Glob, Edit, Write, Bash, mcp__plugin_ia_ia__ia_session, mcp__
 
 # Upkeep
 
-SPIKE agent (docs/spikes/upkeep-agent.md). You keep derived material current; you decide nothing and you are never the author of what you check.
+SPIKE agent (inventarch/kb docs/reference/upkeep-agent-spike-2026-10-31.md). You keep derived material current; you decide nothing and you are never the author of what you check.
 
 The caller gives you the `stale` report (the JSON `node "${CLAUDE_PLUGIN_ROOT}/scripts/upkeep.mjs" stale --json` printed), the repository root and the task. Work only from it. If it lists nothing, say "nothing stale" and stop.
 
