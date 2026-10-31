@@ -21,7 +21,7 @@ A Git install copies a plugin's whole folder, `tests/` included. `tools/validate
 ## Kit rules
 
 - Edit `kits/<kit>`, never the bundled copy; see [kits/README.md](kits/README.md).
-- A release is two commits: a sources commit, then a stamp commit that sets `.ia/release.json` `source.commit` to it, packs with the pinned CLI and records the release (`node tools/kit.mjs pack <kit>`, then `node tools/kit.mjs bundle --write` and `node tools/kit.mjs index --write`). Merge a pull request that records a release with a merge commit; a squash or a rebase rewrites the pinned commit, and `tools/consistency.py` refuses a `source.commit` that is not an ancestor of HEAD.
+- A release is two commits: a sources commit, then a stamp commit that sets `.ia/release.json` `source.commit` to it, packs with the pinned CLI and records the release (`node tools/kit.mjs pack <kit>`, then `node tools/kit.mjs bundle --write`, `node tools/kit.mjs index --write` and `node tools/kit.mjs package --write`, raising the package version in `packages/public-kits/package.json`). Merge a pull request that records a release with a merge commit; a squash or a rebase rewrites the pinned commit, and `tools/consistency.py` refuses a `source.commit` that is not an ancestor of HEAD.
 - `releases.json` is a format 2 index and `releases/<version>.json` is immutable once published (decision `public-releases-format-2`).
 
 ## Gates
@@ -33,6 +33,7 @@ python tools/validate.py
 python tools/selection.py            # review the diff, then: python tools/selection.py --write
 node tools/bundle-kits.mjs --check
 node tools/kit.mjs index --check
+node tools/kit.mjs package --check   # packages/public-kits/package.json is the bundled kits' claim (docs/public-kits-package.md)
 python tools/consistency.py          # --base <ref> adds version bumps and the published-release guard
 npm run lint
 node tools/check-language.mjs        # every bundled kit and .ia/src restored and validated by the pinned CLI
@@ -42,6 +43,6 @@ claude plugin validate --strict plugins/ia && claude plugin validate --strict .
 node tools/smoke-codex.mjs --codex <codex executable> --report <file>   # after a manifest, skill or CODEX.md change
 ```
 
-CI (`.github/workflows/gates.yml`) runs the first nine on Ubuntu for every pull request into `main`, and on Ubuntu, Windows and macOS for every push to `main` (`public-ci-matrix`), plus the native qualification shards (`tools/run-native-tests.mjs`, with `IA_CORE_TEST_CLI` set). The two host gates stay local.
+CI (`.github/workflows/gates.yml`) runs the first ten on Ubuntu for every pull request into `main`, and on Ubuntu, Windows and macOS for every push to `main` (`public-ci-matrix`), plus the native qualification shards (`tools/run-native-tests.mjs`, with `IA_CORE_TEST_CLI` set). The two host gates stay local.
 
-Validation and tests never create remotes, push, publish, install, invite or change access. Those are separate, operator-authorized steps.
+Validation and tests never create remotes, push, publish, install, invite or change access. Those are separate, operator-authorized steps. Publishing `@inventarch/public-kits` is one: only an operator dispatches `.github/workflows/publish-public-kits.yml` (decision `public-kits-package`).

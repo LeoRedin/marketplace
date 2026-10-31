@@ -186,6 +186,7 @@ python tools/validate.py
 python tools/selection.py --check
 node tools/bundle-kits.mjs --check
 node tools/kit.mjs index --check
+node tools/kit.mjs package --check
 python tools/consistency.py
 npm run lint
 node tools/check-language.mjs
@@ -193,7 +194,7 @@ python -m unittest discover -s tests -v
 node --test "tests/*.test.mjs" "plugins/*/tests/*.test.mjs"
 ```
 
-`tools/kit.mjs` holds the maintainer verbs (`pack`, `bundle`, `index`, `convert`); see [the kit README](kits/README.md).
+`tools/kit.mjs` holds the maintainer verbs (`pack`, `bundle`, `index`, `convert`, `package`); see [the kit README](kits/README.md). `package` generates `@inventarch/public-kits`, the npm package that carries the three kits' archives to a door or workspace without the plugin; [docs/public-kits-package.md](docs/public-kits-package.md) describes it and the operator's publish step.
 
 ## Licence
 

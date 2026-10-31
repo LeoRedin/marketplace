@@ -6,6 +6,7 @@
 //   node tools/kit.mjs bundle (--check | --write)                     copy kits/ into the plugins (tools/bundle-kits.mjs)
 //   node tools/kit.mjs index (--check | --write)                      kits/index.json from every kit's release index
 //   node tools/kit.mjs convert <kit folder> [--check | --expand]      releases.json format 1 -> 2, lossless and verified
+//   node tools/kit.mjs package (--check [--built] | --write | --build)   the @inventarch/public-kits package (tools/public-kits.mjs)
 // Every write validates first; --check writes nothing. Exit 0 on success, 1 on
 // drift or a refusal, 2 on bad usage.
 import { existsSync, readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
@@ -13,6 +14,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { main as bundleMain } from './bundle-kits.mjs';
 import { offeredKeys, packMain } from './pack-kit.mjs';
+import { packageMain } from './public-kits.mjs';
 import { readReleases } from '../plugins/ia/scripts/lib/kit.mjs';
 import { convertFolder, expandFolder, releaseText } from '../plugins/ia/scripts/lib/releases.mjs';
 
@@ -21,6 +23,7 @@ const USAGE = `usage:
   node tools/kit.mjs bundle (--check | --write)
   node tools/kit.mjs index (--check | --write)
   node tools/kit.mjs convert <kit folder> [--check | --expand]
+  node tools/kit.mjs package (--check [--built] | --write | --build)
 `;
 
 // The broadcast: one row per kit under kits/, from its release index alone.
@@ -43,6 +46,7 @@ export function main(argv, root = fileURLToPath(new URL('../', import.meta.url))
   const [verb, ...rest] = argv;
   if (verb === 'pack') return packMain(rest, { kitsDir: join(root, 'kits'), out, err });
   if (verb === 'bundle') return bundleMain(rest, root, out);
+  if (verb === 'package') return packageMain(rest, root, out, err);
   if (verb === 'index') {
     if (rest.length !== 1 || !['--check', '--write'].includes(rest[0])) { err(USAGE); return 2; }
     const path = join(root, 'kits', 'index.json');

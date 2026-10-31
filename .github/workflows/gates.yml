@@ -59,6 +59,8 @@ jobs:
         run: node tools/bundle-kits.mjs --check
       - name: The kit index matches the kits
         run: node tools/kit.mjs index --check
+      - name: The public kits package is the bundled kits' claim
+        run: node tools/kit.mjs package --check
       - name: Repository consistency, pins and version bumps
         run: python tools/consistency.py --base ${{ github.event.pull_request.base.sha || github.event.before }}
       - name: Lint the JavaScript

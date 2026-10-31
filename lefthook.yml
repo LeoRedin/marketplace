@@ -14,6 +14,8 @@ pre-commit:
       run: node tools/bundle-kits.mjs --check
     index:
       run: node tools/kit.mjs index --check
+    package:
+      run: node tools/kit.mjs package --check
     consistency:
       run: python tools/consistency.py
     lint:
@@ -37,6 +39,8 @@ pre-push:
       run: node tools/bundle-kits.mjs --check
     index:
       run: node tools/kit.mjs index --check
+    package:
+      run: node tools/kit.mjs package --check
     consistency:
       run: python tools/consistency.py --base origin/main
     lint:

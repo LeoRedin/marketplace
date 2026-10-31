@@ -16,7 +16,8 @@ validate.py guards what ships. This guards the rest of the repository and the fa
 - with --base <ref>: each plugin whose selected bytes changed since its merge base with <ref> has a higher version,
   and every release a kits/ or plugins/ releases.json recorded at that merge base is still there, unchanged, compared
   through one expand() (format 1 passes through; format 2 reads releases/<version>.json), and no releases/<version>.json
-  present at the base was removed or changed.
+  present at the base was removed or changed, and packages/public-kits/package.json, when its ia.kits changed since
+  the base, has a higher version (decision public-kits-package).
 It reports every problem, not only the first, reads only the working tree and Git, and needs no network.
 """
 import argparse
@@ -32,7 +33,10 @@ from validate import PLUGINS, ROOT
 
 # What .gitignore keeps out, for a copy that is not a Git checkout (the tests).
 IGNORED_DIRS = {'.git', 'node_modules', '__pycache__', '.scratch', 'build', 'review-private', '.qualification'}
-IGNORED_PATHS = ('.ia/work/', '.ia/distributions/', '.ia/distributions.lock.json', '.env')
+IGNORED_PATHS = ('.ia/work/', '.ia/distributions/', '.ia/distributions.lock.json', '.env',
+                 'packages/public-kits/index.json', 'packages/public-kits/kits/', 'packages/public-kits/archives/',
+                 'packages/public-kits/LICENSE', 'packages/public-kits/NOTICE')
+PUBLIC_KITS = 'packages/public-kits/package.json'
 BINARY = ('.zip', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.pdf', '.woff', '.woff2')
 NO_TABS = ('.py', '.json', '.yml', '.yaml')
 CONFLICT = re.compile(r'^(?:<{7}|>{7}|\|{7})(?: |$)')
@@ -370,6 +374,22 @@ def version_bumps(root, base, problems):
                             '(bump both manifests, sources.lock.json pluginVersion and CHANGELOG.md)')
         elif semver(after) <= semver(before):
             problems.append(f'{name}: version {after} is not above {before}')
+    public_kits_bump(root, base, merge_base, problems)
+
+
+def public_kits_bump(root, base, merge_base, problems):
+    """The package's version rises whenever the kit releases it carries (its ia.kits) change."""
+    if not (root / PUBLIC_KITS).exists() or git(root, 'ls-tree', '--name-only', merge_base, PUBLIC_KITS).strip() == '':
+        return  # no package, or a new one: nothing published to compare
+    before = load_json(git(root, 'show', f'{merge_base}:{PUBLIC_KITS}'))
+    after = read_json(root, PUBLIC_KITS)
+    if before.get('ia', {}).get('kits') == after.get('ia', {}).get('kits'):
+        return
+    if after.get('version') == before.get('version'):
+        problems.append(f'{PUBLIC_KITS}: the carried kit releases changed since {base} but its version stays '
+                        f'{before.get("version")} (bump it)')
+    elif semver(after.get('version', '0')) <= semver(before.get('version', '0')):
+        problems.append(f'{PUBLIC_KITS}: version {after.get("version")} is not above {before.get("version")}')
 
 
 def expand(document, read_file):

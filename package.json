@@ -8,7 +8,7 @@
     "consistency": "python tools/consistency.py",
     "lint": "biome lint",
     "language": "node tools/check-language.mjs",
-    "check": "python tools/validate.py && python tools/selection.py --check && node tools/bundle-kits.mjs --check && node tools/kit.mjs index --check && python tools/consistency.py && biome lint && node tools/check-language.mjs",
+    "check": "python tools/validate.py && python tools/selection.py --check && node tools/bundle-kits.mjs --check && node tools/kit.mjs index --check && node tools/kit.mjs package --check && python tools/consistency.py && biome lint && node tools/check-language.mjs",
     "test:repo": "python -m unittest discover -s tests -v",
     "test:tools": "node --test \"tests/*.test.mjs\"",
     "test:plugins": "node --test \"plugins/*/tests/*.test.mjs\"",

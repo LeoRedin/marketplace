@@ -70,3 +70,14 @@
     status draft
     owner "InventArch maintainers"
     source "docs/hosts.md"
+
+@spec marketplace-public-kits
+  meaning
+    says "The @inventarch/public-kits npm package: what it carries (each bundled kit's IA archive, manifest and folder, and the kit index), how tools/kit.mjs package generates and checks it, why its built files are not committed, and the operator's publish workflow."
+    answers "How are the default kits packaged for npm, and how is the package published?"
+  work
+    title "The public kits package"
+    status draft
+    owner "InventArch maintainers"
+    source "docs/public-kits-package.md"
+    covers ["packages/", ".github/workflows/publish-public-kits.yml"]

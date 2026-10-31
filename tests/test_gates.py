@@ -15,6 +15,7 @@ RUNS = [
     'python tools/selection.py --check',
     'node tools/bundle-kits.mjs --check',
     'node tools/kit.mjs index --check',
+    'node tools/kit.mjs package --check',
     'python tools/consistency.py --base ${{ github.event.pull_request.base.sha || github.event.before }}',
     'npm run lint',
     'node tools/check-language.mjs',
@@ -84,6 +85,42 @@ class GatesWorkflowTests(unittest.TestCase):
 
     def test_checkout_is_lf(self):
         self.assertIn('* text=auto eol=lf', (ROOT / '.gitattributes').read_text(encoding='utf-8').splitlines())
+
+
+class PublishPublicKitsWorkflowTests(unittest.TestCase):
+    """The operator's publish step for @inventarch/public-kits (decision public-kits-package): dispatch only, from main,
+    checked against its sources, refusing a published version, and published with provenance under OIDC, no token."""
+
+    def setUp(self):
+        self.text = (ROOT / '.github' / 'workflows' / 'publish-public-kits.yml').read_text(encoding='utf-8')
+
+    def test_only_an_operator_starts_it_from_main(self):
+        self.assertIn('on:\n  workflow_dispatch:\n\npermissions:', self.text)
+        for trigger in ('push:', 'pull_request', 'schedule:', 'workflow_run', 'release:'):
+            self.assertNotIn(trigger, self.text)
+        self.assertIn('test "$GITHUB_REF" = refs/heads/main', self.text)
+
+    def test_publishes_with_oidc_and_no_token(self):
+        self.assertIn('permissions:\n  contents: read\n  id-token: write\n', self.text)
+        self.assertNotIn('secrets.', self.text)
+        self.assertNotIn('NODE_AUTH_TOKEN', self.text)
+        self.assertNotIn('NPM_TOKEN', self.text)
+        runs = re.findall(r'^ +run: (.*)$', self.text, re.MULTILINE)
+        self.assertEqual(runs[-1], 'npm publish --provenance --access public')
+        self.assertEqual(sum(r.startswith('npm publish') for r in runs), 1)
+
+    def test_checks_refuse_and_build_before_publishing(self):
+        runs = re.findall(r'^ +run: (.*)$', self.text, re.MULTILINE)
+        order = ['npm ci --ignore-scripts', 'node tools/bundle-kits.mjs --check', 'node tools/kit.mjs index --check',
+                 'node tools/kit.mjs package --check', '|', 'node tools/kit.mjs package --build',
+                 'node tools/kit.mjs package --check --built', 'npm pack --dry-run --json',
+                 'npm publish --provenance --access public']
+        self.assertEqual([r for r in runs if r in order], order)
+        self.assertIn('is already published', self.text)
+        self.assertIn("node-version: '22.22.0'", self.text)
+        for action in re.findall(r'uses: (\S+)', self.text):
+            self.assertRegex(action, r'^actions/[a-z-]+@[0-9a-f]{40}$')
+        self.assertNotIn('continue-on-error', self.text)
 
 
 if __name__ == '__main__':
