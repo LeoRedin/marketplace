@@ -105,3 +105,14 @@
     owner "Unassigned"
     start "2026-10-30"
     source "docs/roadmap.md"
+
+@task signed-kit-releases
+  meaning
+    says "Sign kit releases and check the signature before a kit runs code, so trust no longer rests on the kit id's namespace and the release record the kit carries itself, and widen what the signed digest covers to every module a kit's entry scripts import (decision public-kit-trust)."
+  work
+    title "Trust kit code by signature, not by its namespace claim"
+    status proposed
+    milestone @milestone marketplace-published
+    owner "Unassigned"
+    start "2026-10-31"
+    source "docs/roadmap.md"
