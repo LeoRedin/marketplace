@@ -44,7 +44,7 @@ const text = (system, file) => readFileSync(join(SYSTEMS, system, 'records', fil
 const kit = () => findKit(KIT_ID, DEFAULT_KITS_DIR);
 const names = () => new Set(kitRecordNames(KIT).map(r => r.name));
 const testTitles = () => readdirSync(join(PLUGIN, 'tests')).filter(f => f.endsWith('.test.mjs'))
-  .flatMap(f => [...readFileSync(join(PLUGIN, 'tests', f), 'utf8').matchAll(/^test\('([^']+)'/gm)].map(m => `inventarch/tests/${f} :: ${m[1]}`));
+  .flatMap(f => [...readFileSync(join(PLUGIN, 'tests', f), 'utf8').matchAll(/^test\('([^']+)'/gm)].map(m => `plugins/ia/tests/${f} :: ${m[1]}`));
 
 // Records as `@word name` and their indented block.
 function readKit() {

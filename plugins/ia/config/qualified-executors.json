@@ -119,7 +119,7 @@
         },
         {
           "path": "scripts/lib/cli.mjs",
-          "sha256": "512925dc5f3f35235a2fbe58ac9a5586ae51253d0f293414285faf604ce9dd59",
+          "sha256": "16bd896578987aee54a7488c20891ddf7fcbc1cb3fed55ea16fbfb78d5e7725c",
           "imports": [
             "node:child_process",
             "node:fs",
@@ -149,7 +149,7 @@
           "selection": "IA_CLI_PATH forced to attested entry; npx disabled"
         }
       ],
-      "review": "Carried from the field-lint helper qualified before the public cut: the same imports, argv, cwd and subprocesses; only its header comments changed, and lib/cli.mjs pins 3.4.1."
+      "review": "Carried from the field-lint helper qualified before the public cut: the same imports, argv, cwd and subprocesses; only its header comments changed, and lib/cli.mjs pins 3.5.0."
     }
   }
 }

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.0
+
+Re-cut on IA 3.5.0 (decision `public-cli-3-5-0`, which supersedes `public-cli-3-4-1`).
+
+- Pins `@inventarch/cli` 3.5.0 everywhere the core, its tests and its tools pinned 3.4.1 (`scripts/lib/cli.mjs`, the closure modules, the native runner and verifier, the skills and documents). The language base is unchanged: `inventarch/language` 3.2.0, archive 7b36e4b4.
+- The IA door launcher starts `npx -y @inventarch/mcp-door@3.5.0`.
+- The qualified runtime cohort is regenerated as `config/qualified-runtime-3.5.0.json` (24 packages, checked against the registry integrity in the root lock); `config/qualified-executors.json` follows the changed `lib/cli.mjs`.
+- Bundled kits re-cut with the 3.5.0 CLI: `ia-method` 0.7.1, `ia-kb` 0.9.1 and `ia-authoring` 0.1.1 (recorded releases are immutable, so a new patch version each). `ia-method`'s two case evaluators now name the public path `plugins/ia/tests/ceiling.test.mjs`.
+
 ## 1.1.0
 
 The lanes go through the IA door, kits run handlers and depend on other kits, only trusted kits run code, and governance arrives as a kit (decisions `public-door-mcp`, `public-kit-handlers`, `public-kit-trust`, `public-kit-dependencies`, `public-delegate`, `public-governance-probe` and `public-core-hooks`). ia-kb 0.9.0, not yet published, is re-recorded from 57ebf44 with the knowledge-repository layout of the operator's ruling dec-132 (one `.ia/src`; one `@workspace` for a personal or single-team KB; for an organisation store one `@workspace` per department plus an organisation `@workspace` that also declares the root; `workspaces/<name>/` only for a workspace released or adopted on its own); ia-method 0.7.0 and ia-authoring 0.1.0 stand.

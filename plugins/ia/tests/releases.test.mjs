@@ -11,7 +11,7 @@ import { expandReleases, listKits, readReleases, releaseRecords } from '../scrip
 import { checkFile, checkIndex, convertFolder, expandFolder, isVersion, recordRelease, releaseText, split } from '../scripts/lib/releases.mjs';
 import { sandbox } from './helpers/fixtures.mjs';
 
-const row = (version, n) => ({ version, archive: String(n).repeat(64), manifest: 'm'.repeat(64), sources: 's'.repeat(64), language: 'inventarch/language ^3.2.0', cli: '@inventarch/cli 3.4.1', records: [{ system: 'x', word: 'law', name: `law-${n}` }] });
+const row = (version, n) => ({ version, archive: String(n).repeat(64), manifest: 'm'.repeat(64), sources: 's'.repeat(64), language: 'inventarch/language ^3.2.0', cli: '@inventarch/cli 3.5.0', records: [{ system: 'x', word: 'law', name: `law-${n}` }] });
 function kitFolder(t) {
   const dir = join(sandbox(t, 'ia-core-releases-'), 'kits', 'x');
   mkdirSync(join(dir, '.ia'), { recursive: true });

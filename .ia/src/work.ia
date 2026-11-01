@@ -42,9 +42,9 @@
 
 @task native-qualification-refresh
   meaning
-    says "Run the native qualification shards (tools/run-native-tests.mjs) on Ubuntu, Windows and macOS against the 3.4.1 pins and the re-cut kits, and keep the reports."
+    says "Run the native qualification shards (tools/run-native-tests.mjs) on Ubuntu, Windows and macOS against the 3.5.0 pins and the re-cut kits, and keep the reports."
   work
-    title "Refresh native qualification on 3.4.1"
+    title "Refresh native qualification on 3.5.0"
     status open
     milestone @milestone marketplace-published
     owner "Unassigned"

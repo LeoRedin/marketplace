@@ -172,7 +172,7 @@ class ConsistencyTests(unittest.TestCase):
     # The IA pins agree with sources.lock.json.
 
     def test_launcher_pin_drift_refuses(self):
-        self.edit('plugins/ia/scripts/lib/cli.mjs', "export const PINNED = '3.4.1';", "export const PINNED = '3.3.0';")
+        self.edit('plugins/ia/scripts/lib/cli.mjs', "export const PINNED = '3.5.0';", "export const PINNED = '3.3.0';")
         self.assertProblem(r'plugins/ia/scripts/lib/cli\.mjs: pins 3\.3\.0, sources\.lock\.json pins 3\.4\.1')
 
     def test_every_qualified_runtime_literal_must_match_the_lock(self):

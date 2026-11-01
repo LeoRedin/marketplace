@@ -391,8 +391,8 @@ class ScaffoldTests(unittest.TestCase):
         self.assertEqual(canonical(load(self.root / 'plugins/ia/.mcp.json')), canonical(expected))
         def door(value): return value['mcpServers']['ia']
         edits = {
-            'bare npx': lambda v: door(v).update(command='npx', args=['-y', '@inventarch/mcp-door@3.4.1']),
-            'cmd /c npx': lambda v: door(v).update(command='cmd', args=['/c', 'npx', '-y', '@inventarch/mcp-door@3.4.1']),
+            'bare npx': lambda v: door(v).update(command='npx', args=['-y', '@inventarch/mcp-door@3.5.0']),
+            'cmd /c npx': lambda v: door(v).update(command='cmd', args=['/c', 'npx', '-y', '@inventarch/mcp-door@3.5.0']),
             'other script': lambda v: door(v).update(args=['${CLAUDE_PLUGIN_ROOT}/scripts/resolve.mjs']),
             'extra argument': lambda v: door(v)['args'].append('--root'),
             'shell command': lambda v: door(v).update(command='bash'),
