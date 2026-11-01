@@ -427,7 +427,7 @@ test('a requirement without its failure case is reported', () => {
 test('REQ-AUTH-03 success: every listed asset exists and every carried file is listed', () => {
   assert.deepEqual(assetProblems(), []);
   const descriptor = JSON.parse(readFileSync(join(KIT, '.ia', 'release.json'), 'utf8'));
-  assert.deepEqual(descriptor.assets.map(a => a.path), ['assets/probe-examples/admitted.ia', 'assets/probe-examples/refused.ia', 'assets/trigger-config.md', 'scripts/eval-triggers.mjs', 'scripts/field-lint.mjs', 'scripts/probe.mjs']);
+  assert.deepEqual(descriptor.assets.map(a => a.path), ['assets/probe-examples/admitted.ia', 'assets/probe-examples/refused.ia', 'assets/trigger-config.md', 'scripts/eval-triggers.mjs', 'scripts/field-lint.mjs', 'scripts/lib/scratch.mjs', 'scripts/probe.mjs']);
   // A carried script or example says where it was authored, and names no other kit.
   for (const path of descriptor.assets.map(a => a.path).filter(p => !p.endsWith('.md'))) {
     const lines = readFileSync(join(KIT, path), 'utf8').split('\n');

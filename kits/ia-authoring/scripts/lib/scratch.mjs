@@ -1,4 +1,4 @@
-// The ia-authoring kit's own scratch-capture helper: nothing in this kit resolves a path outside its folder.
+// authored in inventarch/ia-authoring-kit 0.1.0: the kit's own scratch-capture helper; nothing in this kit resolves a path outside its folder.
 // It copies a workspace's .ia and its adopted source roots to a temp folder and runs `ia capture` there, so nothing is
 // written in the workspace. The CLI is resolved in this order: an explicit entry (--cli), IA_CLI_PATH (IA_METHOD_CLI is
 // still honoured), the repository's own install of @inventarch/cli (walking up to the nearest .git), then exactly the
