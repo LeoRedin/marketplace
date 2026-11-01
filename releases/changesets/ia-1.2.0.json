@@ -1,0 +1,45 @@
+{
+  "format": "inventarch-marketplace.changeset.v1",
+  "plugin": "ia",
+  "version": "1.2.0",
+  "previous": "1.1.0",
+  "bump": "minor",
+  "notes": [
+    {
+      "id": "ia-cli-3-5-0",
+      "bump": "minor",
+      "title": "Re-cut on IA 3.5.0",
+      "summary": "The plugin, its tools and its tests pin `@inventarch/cli` 3.5.0, the IA door starts `@inventarch/mcp-door@3.5.0`, and the qualified runtime cohort is regenerated for 3.5.0 (decision `public-cli-3-5-0`). The language base is unchanged: `inventarch/language` 3.2.0."
+    },
+    {
+      "id": "bundled-kits-3-5-0",
+      "bump": "patch",
+      "title": "Re-cut the bundled kits",
+      "summary": "`ia-method` 0.7.1, `ia-kb` 0.9.1 and `ia-authoring` 0.1.1 are packed with the 3.5.0 CLI and published together as `@inventarch/public-kits` 1.0.1. No kit code reaches outside its own folder, and the `ia-method` and `ia-kb` case evaluators name tests in this repository."
+    },
+    {
+      "id": "upkeep-agent",
+      "bump": "minor",
+      "title": "Ship the upkeep agent",
+      "summary": "`agents/upkeep.md` and `scripts/upkeep.mjs` ship, stating what the agent does and where it stops (decision `public-upkeep-agent`)."
+    },
+    {
+      "id": "door-only-lanes",
+      "bump": "minor",
+      "title": "The lanes call only the IA door",
+      "summary": "The work, knowledge and delivery lanes call `ia_session`, `ia_catalogue` and `ia_method` on the door and no longer fall back to `scripts/resolve.mjs`."
+    },
+    {
+      "id": "codex-door",
+      "bump": "minor",
+      "title": "Turn the IA door on under Codex",
+      "summary": "The Codex manifest names `.codex-mcp.json`, which starts the door with `node ./scripts/door.mjs`, because Codex does not expand the plugin-root variable (decision `public-door-codex`). Kit handler hooks stay off under Codex."
+    },
+    {
+      "id": "plugin-readme-header",
+      "bump": "none",
+      "title": "Give the plugin README the catalogue's header",
+      "summary": "The plugin README opens with a title, a version badge, the pinned CLI and the licence, like the catalogue README. No behaviour changes."
+    }
+  ]
+}
