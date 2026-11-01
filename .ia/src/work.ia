@@ -42,9 +42,9 @@
 
 @task native-qualification-refresh
   meaning
-    says "Run the native qualification shards (tools/run-native-tests.mjs) on Ubuntu, Windows and macOS against the 3.4.1 pins and the re-cut kits, and keep the reports."
+    says "Run the native qualification shards (tools/run-native-tests.mjs) on Ubuntu, Windows and macOS against the 3.5.0 pins and the re-cut kits, and keep the reports."
   work
-    title "Refresh native qualification on 3.4.1"
+    title "Refresh native qualification on 3.5.0"
     status open
     milestone @milestone marketplace-published
     owner "Unassigned"
@@ -86,20 +86,21 @@
 
 @task drop-door-fallback
   meaning
-    says "Once @inventarch/mcp-door ships ia_session, ia_catalogue and ia_method (the IA framework release after 3.4.1), move .mcp.json and the pins to it, drop the lanes' scripts/resolve.mjs fallback and make resolve.mjs a thin caller of the shared runtime's packet builder."
+    says "Once @inventarch/mcp-door ships ia_session, ia_catalogue and ia_method, move .mcp.json and the pins to it and drop the lanes' scripts/resolve.mjs fallback. Done in 1.2.0: the 3.5.0 door lists all three tools over stdio (checked 2026-11-01), the door pin is 3.5.0 and the lanes name only the door. scripts/resolve.mjs stays for ia:init, ia:delegate and the kits' own cases; making it a thin caller of the shared runtime's packet builder is not part of this task."
   work
     title "Drop the lanes' resolve.mjs fallback"
-    status proposed
+    status closed
     milestone @milestone marketplace-published
     owner "Unassigned"
     start "2026-10-30"
+    ended "2026-11-01"
     source "docs/roadmap.md"
 
 @task codex-door-and-handlers
   meaning
-    says "Give Codex the IA door and the kit handler hooks once qualified there: a Codex manifest entry or committed .codex/config.toml for the door, and a QUALIFIED_CODEX_HOOKS set for bootstrap.mjs and handlers.mjs."
+    says "Give Codex the kit handler hooks once qualified there: a QUALIFIED_CODEX_HOOKS set for bootstrap.mjs and handlers.mjs. The IA door half is done in 1.2.0: the Codex manifest names .codex-mcp.json (decision public-door-codex)."
   work
-    title "Carry the door and kit handlers to Codex"
+    title "Carry the kit handlers to Codex"
     status proposed
     milestone @milestone marketplace-published
     owner "Unassigned"

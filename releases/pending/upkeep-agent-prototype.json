@@ -1,9 +1,0 @@
-{
-  "format": "inventarch-marketplace.release-note.v1",
-  "bump": "minor",
-  "title": "Ship the upkeep agent prototype",
-  "summary": "A spike, not a supported surface yet: the `ia:upkeep` agent and `scripts/upkeep.mjs`. `upkeep.mjs stale` decides with no model whether a kit's declared derived outputs (`derived.json`) or the records citing changed files are out of step, and exits 0 when nothing is stale; `record` stores the current digests in `.ia/derived.lock.json`, and `build --allow-code` runs a kit's script generator. The agent starts only on a stale report, works in its own worktree and returns a patch; it never edits the caller's tree, commits or pushes.",
-  "plugins": [
-    "ia"
-  ]
-}

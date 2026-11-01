@@ -172,8 +172,8 @@ class ConsistencyTests(unittest.TestCase):
     # The IA pins agree with sources.lock.json.
 
     def test_launcher_pin_drift_refuses(self):
-        self.edit('plugins/ia/scripts/lib/cli.mjs', "export const PINNED = '3.4.1';", "export const PINNED = '3.3.0';")
-        self.assertProblem(r'plugins/ia/scripts/lib/cli\.mjs: pins 3\.3\.0, sources\.lock\.json pins 3\.4\.1')
+        self.edit('plugins/ia/scripts/lib/cli.mjs', "export const PINNED = '3.5.0';", "export const PINNED = '3.3.0';")
+        self.assertProblem(r'plugins/ia/scripts/lib/cli\.mjs: pins 3\.3\.0, sources\.lock\.json pins 3.5.0')
 
     def test_every_qualified_runtime_literal_must_match_the_lock(self):
         # The core's closure modules: every literal is moved off the pin at once, and each row must name its own drift.
@@ -212,7 +212,7 @@ class ConsistencyTests(unittest.TestCase):
 
     def test_stale_cli_reference_refuses_outside_history(self):
         self.edit(PLUGIN_FILE, '\n# ', '\nRun `npx -y -p @inventarch/cli@3.1.0 -- ia validate`.\n\n# ')
-        self.assertProblem(r'knowledge/SKILL\.md:\d+: @inventarch/cli@3\.1\.0, sources\.lock\.json pins 3\.4\.1')
+        self.assertProblem(r'knowledge/SKILL\.md:\d+: @inventarch/cli@3\.1\.0, sources\.lock\.json pins 3.5.0')
         self.write('plugins/ia/CHANGELOG.md', self.text('plugins/ia/CHANGELOG.md') + '\nWas `@inventarch/cli@2.0.0`.\n')
         self.assertFalse(any('CHANGELOG' in p for p in check(self.root)))
 
@@ -228,9 +228,9 @@ class ConsistencyTests(unittest.TestCase):
 
     def test_changelog_must_lead_with_the_manifest_version(self):
         for host in ('claude', 'codex'):
-            self.json_edit(f'plugins/ia/.{host}-plugin/plugin.json', lambda m: m.update(version='1.1.1'))
-        self.json_edit('sources.lock.json', lambda s: s['pluginVersion'].update({'ia': '1.1.1'}))
-        self.assertProblem(r'plugins/ia/CHANGELOG\.md: latest entry is 1\.1\.0, the manifest says 1\.1\.1')
+            self.json_edit(f'plugins/ia/.{host}-plugin/plugin.json', lambda m: m.update(version='1.2.1'))
+        self.json_edit('sources.lock.json', lambda s: s['pluginVersion'].update({'ia': '1.2.1'}))
+        self.assertProblem(r'plugins/ia/CHANGELOG\.md: latest entry is 1\.2\.0, the manifest says 1\.2\.1')
 
     # Version bumps against a base (git).
 
@@ -239,7 +239,7 @@ class ConsistencyTests(unittest.TestCase):
         self.write(PLUGIN_FILE, self.text(PLUGIN_FILE) + '\nA shipped change.\n')
         self.rehash()
         self.assertProblem(r'ia: shipped bytes changed since HEAD but no new release note names it', base='HEAD')
-        self.bump('ia', '1.1.1')
+        self.bump('ia', '1.2.1')
         self.assertEqual(check(self.root, base='HEAD'), [])
 
     def note(self, name, plugins=('ia',), bump='patch'):
@@ -282,7 +282,7 @@ class ConsistencyTests(unittest.TestCase):
         self.write(PLUGIN_FILE, self.text(PLUGIN_FILE) + '\nA shipped change.\n')
         self.rehash()
         self.bump('ia', '0.9.0')
-        self.assertProblem(r'ia: version 0\.9\.0 is not above 1\.1\.0', base='HEAD')
+        self.assertProblem(r'ia: version 0\.9\.0 is not above 1\.2\.0', base='HEAD')
 
     def test_release_ranks_above_its_pre_release(self):
         from consistency import semver
@@ -294,9 +294,9 @@ class ConsistencyTests(unittest.TestCase):
         self.init_history()
         name = 'packages/public-kits/package.json'
         self.json_edit(name, lambda p: p['ia']['kits'][0].update(version='9.9.9'))
-        self.assertProblem(r'packages/public-kits/package\.json: the carried kit releases changed since HEAD but its version stays 1\.0\.0', base='HEAD')
+        self.assertProblem(r'packages/public-kits/package\.json: the carried kit releases changed since HEAD but its version stays 1\.0\.1', base='HEAD')
         self.json_edit(name, lambda p: p.update(version='0.9.0'))
-        self.assertProblem(r'packages/public-kits/package\.json: version 0\.9\.0 is not above 1\.0\.0', base='HEAD')
+        self.assertProblem(r'packages/public-kits/package\.json: version 0\.9\.0 is not above 1\.0\.1', base='HEAD')
         self.json_edit(name, lambda p: p.update(version='1.1.0'))
         self.assertFalse([p for p in check(self.root, base='HEAD') if 'public-kits' in p])
 

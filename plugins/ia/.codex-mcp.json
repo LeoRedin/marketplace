@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "ia": {
+      "command": "node",
+      "args": [
+        "./scripts/door.mjs"
+      ],
+      "cwd": "./"
+    }
+  }
+}

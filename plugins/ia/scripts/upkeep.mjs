@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// SPIKE (the upkeep agent prototype, 2026-10-31): the deterministic half of the upkeep
-// agent. It decides, with no model, whether anything is worth starting the
-// agent for.
+// The deterministic half of the upkeep agent (decision public-upkeep-agent). It decides, with no model, whether
+// anything is worth starting the agent for. It reads files and runs git; it never writes except to
+// .ia/derived.lock.json (record, build) and, for build, to a declared output.
 //   upkeep.mjs stale  [--root <dir>] [--sidecar <file>] [--base <ref>] [--changed a,b] [--json]
 //   upkeep.mjs record <id> [--root] [--sidecar]                  record the current digests as fresh
 //   upkeep.mjs build  [<id>] --allow-code [--root] [--sidecar]   run script generators, then record
@@ -14,8 +14,11 @@
 // the agent must not overwrite it silently). Also lists records (.ia/src/**.ia)
 // whose `source`, `cites` or `grounded-by` lines name a changed file.
 // Exit 0 nothing stale (and silent without --json), 3 something stale, 2 usage.
-// `build` runs kit code, so a production version must take the trust check of
-// lib/trust.mjs kitTrust, as handlers do; here --allow-code stands in for it.
+// Limits: `build` runs a script the sidecar names, so it refuses unless the caller passes --allow-code; it does
+// not apply the kit trust check (lib/trust.mjs kitTrust) that handlers take, so run it only on a sidecar you
+// trust. Staleness is by content digest of the declared inputs, not by meaning: it cannot tell whether a
+// changed input matters. Citations are found by the `source`, `cites` and `grounded-by` lines of .ia/src
+// records, nothing else.
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';

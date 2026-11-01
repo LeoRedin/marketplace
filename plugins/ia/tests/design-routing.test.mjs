@@ -10,9 +10,9 @@ test('Delivery discovers hosted UX before native resolution without restoring a 
   const delivery = read('skills/delivery/SKILL.md');
   assert.match(delivery.split('---')[1], /UX improvements.*design tokens.*accessibility audits/);
   const stage = delivery.indexOf('references/design-stage.md');
-  const native = delivery.indexOf('scripts/resolve.mjs');
+  const native = delivery.indexOf('ia_catalogue');
   assert.ok(stage >= 0 && stage < native, 'hosted UX must branch before native binding resolution');
-  assert.match(delivery, /--entry delivery/);
+  assert.match(delivery, /ia_catalogue {lane: "delivery"}/);
   assert.match(delivery, /software architecture, code components or boundaries follows the resolver/);
   assert.match(read('skills/init/SKILL.md'), /references\/design-stage.md/);
   assert.match(read('references/design-stage.md'), /design-service.md/);

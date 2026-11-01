@@ -58,7 +58,7 @@ test('package --check refuses a stale claim, a changed field and a declared scri
   write(pkg);
   // A bundled kit whose bytes are not its recorded release makes no claim.
   writeFileSync(join(root, 'plugins/ia/config/kits/ia-kb/.ia/release.json'), readFileSync(join(root, 'plugins/ia/config/kits/ia-kb/.ia/release.json'), 'utf8') + '\n');
-  assert.throws(() => packageClaim(root), /ia-kb is not its recorded release 0\.9\.0/);
+  assert.throws(() => packageClaim(root), /ia-kb is not its recorded release 0.9.1/);
   assert.equal(run(root, '--check').status, 1);
 });
 
@@ -90,7 +90,7 @@ test('built files are checked when present, and required with --built', t => {
   const problems = builtProblems(root).join('\n');
   assert.match(problems, /LICENSE is missing/);
   assert.match(problems, /kits\/ia-kb is not plugins\/ia\/config\/kits\/ia-kb: missing /);
-  assert.match(problems, /archives\/[0-9a-f]{64}\.ia\.tgz \(inventarch\/ia-kb-kit 0\.9\.0\) is missing/);
+  assert.match(problems, /archives\/[0-9a-f]{64}\.ia\.tgz \(inventarch\/ia-kb-kit 0\.9\.1\) is missing/);
   assert.equal(run(root, '--check').status, 1);
   assert.equal(run(root, '--bogus').status, 2);
 });

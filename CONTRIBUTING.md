@@ -18,7 +18,7 @@ Python 3.11 or later and Node.js `>=22.22.0 <23`. Run this once in each checkout
 npm ci
 ```
 
-It installs Biome, lefthook and the pinned `@inventarch/cli` 3.4.1, and lefthook installs this repository's Git hooks, which run the gates before each commit and push. `LEFTHOOK=0` skips them for one command; CI still runs them. Never use an `ia` on your `PATH` for this repository: the gates use the pinned one.
+It installs Biome, lefthook and the pinned `@inventarch/cli` 3.5.0, and lefthook installs this repository's Git hooks, which run the gates before each commit and push. `LEFTHOOK=0` skips them for one command; CI still runs them. Never use an `ia` on your `PATH` for this repository: the gates use the pinned one.
 
 ## How the repository is organised
 

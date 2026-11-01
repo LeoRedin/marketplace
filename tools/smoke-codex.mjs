@@ -40,6 +40,9 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const HOOKS_PLUGINS = new Set(['ia']);
 const CODEX_HOOKS_OFF = { hooks: {} };
 const CODEX_HOOK_FILES = {};
+// The plugins whose Codex manifest names the IA door's .mcp.json (decision public-door-codex); every other plugin has none.
+const DOOR_PLUGINS = new Set(['ia']);
+const DOOR_TOOLS = ['ia_session', 'ia_catalogue', 'ia_method'];
 // What the repository's sensitive-bytes scanner refuses as a machine path; the report must carry none.
 const MACHINE_PATH = /[a-z]:[\\/]+users[\\/]+|\/[a-z]\/users\/|\/users\/[a-z0-9._-]+\/|\/home\/[a-z0-9._-]+\/|appdata[\\/]/i;
 
@@ -214,7 +217,16 @@ try {
       assert.equal(detail.hooks.length, handlers, `${plugin.name}: Codex lists ${detail.hooks.length} hooks; the delivery file has ${handlers} handlers`);
       assert(!JSON.stringify(detail.hooks).includes('hook.mjs'), `${plugin.name}: ledger hooks leaked into Codex`);
     } else assert.deepEqual(detail.hooks, [], `${plugin.name}: Claude hooks leaked into Codex`);
-    assert.deepEqual(detail.mcpServers, [], `${plugin.name}: MCP servers reported`);
+    let doorTools = null;
+    if (DOOR_PLUGINS.has(plugin.name)) {
+      assert.deepEqual(detail.mcpServers, ['ia'], `${plugin.name}: Codex lists ${JSON.stringify(detail.mcpServers)} instead of the door`);
+      // Codex starts the door from the installed plugin (npx fetches the pinned @inventarch/mcp-door) and lists what it serves.
+      const status = await host.request('mcpServerStatus/list', { serverName: 'ia', detail: 'full' });
+      const door = status.data.find(s => s.name === 'ia' && s.pluginId === `${plugin.name}@${catalog.name}`);
+      assert(door, `${plugin.name}: the door is not among Codex's MCP servers`);
+      doorTools = Object.keys(door.tools ?? {}).sort();
+      for (const tool of DOOR_TOOLS) assert(doorTools.includes(tool), `${plugin.name}: the door under Codex lacks ${tool} (has ${doorTools.join(', ')})`);
+    } else assert.deepEqual(detail.mcpServers, [], `${plugin.name}: MCP servers reported`);
     assert.deepEqual(detail.apps, [], `${plugin.name}: apps reported`);
     const expected = plugin.skills.map(s => `${plugin.name}:${s}`).sort();
     assert.deepEqual(detail.skills.map(s => s.name).sort(), expected);
@@ -237,7 +249,7 @@ try {
       manifestSha256: digest(join(plugin.root, '.codex-plugin/plugin.json')), hostGuideSha256: digest(join(plugin.root, 'CODEX.md')),
       loadedSkillCount: active.length, skillNames: expected, hostInterface, listedInterface, interfaceMatchesManifest,
       manifestHooks: plugin.manifestHooks, installedHooksJson: existsSync(join(installed, 'hooks/hooks.json')),
-      hooks: detail.hooks.length, mcpServers: detail.mcpServers.length, apps: detail.apps.length, installedCacheVerified: true,
+      hooks: detail.hooks.length, mcpServers: detail.mcpServers.length, doorTools, apps: detail.apps.length, installedCacheVerified: true,
     });
   }
   const totalLoadedSkills = plugins.reduce((n, p) => n + p.loadedSkillCount, 0);

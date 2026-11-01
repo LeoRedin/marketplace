@@ -12,7 +12,7 @@ The main system, `ia-authoring`, holds the entry capability `authoring-deliver`,
 
 This kit replaces two retired kits, `inventarch/host-authoring-kit` and `inventarch/catalogue-authoring-kit`, whose records it carries as its host and catalogue parts. Their old releases remain in the history of the catalogue they came from.
 
-Version 0.1.0. Language base `inventarch/language ^3.2.0`, packed with `@inventarch/cli 3.4.1`. Guidance, checks and scripts only: it grants no authority and installs no hook. Licence Apache-2.0.
+Version 0.1.1. Language base `inventarch/language ^3.2.0`, packed with `@inventarch/cli 3.5.0`. Guidance, checks and scripts only: it grants no authority and installs no hook. Licence Apache-2.0.
 
 ## Layout
 
@@ -35,7 +35,7 @@ bindings.json                            the activity keys the kit recommends, a
 releases.json                            the release index; each version's record list is in releases/<version>.json
 ```
 
-The scripts import the core's scratch-capture helper (`../../../../scripts/lib/scratch.mjs`), so they run from the kit's bundled copy at `plugins/ia/config/kits/ia-authoring/`.
+The scripts import the kit's own scratch-capture helper (`./lib/scratch.mjs`), so they run from any copy of the kit folder and reach no path outside it.
 
 ## Delivery and bindings
 
