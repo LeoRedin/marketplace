@@ -43,8 +43,8 @@ node tools/kit.mjs package --check --built    # the same check, requiring the bu
 `.github/workflows/publish-public-kits.yml` publishes the package. It has no trigger except `workflow_dispatch`, so only an operator starts it: from the Actions tab, or with `gh workflow run publish-public-kits.yml -R inventarch/marketplace --ref main`. Its job runs in the `npm` environment, which GitHub deploys only from `main` and only once its required reviewer, the operator, approves the run; that approval is the publication checkpoint, and no agent gives it. In order, it:
 
 1. refuses any ref but `main`;
-2. installs npm 11.6.2 (trusted publishing needs 11.5.1 or later) and the root dependencies with `--ignore-scripts`;
-3. checks the bundle, the kit index and `package --check`;
+2. installs the root dependencies with `--ignore-scripts` on Node 22.22.2;
+3. checks the bundle, the kit index and `package --check`, then installs npm 12.2.0, the npm that made the trusted publisher. setup-node writes no `.npmrc`, so npm has only its OIDC token to publish with;
 4. refuses a version npm already has (`npm view @inventarch/public-kits@<version>`);
 5. builds with the pinned CLI and runs `package --check --built`;
 6. prints `npm pack --dry-run --json`, whose `integrity` is the value a lock entry records;

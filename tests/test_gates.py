@@ -124,7 +124,9 @@ class PublishPublicKitsWorkflowTests(unittest.TestCase):
                  'npm publish --provenance --access public']
         self.assertEqual([r for r in runs if r in order], order)
         self.assertIn('is already published', self.text)
-        self.assertIn("node-version: '22.22.0'", self.text)
+        self.assertIn("node-version: '22.22.2'", self.text)
+        self.assertNotRegex(self.text, r'(?m)^ +registry-url:')
+        self.assertIn('npm@12.2.0', self.text)
         for action in re.findall(r'uses: (\S+)', self.text):
             self.assertRegex(action, r'^actions/[a-z-]+@[0-9a-f]{40}$')
         self.assertNotIn('continue-on-error', self.text)

@@ -32,11 +32,10 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: '22.22.0'
-          registry-url: 'https://registry.npmjs.org'
-      # Trusted publishing needs npm 11.5.1 or later; Node 22.22.0 ships npm 10.
-      - name: npm with trusted publishing
-        run: npm install -g npm@11.6.2
+          # 22.22.2 is the lowest Node that npm 12.2.0 runs on, and inside the CLI's qualified 22.22.x. No registry-url:
+          # setup-node would write an .npmrc with a placeholder token, which npm falls back to when the OIDC exchange
+          # fails, and a refused exchange then surfaces only as a 404 on the publish.
+          node-version: '22.22.2'
       # The pinned IA CLI packs the archives. No install script runs.
       - name: Root dependencies (the pinned IA CLI)
         run: npm ci --ignore-scripts
@@ -46,11 +45,13 @@ jobs:
         run: node tools/kit.mjs index --check
       - name: package.json is the claim the bundled kits make
         run: node tools/kit.mjs package --check
+      # The npm that created the trusted publisher (npm trust needs 12), installed after the dependencies so npm ci
+      # stays on Node's own npm. No install script runs.
+      - name: npm 12.2.0 for trusted publishing
+        shell: bash
+        run: npm install --prefix "$RUNNER_TEMP/npm-cli" --no-save --package-lock=false --ignore-scripts npm@12.2.0 && echo "$RUNNER_TEMP/npm-cli/node_modules/.bin" >> "$GITHUB_PATH"
       - name: Refuse a version npm already has
         shell: bash
-        env:
-          # An anonymous read: the .npmrc setup-node wrote holds only a placeholder token.
-          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/anonymous.npmrc
         run: |
           version="$(node -p "require('./packages/public-kits/package.json').version")"
           if found="$(npm view "@inventarch/public-kits@${version}" version 2>&1)"; then
