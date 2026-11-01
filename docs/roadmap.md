@@ -10,6 +10,6 @@ Open work for the public catalogue. Each item is a `@task` in `.ia/src/work.ia` 
 | Propose that the IA home spec name the `accountOffer` key beside `updateCheck`. | proposed | `account-offer-key-in-spec` |
 | Lower `.ia/bindings.json` to `@execution-binding` records once the CLI admits them for kit capabilities. | proposed | `bindings-as-records` |
 | Qualify the `ia-authoring` method closure: a reviewed execution contract for every runner, then carry it beside `ia-kb`. | open | `authoring-method-qualification` |
-| Once `@inventarch/mcp-door` ships `ia_session`, `ia_catalogue` and `ia_method`, move the door's pin to that release and drop the lanes' `resolve.mjs` fallback. Done in 1.2.0 (door 3.5.0). | done | `drop-door-fallback` |
+| Once `@inventarch/mcp-door` ships `ia_session`, `ia_catalogue` and `ia_method`, move the door's pin to that release and drop the lanes' `resolve.mjs` fallback. Done in 1.2.0 (door 3.5.0). | closed | `drop-door-fallback` |
 | Carry the kit handler hooks to Codex once qualified there. The IA door half is done in 1.2.0 (decision `public-door-codex`). | proposed | `codex-door-and-handlers` |
 | Sign kit releases and check the signature before a kit runs code, so trust stops resting on the namespace claim and covers every module a kit imports. | proposed | `signed-kit-releases` |

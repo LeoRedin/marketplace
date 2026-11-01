@@ -420,7 +420,7 @@
 
 @decision public-door-codex
   meaning
-    says "The Codex manifest of the core names the IA door: "mcpServers": "./.codex-mcp.json", a file holding server ia run as node ./scripts/door.mjs with cwd ./ (Codex takes a contained ./ command path and cwd, and does not expand CLAUDE_PLUGIN_ROOT, so it cannot use the Claude .mcp.json). The launcher is the same scripts/door.mjs, which starts npx -y @inventarch/mcp-door at the plugin's IA pin and sets IA_KITS_DIR itself. tools/validate.py holds the file to exactly that; tools/smoke-codex.mjs starts the door through Codex (mcpServerStatus/list) and requires ia_session, ia_catalogue and ia_method. Kit handler hooks stay off in Codex (task codex-door-and-handlers)."
+    says "The Codex manifest of the core names the IA door: mcpServers ./.codex-mcp.json, a file holding server ia run as node ./scripts/door.mjs with cwd ./ (Codex takes a contained ./ command path and cwd, and does not expand CLAUDE_PLUGIN_ROOT, so it cannot use the Claude .mcp.json). The launcher is the same scripts/door.mjs, which starts npx -y @inventarch/mcp-door at the plugin's IA pin and sets IA_KITS_DIR itself. tools/validate.py holds the file to exactly that; tools/smoke-codex.mjs starts the door through Codex (mcpServerStatus/list) and requires ia_session, ia_catalogue and ia_method. Kit handler hooks stay off in Codex (task codex-door-and-handlers)."
   work
     title "Ship the IA door to Codex"
     status made
@@ -431,5 +431,5 @@
   decision
     question "How does the core's IA door reach Codex?"
     decider "Operator"
-    choice "The Codex manifest of the core names the IA door: "mcpServers": "./.codex-mcp.json", a file holding server ia run as node ./scripts/door.mjs with cwd ./ (Codex takes a contained ./ command path and cwd, and does not expand CLAUDE_PLUGIN_ROOT, so it cannot use the Claude .mcp.json). The launcher is the same scripts/door.mjs, which starts npx -y @inventarch/mcp-door at the plugin's IA pin and sets IA_KITS_DIR itself. tools/validate.py holds the file to exactly that; tools/smoke-codex.mjs starts the door through Codex (mcpServerStatus/list) and requires ia_session, ia_catalogue and ia_method. Kit handler hooks stay off in Codex (task codex-door-and-handlers)."
+    choice "The Codex manifest of the core names the IA door: mcpServers ./.codex-mcp.json, a file holding server ia run as node ./scripts/door.mjs with cwd ./ (Codex takes a contained ./ command path and cwd, and does not expand CLAUDE_PLUGIN_ROOT, so it cannot use the Claude .mcp.json). The launcher is the same scripts/door.mjs, which starts npx -y @inventarch/mcp-door at the plugin's IA pin and sets IA_KITS_DIR itself. tools/validate.py holds the file to exactly that; tools/smoke-codex.mjs starts the door through Codex (mcpServerStatus/list) and requires ia_session, ia_catalogue and ia_method. Kit handler hooks stay off in Codex (task codex-door-and-handlers)."
     rationale "Codex users get the same method packets through the door the Claude plugin ships, without hand-writing a config entry; a separate file keeps the Claude door file exact."
