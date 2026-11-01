@@ -57,7 +57,7 @@
     },
     {
       "path": "plugins/ia/config/kits/ia-authoring/.ia/release.json",
-      "sha256": "c326ca02bd3f73fc74c8b8ae6730456ff52dd22b6bd08c9c8c48663d91f72a95"
+      "sha256": "86768ac94379dff83ebc303cd9c07caf7656ac89365b0b17a13a09fa9d98d94e"
     },
     {
       "path": "plugins/ia/config/kits/ia-authoring/.ia/src/systems/ia-authoring/records/capabilities.ia",
@@ -193,11 +193,11 @@
     },
     {
       "path": "plugins/ia/config/kits/ia-authoring/releases/0.1.1.json",
-      "sha256": "e775535d29f61d14cbf1c316b8de25d6d27864f79cdf0d96daae0977d7b59f85"
+      "sha256": "fa491440213cf86487c1bf67b71c2f6b3f0fb4d5413c80491ab542288126b187"
     },
     {
       "path": "plugins/ia/config/kits/ia-authoring/releases.json",
-      "sha256": "831220b5c05a0b9b1f3400998f2bc69e8258aba27e70680cd02d8731b7dc3584"
+      "sha256": "eed11c78996a5451157b0a276c28fcfcefa83e7c3b6d263a7c8540c8f2822044"
     },
     {
       "path": "plugins/ia/config/kits/ia-authoring/scripts/eval-triggers.mjs",
@@ -209,7 +209,7 @@
     },
     {
       "path": "plugins/ia/config/kits/ia-authoring/scripts/lib/scratch.mjs",
-      "sha256": "4206a93ef964e90c3e41debb991979d9573dc7a651d2a4471cc8fc2a809f4e8e"
+      "sha256": "b05467f3d2497e03ee0d1e2708bd3402904f23433d48974a38ba06d8d082ffb7"
     },
     {
       "path": "plugins/ia/config/kits/ia-authoring/scripts/probe.mjs",
@@ -509,7 +509,7 @@
     },
     {
       "path": "plugins/ia/config/qualified-executors.json",
-      "sha256": "fbe0607fa4d71be05f3d09c0b7073d66a58f07906aac51816fb37a8bf1e0220b"
+      "sha256": "d3709031cafa4de6ee2940474f62510550895a0e713e57692445ad4f8adbf186"
     },
     {
       "path": "plugins/ia/config/qualified-process-tools.json",

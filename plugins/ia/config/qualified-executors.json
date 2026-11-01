@@ -119,7 +119,7 @@
         },
         {
           "path": "config/kits/ia-authoring/scripts/lib/scratch.mjs",
-          "sha256": "4206a93ef964e90c3e41debb991979d9573dc7a651d2a4471cc8fc2a809f4e8e",
+          "sha256": "b05467f3d2497e03ee0d1e2708bd3402904f23433d48974a38ba06d8d082ffb7",
           "imports": [
             "node:assert/strict",
             "node:child_process",

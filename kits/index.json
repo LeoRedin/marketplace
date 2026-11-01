@@ -7,13 +7,13 @@
       "releases": "kits/ia-authoring/releases.json",
       "latest": {
         "version": "0.1.1",
-        "archive": "253cdde7c63e3755b8c788adafa5d15640bf57740e2214beacf53e20a9dbc7c2",
+        "archive": "7b2a11d1eef91b5a753ef4c948d95b3a48451a72468027e6020bc0e833b18cda",
         "cli": "@inventarch/cli 3.5.0",
         "language": "inventarch/language ^3.2.0",
         "file": "kits/ia-authoring/releases/0.1.1.json",
         "source": {
           "repository": "https://github.com/inventarch/marketplace.git",
-          "commit": "6c83794804c7fbb0ddff87a975ed3c9d582eef81"
+          "commit": "f2b2bd1b3758b64ae7247d62f3c1d90e483b7a24"
         }
       },
       "versions": [
