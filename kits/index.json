@@ -7,13 +7,13 @@
       "releases": "kits/ia-authoring/releases.json",
       "latest": {
         "version": "0.1.1",
-        "archive": "41d72e0a1ac9aec925898df35ae5e7d4efc8c2d71b70d996fd9a9cce0fd31da4",
+        "archive": "253cdde7c63e3755b8c788adafa5d15640bf57740e2214beacf53e20a9dbc7c2",
         "cli": "@inventarch/cli 3.5.0",
         "language": "inventarch/language ^3.2.0",
         "file": "kits/ia-authoring/releases/0.1.1.json",
         "source": {
           "repository": "https://github.com/inventarch/marketplace.git",
-          "commit": "54c6f1b84381e5218571fbf6a9b28c7afa634489"
+          "commit": "6c83794804c7fbb0ddff87a975ed3c9d582eef81"
         }
       },
       "versions": [
@@ -38,13 +38,13 @@
       "releases": "kits/ia-kb/releases.json",
       "latest": {
         "version": "0.9.1",
-        "archive": "bd727378f771b08ca8a4b534d57281cc18267866f487cc9ed83ffe24377f3955",
+        "archive": "8a2e043bf84a3dee5fe832f7f63febca519bcf0f3f57fec8cd5209c8fd018ecb",
         "cli": "@inventarch/cli 3.5.0",
         "language": "inventarch/language ^3.2.0",
         "file": "kits/ia-kb/releases/0.9.1.json",
         "source": {
           "repository": "https://github.com/inventarch/marketplace.git",
-          "commit": "54c6f1b84381e5218571fbf6a9b28c7afa634489"
+          "commit": "6c83794804c7fbb0ddff87a975ed3c9d582eef81"
         }
       },
       "versions": [

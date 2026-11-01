@@ -20,17 +20,17 @@
       {
         "id": "inventarch/ia-authoring-kit",
         "version": "0.1.1",
-        "archive": "41d72e0a1ac9aec925898df35ae5e7d4efc8c2d71b70d996fd9a9cce0fd31da4",
-        "manifest": "415810e9929d6137386d29f46dc8815811ac6d4ddcfd545ef2dcdc807b09e1b7",
-        "sources": "2d5f6be05f8024ff3e3c440485d4be1a31b4511f913701881022486960ccd283",
+        "archive": "253cdde7c63e3755b8c788adafa5d15640bf57740e2214beacf53e20a9dbc7c2",
+        "manifest": "aceaeec808a63864f1601f488b4d4f8640cdb7dfd1dda861bb1fcef992f930b7",
+        "sources": "31232fb118dd8122575fe12fa9d63667c87764a53c063fd1e23ab0089d8395ac",
         "folder": "ia-authoring"
       },
       {
         "id": "inventarch/ia-kb-kit",
         "version": "0.9.1",
-        "archive": "bd727378f771b08ca8a4b534d57281cc18267866f487cc9ed83ffe24377f3955",
-        "manifest": "7828a3bbf1db6d75989504bb4026a3ba0a5d3c5867a0a961e20a7521d49278e5",
-        "sources": "ff5e6478fd6fb3717f53eb1cd564a9d98b91514604a01fe42a47b03b91dd0c5c",
+        "archive": "8a2e043bf84a3dee5fe832f7f63febca519bcf0f3f57fec8cd5209c8fd018ecb",
+        "manifest": "93d7ef580151dc4e17d9153615e526d41e97a34baa131929b3644dbf90b4261d",
+        "sources": "977619314561ecb220a26ec176816f15dbe1b2fa689e1b9ab1de53e525b0cc70",
         "folder": "ia-kb"
       },
       {

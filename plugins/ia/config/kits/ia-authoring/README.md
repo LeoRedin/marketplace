@@ -35,7 +35,7 @@ bindings.json                            the activity keys the kit recommends, a
 releases.json                            the release index; each version's record list is in releases/<version>.json
 ```
 
-The scripts import the core's scratch-capture helper (`../../../../scripts/lib/scratch.mjs`), so they run from the kit's bundled copy at `plugins/ia/config/kits/ia-authoring/`.
+The scripts import the kit's own scratch-capture helper (`./lib/scratch.mjs`), so they run from any copy of the kit folder and reach no path outside it.
 
 ## Delivery and bindings
 
