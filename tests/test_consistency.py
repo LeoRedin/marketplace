@@ -228,9 +228,9 @@ class ConsistencyTests(unittest.TestCase):
 
     def test_changelog_must_lead_with_the_manifest_version(self):
         for host in ('claude', 'codex'):
-            self.json_edit(f'plugins/ia/.{host}-plugin/plugin.json', lambda m: m.update(version='1.1.1'))
-        self.json_edit('sources.lock.json', lambda s: s['pluginVersion'].update({'ia': '1.1.1'}))
-        self.assertProblem(r'plugins/ia/CHANGELOG\.md: latest entry is 1\.1\.0, the manifest says 1\.1\.1')
+            self.json_edit(f'plugins/ia/.{host}-plugin/plugin.json', lambda m: m.update(version='1.2.1'))
+        self.json_edit('sources.lock.json', lambda s: s['pluginVersion'].update({'ia': '1.2.1'}))
+        self.assertProblem(r'plugins/ia/CHANGELOG\.md: latest entry is 1\.2\.0, the manifest says 1\.2\.1')
 
     # Version bumps against a base (git).
 
@@ -238,8 +238,8 @@ class ConsistencyTests(unittest.TestCase):
         self.init_history()
         self.write(PLUGIN_FILE, self.text(PLUGIN_FILE) + '\nA shipped change.\n')
         self.rehash()
-        self.assertProblem(r'ia: shipped bytes changed since HEAD but its version stays 1\.1\.0', base='HEAD')
-        self.bump('ia', '1.1.1')
+        self.assertProblem(r'ia: shipped bytes changed since HEAD but its version stays 1\.2\.0', base='HEAD')
+        self.bump('ia', '1.2.1')
         self.assertEqual(check(self.root, base='HEAD'), [])
 
     def test_test_only_change_needs_no_bump(self):
@@ -253,7 +253,7 @@ class ConsistencyTests(unittest.TestCase):
         self.write(PLUGIN_FILE, self.text(PLUGIN_FILE) + '\nA shipped change.\n')
         self.rehash()
         self.bump('ia', '0.9.0')
-        self.assertProblem(r'ia: .*version stays|ia: version 0\.9\.0 is not above 1\.1\.0', base='HEAD')
+        self.assertProblem(r'ia: .*version stays|ia: version 0\.9\.0 is not above 1\.2\.0', base='HEAD')
 
     def test_release_ranks_above_its_pre_release(self):
         from consistency import semver
@@ -265,9 +265,9 @@ class ConsistencyTests(unittest.TestCase):
         self.init_history()
         name = 'packages/public-kits/package.json'
         self.json_edit(name, lambda p: p['ia']['kits'][0].update(version='9.9.9'))
-        self.assertProblem(r'packages/public-kits/package\.json: the carried kit releases changed since HEAD but its version stays 1\.0\.0', base='HEAD')
+        self.assertProblem(r'packages/public-kits/package\.json: the carried kit releases changed since HEAD but its version stays 1\.0\.1', base='HEAD')
         self.json_edit(name, lambda p: p.update(version='0.9.0'))
-        self.assertProblem(r'packages/public-kits/package\.json: version 0\.9\.0 is not above 1\.0\.0', base='HEAD')
+        self.assertProblem(r'packages/public-kits/package\.json: version 0\.9\.0 is not above 1\.0\.1', base='HEAD')
         self.json_edit(name, lambda p: p.update(version='1.1.0'))
         self.assertFalse([p for p in check(self.root, base='HEAD') if 'public-kits' in p])
 
