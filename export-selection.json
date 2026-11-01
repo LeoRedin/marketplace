@@ -25,7 +25,7 @@
     },
     {
       "path": "plugins/ia/.mcp.json",
-      "sha256": "ac81f81a7a64d2244505f5ea9becfc42aaa16f37c3678dbb12f2d987dba94ef5"
+      "sha256": "973ef0879b994a4d28d87e979743a167ed5abb44fcfe36465cc81a50a40b91ec"
     },
     {
       "path": "plugins/ia/agents/checker.md",
@@ -529,7 +529,7 @@
     },
     {
       "path": "plugins/ia/README.md",
-      "sha256": "bfcf7e11e812e6de47ead480ac6e992a868913cc4d284418e0c2300bba6b218b"
+      "sha256": "7eb508767eee22a7fccac1bb5452cb5ca951a1b89b8172a489ebf6073ce42964"
     },
     {
       "path": "plugins/ia/references/design-service.md",
@@ -576,12 +576,16 @@
       "sha256": "43326d953f3717e7dd54076a520ad8ea47f75edcb677366cd83f3fd35f9974a4"
     },
     {
+      "path": "plugins/ia/scripts/kit-fetch.mjs",
+      "sha256": "90c87d30cefc230001ff5505f6c3464108d8115092a0e52f37c43f4c59d63248"
+    },
+    {
       "path": "plugins/ia/scripts/kit.mjs",
       "sha256": "5c9400796c9399648af8fe36bf01fc0ffed040259f909c8cfe01fdc3fa5f2208"
     },
     {
       "path": "plugins/ia/scripts/lib/account.mjs",
-      "sha256": "c62e4325cbe54a0c8cf4ce9f11eb07d03edc1e2bd64b9d6f07133093e3466094"
+      "sha256": "ea0e3ec688b69b721f581803e0cf100d6cefe0cfab678e5fcb66cfc54f14465e"
     },
     {
       "path": "plugins/ia/scripts/lib/binding.mjs",
@@ -637,7 +641,7 @@
     },
     {
       "path": "plugins/ia/scripts/lib/kit-ops.mjs",
-      "sha256": "5c923e2cb16bbb0038ad10d111f46c3b5e4c328c07ad0834afc5009f48c1ea25"
+      "sha256": "12629f362787b81622cfeb45d92e1dbf1896e8cf2d1f8d9b1a29049013e12952"
     },
     {
       "path": "plugins/ia/scripts/lib/kit.mjs",
@@ -737,7 +741,7 @@
     },
     {
       "path": "plugins/ia/skills/init/SKILL.md",
-      "sha256": "79982680a33cbb90c2c5fe364123ce06d9192f8892a60971360d19390ab1f3bf"
+      "sha256": "84355aaf9add47559fa857441166060e945e9bae45ec912c120a444b3b7acb69"
     },
     {
       "path": "plugins/ia/skills/knowledge/SKILL.md",
