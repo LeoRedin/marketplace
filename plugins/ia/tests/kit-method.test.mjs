@@ -148,7 +148,7 @@ test('every case evaluator names a test that exists in the core', () => {
   const evaluators = [...text('ia-method', 'compliance.ia').matchAll(/evaluator "([^"]+)"/g)].map(m => m[1]);
   assert.ok(evaluators.length >= 2);
   for (const evaluator of evaluators) {
-    assert.match(evaluator, /^inventarch\/tests\/ceiling\.test\.mjs :: /);
+    assert.match(evaluator, /^plugins\/ia\/tests\/ceiling\.test\.mjs :: /);
     assert.ok(titles.has(evaluator), `no test named by ${evaluator}`);
   }
 });
