@@ -98,9 +98,9 @@
 
 @task codex-door-and-handlers
   meaning
-    says "Give Codex the IA door and the kit handler hooks once qualified there: a Codex manifest entry or committed .codex/config.toml for the door, and a QUALIFIED_CODEX_HOOKS set for bootstrap.mjs and handlers.mjs."
+    says "Give Codex the kit handler hooks once qualified there: a QUALIFIED_CODEX_HOOKS set for bootstrap.mjs and handlers.mjs. The IA door half is done in 1.2.0: the Codex manifest names .codex-mcp.json (decision public-door-codex)."
   work
-    title "Carry the door and kit handlers to Codex"
+    title "Carry the kit handlers to Codex"
     status proposed
     milestone @milestone marketplace-published
     owner "Unassigned"

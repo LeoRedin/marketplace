@@ -12,7 +12,7 @@ import unittest
 import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
-from validate import ROOT, HOOK_PLUGINS, MCP_PLUGINS, PLUGINS, QUALIFIED_CODEX_HOOKS, UNADVERTISED, host_run_checks, load, qualified_hooks, qualified_mcp, selected_bytes, validate, schema_check, safe_bytes
+from validate import ROOT, HOOK_PLUGINS, MCP_PLUGINS, PLUGINS, QUALIFIED_CODEX_HOOKS, UNADVERTISED, host_run_checks, load, qualified_codex_mcp, qualified_hooks, qualified_mcp, selected_bytes, validate, schema_check, safe_bytes
 from package import candidate
 from selection import proposed
 
@@ -372,13 +372,13 @@ class ScaffoldTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'ia hooks differ from the qualified set: plugins/ia/hooks/hooks.json'):
                     validate(self.root)
 
-    def test_core_door_stays_off_in_codex(self):
-        # Codex reads a plugin's .mcp.json too (codex-cli 0.164.0-alpha.11.1 lists it): the Codex manifest keeps it off.
-        for name, change in {'missing': lambda m: m.pop('mcpServers'), 'a server': lambda m: m.update(mcpServers='./.mcp.json')}.items():
+    def test_core_door_is_named_in_codex(self):
+        # Codex reads a plugin's .mcp.json too: the Codex manifest names that one file (public-door-codex), not an empty set or a server of its own.
+        for name, change in {'missing': lambda m: m.pop('mcpServers'), 'off': lambda m: m.update(mcpServers={}), 'a server': lambda m: m.update(mcpServers={'ia': {'command': 'npx'}})}.items():
             with self.subTest(edit=name):
                 self.tearDown(); self.setUp()
                 self.edit_json('plugins/ia/.codex-plugin/plugin.json', change)
-                with self.assertRaisesRegex(ValueError, 'keeps its MCP server off in Codex'):
+                with self.assertRaisesRegex(ValueError, 'names its door in Codex'):
                     validate(self.root)
 
     def test_core_door_must_equal_the_qualified_server(self):
@@ -407,6 +407,27 @@ class ScaffoldTests(unittest.TestCase):
                 self.tearDown(); self.setUp()
                 self.edit_json('plugins/ia/.mcp.json', change)
                 with self.assertRaisesRegex(ValueError, 'ia MCP servers differ from the qualified door: plugins/ia/.mcp.json'):
+                    validate(self.root)
+
+    def test_codex_door_must_equal_the_qualified_server(self):
+        # public-door-codex: Codex takes a contained ./ command path and cwd and does not expand CLAUDE_PLUGIN_ROOT.
+        expected = {'mcpServers': {'ia': {'command': 'node', 'args': ['./scripts/door.mjs'], 'cwd': './'}}}
+        canonical = lambda value: json.dumps(value, sort_keys=True)
+        self.assertEqual(canonical(qualified_codex_mcp()), canonical(expected))
+        self.assertEqual(canonical(load(self.root / 'plugins/ia/.codex-mcp.json')), canonical(expected))
+        def door(value): return value['mcpServers']['ia']
+        edits = {
+            'claude placeholder': lambda v: door(v).update(args=['${CLAUDE_PLUGIN_ROOT}/scripts/door.mjs']),
+            'bare npx': lambda v: door(v).update(command='npx', args=['-y', '@inventarch/mcp-door@3.5.0']),
+            'other script': lambda v: door(v).update(args=['./scripts/resolve.mjs']),
+            'no cwd': lambda v: door(v).pop('cwd'),
+            'second server': lambda v: v['mcpServers'].update(extra={'command': 'npx', 'args': ['-y', 'x']}),
+        }
+        for name, change in edits.items():
+            with self.subTest(edit=name):
+                self.tearDown(); self.setUp()
+                self.edit_json('plugins/ia/.codex-mcp.json', change)
+                with self.assertRaisesRegex(ValueError, 'ia Codex door differs from the qualified door: plugins/ia/.codex-mcp.json'):
                     validate(self.root)
 
     def test_runtime_keys_in_frontmatter_refuse(self):

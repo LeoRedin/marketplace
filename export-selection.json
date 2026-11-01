@@ -16,8 +16,12 @@
       "sha256": "5524fa93e1c043efaf0b3222715f0ace3ab1782c124918231326fc9402ae22f7"
     },
     {
+      "path": "plugins/ia/.codex-mcp.json",
+      "sha256": "c69f5e529eb93957886edef75fb8f9732eebe27f16733f22e297d0ddd85e2e06"
+    },
+    {
       "path": "plugins/ia/.codex-plugin/plugin.json",
-      "sha256": "08d22fa72f49d6504b187e29807e4a5db446835f2d8c11f2a42d62ba800ad09e"
+      "sha256": "6609687dd4d494c40eba4f013cc7572cf037e31fa18d82a9a919ae650834e770"
     },
     {
       "path": "plugins/ia/.mcp.json",
@@ -41,11 +45,11 @@
     },
     {
       "path": "plugins/ia/CHANGELOG.md",
-      "sha256": "a4fdd5fed27d71dbada22c2d4834c602b3023c643b168f55281b467f4fad51a1"
+      "sha256": "877b5745477ec7a7e44df1cf54721b898c10d7a2858e8f82d66a099286a3418d"
     },
     {
       "path": "plugins/ia/CODEX.md",
-      "sha256": "fd0c883be4073068a940cd6107d5589bc5ee27439f1174ffaccd92f4858f8060"
+      "sha256": "c19c5a1317832fc8c804d5d08a4375e41e27a5b6ff8603290e83d93bd504fab0"
     },
     {
       "path": "plugins/ia/config/kits/ia-authoring/.ia/distributions.lock.json",

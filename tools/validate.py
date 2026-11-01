@@ -68,11 +68,22 @@ def qualified_mcp():
 
 
 MCP_PLUGINS = ('ia',)
-CODEX_MCP_OFF = {}
+CODEX_MCP_DOOR = './.codex-mcp.json'  # public-door-codex: the Codex manifest names the core's one door file
 
 
 def mcp_file(name):
     return f'plugins/{name}/.mcp.json'
+
+
+# public-door-codex: Codex does not expand ${CLAUDE_PLUGIN_ROOT} in args and takes a contained ./ command path and cwd
+# (Agent Plugins stdio rules, codex-cli 0.164.0), so its manifest names a door file of its own: node ./scripts/door.mjs run from the
+# plugin root, where door.mjs sets IA_KITS_DIR to the bundled kits itself.
+def codex_mcp_file(name):
+    return f'plugins/{name}/.codex-mcp.json'
+
+
+def qualified_codex_mcp():
+    return {'mcpServers': {'ia': {'command': 'node', 'args': ['./scripts/door.mjs'], 'cwd': './'}}}
 HOOK_PLUGINS = tuple(QUALIFIED_HOOKS)
 CODEX_HOOKS_OFF = {'hooks': {}}
 # A plugin may run Codex hooks only from a file its Codex manifest names and this table qualifies; none does yet.
@@ -275,7 +286,7 @@ def plugin_files(root, name):
         require(not path.is_symlink(), 'symlink in plugin: ' + rel)
         require(not STRAY_DIRS.intersection(parts), 'stray folder in plugin: ' + rel)
         hooks_exception = name in HOOK_PLUGINS and parts[2] == 'hooks' and (rel in hook_files(name) or (len(parts) == 3 and path.is_dir()))
-        mcp_exception = name in MCP_PLUGINS and rel == mcp_file(name) and path.is_file()
+        mcp_exception = name in MCP_PLUGINS and rel in (mcp_file(name), codex_mcp_file(name)) and path.is_file()
         require(parts[2] in PLUGIN_TOP or hooks_exception or mcp_exception or (len(parts) == 3 and path.is_file() and rel.endswith('.md')),
                 'unapproved plugin component: ' + rel)
         require(parts[-1].lower() not in RUNTIME_FILES or (name in HOOK_PLUGINS and rel == hooks_file(name)) or mcp_exception,
@@ -376,8 +387,8 @@ def validate(root=ROOT):
             elif host == 'codex' and name in HOOK_PLUGINS:
                 require(manifest.pop('hooks', None) == CODEX_HOOKS_OFF, name + ' keeps its hooks off in Codex: its Codex manifest needs "hooks": {"hooks": {}}')
             if host == 'codex' and name in MCP_PLUGINS:
-                # Codex reads a plugin's .mcp.json too; the door stays off there until qualified (task codex-door-and-handlers).
-                require(manifest.pop('mcpServers', None) == CODEX_MCP_OFF, name + ' keeps its MCP server off in Codex: its Codex manifest needs "mcpServers": {}')
+                # Codex reads a plugin's .mcp.json too, and expands only ${PLUGIN_ROOT}; the manifest names the Codex door file (decision public-door-codex).
+                require(manifest.pop('mcpServers', None) == CODEX_MCP_DOOR, name + ' names its door in Codex: its Codex manifest needs "mcpServers": "./.codex-mcp.json"')
             schema_check(manifest, schema)
             require(manifest['name'] == name, 'plugin identity')
             if host == 'codex':
@@ -456,6 +467,8 @@ def validate(root=ROOT):
         require(f'plugins/{name}/scripts/door.mjs' in entries, name + ' ships the IA door launcher: plugins/' + name + '/scripts/door.mjs')
         require(canonical(load(root / mcp_file(name))) == canonical(qualified_mcp()),
                 name + ' MCP servers differ from the qualified door: ' + mcp_file(name))
+        require(codex_mcp_file(name) in entries and canonical(load(root / codex_mcp_file(name))) == canonical(qualified_codex_mcp()),
+                name + ' Codex door differs from the qualified door: ' + codex_mcp_file(name))
     for name, (_, table) in QUALIFIED_CODEX_HOOKS.items():
         require(canonical(load(root / codex_hooks_file(name))) == canonical(render_hooks(table)), name + ' Codex hooks differ from the qualified set: ' + codex_hooks_file(name))
     catalog_paths = ('.claude-plugin/marketplace.json', '.agents/plugins/marketplace.json')
