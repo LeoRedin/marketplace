@@ -1,0 +1,20 @@
+version: 2
+updates:
+  # The gates' tools through the root lockfile. @inventarch/* is pinned exactly in sources.lock.json, and a new IA
+  # release moves every pin together (decision public-cli-3-5-0), so Dependabot leaves it alone.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: "@inventarch/*"
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+    open-pull-requests-limit: 5
+
+  # Workflow actions, each pinned to a commit; Dependabot updates the pin and its version comment.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

@@ -1,5 +1,6 @@
 # The repository gates (AGENTS.md): on Ubuntu for every pull request into main, and on Ubuntu, Windows and macOS for
-# every push to main (decision public-ci-matrix). lefthook.yml runs the same checks before a commit or push leaves a
+# every push to main (decision public-ci-matrix). The release pull request workflow dispatches it on release/next, whose
+# pushes start no workflow of their own (decision public-release-notes); a dispatch runs on Ubuntu. lefthook.yml runs the same checks before a commit or push leaves a
 # machine (decision public-local-gates); the test suites run only here.
 # claude plugin validate --strict and tools/smoke-codex.mjs stay local gates: they need the hosts.
 name: Gates
@@ -9,6 +10,7 @@ on:
     branches: [main]
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -33,9 +35,9 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          # The version-bump check compares against the pull request's base, or the main a push replaced (every commit
-          # of a multi-commit push counts), so the history must hold that commit. A force-push's old main is gone: the
-          # check then says it cannot read the base.
+          # The version-bump check compares against the pull request's base, the main a push replaced (every commit
+          # of a multi-commit push counts) or, on a dispatch, origin/main, so the history must hold that commit. A
+          # force-push's old main is gone: the check then says it cannot read the base.
           fetch-depth: 0
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
@@ -62,7 +64,9 @@ jobs:
       - name: The public kits package is the bundled kits' claim
         run: node tools/kit.mjs package --check
       - name: Repository consistency, pins and version bumps
-        run: python tools/consistency.py --base ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: python tools/consistency.py --base ${{ github.event.pull_request.base.sha || github.event.before || 'origin/main' }}
+      - name: Release notes are well formed
+        run: node tools/release.mjs check
       - name: Lint the JavaScript
         run: npm run lint
       - name: IA language admission with the pinned CLI

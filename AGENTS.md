@@ -16,7 +16,8 @@ A Git install copies a plugin's whole folder, `tests/` included. `tools/validate
 - Target exactly `@inventarch/cli` 3.5.0 and `inventarch/language` 3.2.0 (`sources.lock.json`, decision `public-cli-3-5-0`). Never use the `ia` on PATH; use the core's `scripts/ia.mjs` or `npx -y -p @inventarch/cli@3.5.0 -- ia`. IA refuses `ia init` inside its home `~/.ia`.
 - No machine paths, credentials, tenant corpus, people's names or other organisations' material in any file.
 - Manifests: the Claude manifest carries `displayName`; the Codex manifest is the Claude one without it, plus `skills` and Codex's `interface` block (`public-codex-manifest-interface`). Every plugin ships a `CODEX.md`, and every skill opens with the `**Codex:**` bridge line to it. Every manifest and kit says `Apache-2.0` (`public-apache-license`).
-- Bump a plugin's version for every change that ships, in both manifests and `sources.lock.json` `pluginVersion`, and add a CHANGELOG entry.
+- Every change that ships adds a release note (`node tools/release.mjs note --plugin <name> --bump <patch|minor|major|none> --title … --summary …`, which writes `releases/pending/<id>.json`; decision `public-release-notes`). Never bump a plugin's version, `sources.lock.json` `pluginVersion` or its CHANGELOG by hand: the release pull request, which only an operator starts (`.github/workflows/release-pr.yml`), folds the notes into them and records `releases/changesets/<plugin>-<version>.json`; merging it tags `<plugin>-v<version>` (`.github/workflows/release.yml`). See [releases/README.md](releases/README.md).
+- `main` takes changes only through a pull request that merges with a merge commit, after the Gates and Native verified checks pass on Ubuntu and every review thread is resolved (decision `public-main-rulesets`, `.github/rulesets/`).
 
 ## Kit rules
 
@@ -34,7 +35,8 @@ python tools/selection.py            # review the diff, then: python tools/selec
 node tools/bundle-kits.mjs --check
 node tools/kit.mjs index --check
 node tools/kit.mjs package --check   # packages/public-kits/package.json is the bundled kits' claim (docs/public-kits-package.md)
-python tools/consistency.py          # --base <ref> adds version bumps and the published-release guard
+python tools/consistency.py          # --base <ref> adds version bumps or release notes and the published-release guard
+node tools/release.mjs check         # every pending release note and changeset is well formed
 npm run lint
 node tools/check-language.mjs        # every bundled kit and .ia/src restored and validated by the pinned CLI
 python -m unittest discover -s tests -v
@@ -43,6 +45,6 @@ claude plugin validate --strict plugins/ia && claude plugin validate --strict .
 node tools/smoke-codex.mjs --codex <codex executable> --report <file>   # after a manifest, skill or CODEX.md change
 ```
 
-CI (`.github/workflows/gates.yml`) runs the first ten on Ubuntu for every pull request into `main`, and on Ubuntu, Windows and macOS for every push to `main` (`public-ci-matrix`), plus the native qualification shards (`tools/run-native-tests.mjs`, with `IA_CORE_TEST_CLI` set). The two host gates stay local.
+CI (`.github/workflows/gates.yml`) runs the first eleven on Ubuntu for every pull request into `main`, and on Ubuntu, Windows and macOS for every push to `main` (`public-ci-matrix`), plus the native qualification shards (`tools/run-native-tests.mjs`, with `IA_CORE_TEST_CLI` set). The two host gates stay local.
 
-Validation and tests never create remotes, push, publish, install, invite or change access. Those are separate, operator-authorized steps. Publishing `@inventarch/public-kits` is one: only an operator dispatches `.github/workflows/publish-public-kits.yml` (decision `public-kits-package`).
+Validation and tests never create remotes, push, publish, install, invite or change access. Those are separate, operator-authorized steps. Publishing `@inventarch/public-kits` is one: only an operator dispatches `.github/workflows/publish-public-kits.yml` (decision `public-kits-package`). Starting the release pull request is another: only an operator dispatches `.github/workflows/release-pr.yml`, and only an operator merges what it opens.

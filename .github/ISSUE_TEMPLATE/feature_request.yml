@@ -1,0 +1,45 @@
+name: Feature request
+description: Propose a change to the ia plugin, a public kit, the catalogue or its tooling.
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Everything here is public: a method that must stay proprietary does not belong in this repository.
+        Kits and workspaces never mint words; a new IA word is proposed in inventarch/ia.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - "ia plugin: lanes, skills or agents"
+        - "ia plugin: hooks, kit handlers or kit trust"
+        - "ia plugin: kit lookup and kit verbs"
+        - "A public kit (ia-method, ia-kb, ia-authoring)"
+        - "A new public kit"
+        - "Host support (Claude Code, Codex, Copilot)"
+        - "@inventarch/public-kits package"
+        - "Repository tooling, releases or CI"
+        - "Documentation"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What you are trying to do, and why the plugin or kits do not let you today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: The change you suggest. For a kit change, name the capability, binding key or record it touches.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Existing skills, kits, bindings or workarounds you tried and why they fall short.

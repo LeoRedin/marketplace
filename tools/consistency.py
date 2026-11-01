@@ -13,8 +13,9 @@ validate.py guards what ships. This guards the rest of the repository and the fa
 - each plugin's manifest version equals sources.lock.json's pluginVersion and leads its CHANGELOG.md;
 - in a Git checkout: every kit release's source.commit (each .ia/release.json under plugins/) is an ancestor of HEAD,
   so a squash or rebase merge cannot leave a published archive's source unreachable (issue #81);
-- with --base <ref>: each plugin whose selected bytes changed since its merge base with <ref> has a higher version,
-  and every release a kits/ or plugins/ releases.json recorded at that merge base is still there, unchanged, compared
+- with --base <ref>: each plugin whose selected bytes changed since its merge base with <ref> has a higher version or
+  a release note under releases/pending/ that is new or changed since that base and names it (decision
+  public-release-notes; tools/release.mjs check holds the notes' shape), and every release a kits/ or plugins/ releases.json recorded at that merge base is still there, unchanged, compared
   through one expand() (format 1 passes through; format 2 reads releases/<version>.json), and no releases/<version>.json
   present at the base was removed or changed, and packages/public-kits/package.json, when its ia.kits changed since
   the base, has a higher version (decision public-kits-package).
@@ -37,6 +38,7 @@ IGNORED_PATHS = ('.ia/work/', '.ia/distributions/', '.ia/distributions.lock.json
                  'packages/public-kits/index.json', 'packages/public-kits/kits/', 'packages/public-kits/archives/',
                  'packages/public-kits/LICENSE', 'packages/public-kits/NOTICE')
 PUBLIC_KITS = 'packages/public-kits/package.json'
+PENDING = 'releases/pending'
 BINARY = ('.zip', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.pdf', '.woff', '.woff2')
 NO_TABS = ('.py', '.json', '.yml', '.yaml')
 CONFLICT = re.compile(r'^(?:<{7}|>{7}|\|{7})(?: |$)')
@@ -360,6 +362,7 @@ def version_bumps(root, base, problems):
     old = {row['path']: row['sha256'] for row in old_selection['files']}
     new = {row['path']: row['sha256'] for row in read_json(root, 'export-selection.json')['files']}
     changed = {p for p in old.keys() | new.keys() if old.get(p) != new.get(p) and p.startswith('plugins/')}
+    noted = noted_plugins(root, merge_base)
     for name in sorted({p.split('/')[1] for p in changed}):
         if name not in PLUGINS:
             continue
@@ -370,11 +373,32 @@ def version_bumps(root, base, problems):
             continue  # a new plugin has no earlier version
         after = read_json(root, manifest).get('version')
         if after == before:
-            problems.append(f'{name}: shipped bytes changed since {base} but its version stays {before} '
-                            '(bump both manifests, sources.lock.json pluginVersion and CHANGELOG.md)')
+            if name not in noted:
+                problems.append(f'{name}: shipped bytes changed since {base} but no new release note names it '
+                                f'(node tools/release.mjs note --plugin {name} --bump <patch|minor|major|none> --title … --summary …)')
         elif semver(after) <= semver(before):
             problems.append(f'{name}: version {after} is not above {before}')
     public_kits_bump(root, base, merge_base, problems)
+
+
+def noted_plugins(root, merge_base):
+    """The plugins named by a pending release note that is new or changed since the merge base: a note already pending
+    there accounts for an earlier change, not this one."""
+    names = set()
+    for path in sorted((root / PENDING).glob('*.json')) if (root / PENDING).is_dir() else []:
+        rel = path.relative_to(root).as_posix()
+        try:
+            note = load_json(path.read_text(encoding='utf-8'))
+        except ValueError:
+            continue  # tools/release.mjs check reports it
+        try:
+            if git(root, 'show', f'{merge_base}:{rel}') == path.read_text(encoding='utf-8'):
+                continue
+        except subprocess.CalledProcessError:
+            pass  # new since the base
+        if isinstance(note, dict) and isinstance(note.get('plugins'), list):
+            names.update(p for p in note['plugins'] if isinstance(p, str))
+    return names
 
 
 def public_kits_bump(root, base, merge_base, problems):

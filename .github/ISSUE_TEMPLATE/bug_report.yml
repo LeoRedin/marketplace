@@ -1,0 +1,82 @@
+name: Bug report
+description: The ia plugin, a bundled kit or the catalogue behaves differently from what its README or decisions say.
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not report security problems here. Use the private report form linked from SECURITY.md.
+        A problem in the `ia` CLI, the language or `@inventarch/mcp-door` belongs in inventarch/ia.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - "ia plugin: a lane (ia:work, ia:knowledge, ia:delivery)"
+        - "ia plugin: ia:init, ia:doctor or ia:delegate"
+        - "ia plugin: agents (reader, checker, worker, upkeep)"
+        - "ia plugin: session hook, kit handlers or kit trust"
+        - "ia plugin: kit verbs (kit.mjs list, add, bind, upgrade, repin, rebind, check)"
+        - "Kit: ia-method"
+        - "Kit: ia-kb"
+        - "Kit: ia-authoring"
+        - "@inventarch/public-kits package"
+        - "Catalogue install (Claude Code or Codex marketplace)"
+        - "Repository tooling or CI"
+        - "Not sure"
+    validations:
+      required: true
+  - type: dropdown
+    id: host
+    attributes:
+      label: Host
+      options:
+        - Claude Code
+        - Codex
+        - GitHub Copilot (door only)
+        - None (CLI or tooling)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Plugin version
+      description: The ia plugin version (`claude plugin list`, or plugins/ia/.claude-plugin/plugin.json), and the kit version if a kit is involved.
+      placeholder: "ia 1.2.0, ia-kb 0.9.1"
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, Node version, and the `ia` CLI version if one is installed. Remove anything you consider private.
+      placeholder: |
+        Windows 11, Node 22.22.0, @inventarch/cli 3.5.0
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The exact commands or prompts, and the smallest repository or `.ia` records that trigger the problem.
+      placeholder: |
+        1. claude plugin install ia@inventarch
+        2. /ia:init in a new repository
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What the README, a decision or a skill says should happen.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: What happened instead, including the full output, refusal code (for example `IA-CORE-NO-METHOD`) or hook message.
+      render: shell
+    validations:
+      required: true

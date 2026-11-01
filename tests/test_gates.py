@@ -16,7 +16,8 @@ RUNS = [
     'node tools/bundle-kits.mjs --check',
     'node tools/kit.mjs index --check',
     'node tools/kit.mjs package --check',
-    'python tools/consistency.py --base ${{ github.event.pull_request.base.sha || github.event.before }}',
+    "python tools/consistency.py --base ${{ github.event.pull_request.base.sha || github.event.before || 'origin/main' }}",
+    'node tools/release.mjs check',
     'npm run lint',
     'node tools/check-language.mjs',
     'python -m unittest discover -s tests -v',
@@ -41,8 +42,9 @@ class GatesWorkflowTests(unittest.TestCase):
     def setUp(self):
         self.text = WORKFLOW.read_text(encoding='utf-8')
 
-    def test_triggers_cover_stacked_pull_requests_and_main_pushes(self):
-        self.assertIn("on:\n  pull_request:\n    branches: [main]\n  push:\n    branches: [main]\n", self.text)
+    def test_triggers_cover_pull_requests_main_pushes_and_the_release_dispatch(self):
+        # The release pull request workflow dispatches Gates on release/next (decision public-release-notes).
+        self.assertIn("on:\n  pull_request:\n    branches: [main]\n  push:\n    branches: [main]\n  workflow_dispatch:\n\npermissions:", self.text)
 
     def test_event_selects_the_operating_systems(self):
         match = re.search(r"os: \$\{\{ github\.event_name == 'push' && fromJSON\('(\[.*?\])'\) \|\| fromJSON\('(\[.*?\])'\) \}\}", self.text)
@@ -121,6 +123,64 @@ class PublishPublicKitsWorkflowTests(unittest.TestCase):
         for action in re.findall(r'uses: (\S+)', self.text):
             self.assertRegex(action, r'^actions/[a-z-]+@[0-9a-f]{40}$')
         self.assertNotIn('continue-on-error', self.text)
+
+
+def pinned_actions(case, text):
+    for action in re.findall(r'uses: (\S+)', text):
+        case.assertRegex(action, r'^actions/[a-z-]+@[0-9a-f]{40}$')
+    case.assertNotIn('continue-on-error', text)
+
+
+class ReleasePullRequestWorkflowTests(unittest.TestCase):
+    """The release pull request (decision public-release-notes): only an operator starts it, from main; it installs
+    nothing under its write token, folds the notes, records the selection and dispatches Gates on release/next."""
+
+    def setUp(self):
+        self.text = (ROOT / '.github' / 'workflows' / 'release-pr.yml').read_text(encoding='utf-8')
+
+    def test_only_an_operator_starts_it_from_main(self):
+        self.assertIn('on:\n  workflow_dispatch:\n\npermissions:\n  contents: read\n', self.text)
+        for trigger in ('push:', 'pull_request:', 'schedule:', 'workflow_run:', 'release:'):
+            self.assertNotIn(trigger, self.text)
+        self.assertIn('test "$GITHUB_REF" = refs/heads/main', self.text)
+
+    def test_writes_only_a_branch_and_a_pull_request(self):
+        self.assertIn('permissions:\n      contents: write\n      pull-requests: write\n      actions: write\n', self.text)
+        for absent in ('id-token:', 'secrets.', 'npm ci', 'npm install', 'git push origin main', 'gh pr merge', 'git tag'):
+            self.assertNotIn(absent, self.text)
+        self.assertIn('git push --force origin release/next', self.text)
+
+    def test_folds_records_and_dispatches_gates(self):
+        order = ['node tools/release.mjs version --write --pr-body', 'python tools/selection.py --write',
+                 'git push --force origin release/next', 'gh workflow run gates.yml --ref release/next']
+        self.assertEqual(sorted(order, key=self.text.index), order)
+        self.assertIn('Authored by InventArch', self.text)
+        self.assertIn("node-version: '22.22.0'", self.text)
+        pinned_actions(self, self.text)
+
+
+class ReleaseWorkflowTests(unittest.TestCase):
+    """Tagging a merged release (decision public-release-notes): only for a changeset on main, only after Gates passed
+    on that exact commit, with a token that can write tags and releases and nothing else."""
+
+    def setUp(self):
+        self.text = (ROOT / '.github' / 'workflows' / 'release.yml').read_text(encoding='utf-8')
+
+    def test_starts_on_a_recorded_changeset_or_a_dispatch_from_main(self):
+        self.assertIn("on:\n  push:\n    branches: [main]\n    paths: ['releases/changesets/**']\n  workflow_dispatch:\n", self.text)
+        for trigger in ('pull_request:', 'schedule:', 'workflow_run:'):
+            self.assertNotIn(trigger, self.text)
+        self.assertIn("if: github.ref == 'refs/heads/main'", self.text)
+
+    def test_waits_for_gates_then_tags(self):
+        self.assertIn('permissions:\n      contents: write\n      actions: read\n', self.text)
+        for absent in ('id-token:', 'secrets.', 'npm publish', 'npm ci', '--force'):
+            self.assertNotIn(absent, self.text)
+        self.assertIn('actions/workflows/gates.yml/runs?head_sha=$RELEASE_SHA&branch=main', self.text)
+        order = ['node tools/release.mjs list', 'Wait for Gates', 'gh release create']
+        self.assertEqual(sorted(order, key=self.text.index), order)
+        self.assertIn('--target "$GITHUB_SHA"', self.text)
+        pinned_actions(self, self.text)
 
 
 if __name__ == '__main__':

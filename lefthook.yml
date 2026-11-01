@@ -18,6 +18,8 @@ pre-commit:
       run: node tools/kit.mjs package --check
     consistency:
       run: python tools/consistency.py
+    release-notes:
+      run: node tools/release.mjs check
     lint:
       skip:
         - run: test ! -f node_modules/.bin/biome
@@ -43,6 +45,8 @@ pre-push:
       run: node tools/kit.mjs package --check
     consistency:
       run: python tools/consistency.py --base origin/main
+    release-notes:
+      run: node tools/release.mjs check
     lint:
       skip:
         - run: test ! -f node_modules/.bin/biome

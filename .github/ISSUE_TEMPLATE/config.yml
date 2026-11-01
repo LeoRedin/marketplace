@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/inventarch/marketplace/security/advisories/new
+    about: Private report to the maintainers. Never file a security problem as a public issue.
+  - name: A problem with the IA CLI, language or IA door
+    url: https://github.com/inventarch/ia/issues/new/choose
+    about: The ia CLI, the language, its vocabulary and @inventarch/mcp-door live in inventarch/ia.
+  - name: Install and host support
+    url: https://github.com/inventarch/marketplace/blob/main/docs/hosts.md
+    about: What each host loads from this catalogue and what has been qualified on it.

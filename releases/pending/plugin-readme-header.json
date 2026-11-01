@@ -1,0 +1,9 @@
+{
+  "format": "inventarch-marketplace.release-note.v1",
+  "bump": "none",
+  "title": "Give the plugin README the catalogue's header",
+  "summary": "The plugin README opens with a title, a version badge, the pinned CLI and the licence, like the catalogue README. No behaviour changes.",
+  "plugins": [
+    "ia"
+  ]
+}
