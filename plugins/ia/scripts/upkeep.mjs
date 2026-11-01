@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// SPIKE (inventarch/kb docs/reference/upkeep-agent-spike-2026-10-31.md): the deterministic half of the upkeep
+// SPIKE (the upkeep agent prototype, 2026-10-31): the deterministic half of the upkeep
 // agent. It decides, with no model, whether anything is worth starting the
 // agent for.
 //   upkeep.mjs stale  [--root <dir>] [--sidecar <file>] [--base <ref>] [--changed a,b] [--json]

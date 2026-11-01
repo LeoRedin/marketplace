@@ -1,42 +1,26 @@
-# InventArch marketplace
+# 🧩 IA marketplace · the public InventArch plugin catalogue
 
-The public InventArch plugin catalogue (`inventarch`). It ships one plugin, `ia`, and the public method kits it carries.
+[![Gates](https://github.com/inventarch/marketplace/actions/workflows/gates.yml/badge.svg?branch=main)](https://github.com/inventarch/marketplace/actions/workflows/gates.yml) [![ia plugin](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Finventarch%2Fmarketplace%2Fmain%2Fplugins%2Fia%2F.claude-plugin%2Fplugin.json&query=%24.version&label=ia%20plugin)](plugins/ia/CHANGELOG.md) [![IA CLI](https://img.shields.io/badge/%40inventarch%2Fcli-3.4.1-blue)](sources.lock.json) [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE) [![Node](https://img.shields.io/badge/node-22.x-brightgreen)](package.json) [![Hosts](https://img.shields.io/badge/hosts-Claude%20Code%20%C2%B7%20Codex-8a63d2)](docs/hosts.md)
 
-| Plugin | What it is for |
-|---|---|
-| [ia](plugins/ia/README.md) | The core. Three lanes, `ia:work`, `ia:knowledge` and `ia:delivery`, plus the user-invoked `ia:init`, `ia:doctor` and `ia:delegate`; the IA door as its MCP server, whose `ia_session`, `ia_catalogue` and `ia_method` tools deliver a bound method kit's playbook cells as a packet (with a resolver over `ia position` as the fallback); reader, checker and worker profiles; kit lookup, install, dependency and bind verbs; a read-only session bootstrap; and hooks that run the handlers installed kits declare. |
+> The **IA marketplace** is the plugin catalogue `inventarch` for Claude Code and Codex. It ships one plugin, **`ia`**, which gives a coding agent three lanes: Work, Knowledge and Delivery. Each lane delivers the method a repository binds as one packet the agent follows, instead of a prompt it improvises.
+>
+> This is the **public catalogue**: the `ia` plugin and the three public method kits it carries by default. It is licensed under Apache-2.0 and needs no account. More kits are available with an InventArch account, and they install into your IA home, never into this repository.
 
-## Kits
+## Why the ia plugin
 
-The core carries three public kits, one default per lane. Their sources are under [`kits/`](kits/README.md), and [`kits/index.json`](kits/index.json) lists each kit's latest release and the binding keys it offers.
+- **Three lanes, one door.** `ia:work`, `ia:knowledge` and `ia:delivery` go through the IA door (`ia_session`, `ia_catalogue`, `ia_method`), which reads the method kit the repository binds and returns its playbook as a packet. The agent follows only the packet.
+- **Methods are kits, not prompts.** A kit is a versioned, released set of IA records. You bind one to a lane key in `.ia/bindings.json`, and upgrading, repinning or rebinding it is one previewed command.
+- **Only trusted kits run code.** A kit runs a handler, an on-write check or a check only when its publisher is on the plugin's fixed list and its files are the release it recorded. Any other kit is data only.
+- **Nothing happens behind your back.** Every `kit.mjs` verb previews until you pass `--apply`. The session hook reads no credentials and never fetches. The account offer appears once and never blocks.
 
-| Kit | Lane | What it gives you |
-|---|---|---|
-| [`ia-method`](kits/ia-method/README.md) (`inventarch/ia-method-kit`) | Work | The IA operating loop, the ceiling on work that rests on a provisional foundation, and one method capability (a four-cell orient, plan, act, learn playbook) for every public IA record word, plus one over the vocabulary. |
-| [`ia-kb`](kits/ia-kb/README.md) (`inventarch/ia-kb-kit`) | Knowledge | Where knowledge goes and where workspaces live, binding a document to its record, maintenance, checks, migration and review. |
-| [`ia-authoring`](kits/ia-authoring/README.md) (`inventarch/ia-authoring-kit`) | Delivery | One authoring process in three parts: records of existing IA words, host plugins (lower, project, evaluate, qualify), and plugin catalogues. It replaces the retired `inventarch/host-authoring-kit` and `inventarch/catalogue-authoring-kit`. |
+> [!NOTE]
+> **ia 1.1** routes the lanes through the IA door the plugin ships as its MCP server, lets kits declare handlers and depend on other kits, runs code only from trusted kits, and delivers governance as a kit. See the [changelog](plugins/ia/CHANGELOG.md).
 
-Each lane's entry capability is a whole procedure: a request with no specific activity gets all four phases, and `--phase` selects one.
+---
 
-More kits (meetings, governed work, organisation-wide knowledge custody, workspace and system design, and others) are available with an InventArch account. They are served by the InventArch API and installed into your IA home, never into this repository.
+## ⚡ Quick start
 
-### Kit names
-
-Every kit follows one pattern, public or not:
-
-| Part | Name |
-|---|---|
-| Folder | `ia-<name>` |
-| Kit id | `inventarch/ia-<name>-kit` |
-| Main system | `ia-<name>` |
-| Extra systems | `ia-<name>-<part>` (for example `ia-authoring-host`) |
-| Workspace | `ia-<name>-kit` |
-| Distribution | `ia-<name>-distribution` |
-| Steward | `ia-<name>-steward` |
-
-Whether a kit is public is shown by the repository that holds it, never by its name.
-
-## Install
+### 1. Install the catalogue and the plugin
 
 Claude Code:
 
@@ -58,7 +42,9 @@ codex plugin add ia@inventarch
 
 Installing the plugin also gives Claude Code the IA door: the plugin's launcher (`scripts/door.mjs`, run with `node`) starts `npx -y @inventarch/mcp-door@3.4.1`, never through a shell (on Windows it runs npm's `npx-cli.js` with `node`), so the first session in a new environment needs network access to fetch it once.
 
-Then run `/ia:init` in a repository: it offers `ia init` and binds the default kits. By hand, in a repository that is an IA workspace:
+### 2. Set up a repository
+
+Run `/ia:init` in a repository: it offers `ia init` and binds the default kits. By hand, in a repository that is an IA workspace:
 
 ```sh
 node "<plugin root>/scripts/kit.mjs" list
@@ -68,6 +54,79 @@ node "<plugin root>/scripts/kit.mjs" bind inventarch/ia-authoring-kit --apply
 ```
 
 Every `kit.mjs` verb previews unless you pass `--apply`. `upgrade`, `repin` and `rebind` move a repository to a new kit release; `add --from <folder or archive>` installs a kit into `<IA home>/kits/<kit>/<version>/`. A kit that depends on another kit (its `.ia/release.json` names it) installs only once that kit is found: carried by the plugin, already in `<IA home>/kits`, or next to it in the same folder. Add the dependency first; adoption then vendors both.
+
+### 3. Ask for work in a lane
+
+Ask the agent for a task, a document or a change. It picks the lane (`ia:work`, `ia:knowledge` or `ia:delivery`), resolves the bound method and follows its packet. `/ia:doctor` explains what is unconfigured or refused, with the command that fixes each problem.
+
+### Coexisting with the CLI-rendered plugin
+
+`ia host claude --user` (IA CLI 3.4.x) renders its own `ia@inventarch` plugin into `~/.ia/claude/marketplace` and registers that folder under the same catalogue name, `inventarch`. The CLI will change so that `ia host` adds this public marketplace and installs `ia@inventarch` from it instead of rendering its own plugin. Until that CLI release, remove the CLI-rendered registration first:
+
+```sh
+claude plugin marketplace remove inventarch
+claude plugin marketplace add inventarch/marketplace
+claude plugin install ia@inventarch
+```
+
+This plugin carries the rendered plugin's `init` and `doctor` skills (`ia:init`, `ia:doctor`).
+
+---
+
+## 🧰 Kits
+
+The core carries three public kits, one default per lane. Their sources are under [`kits/`](kits/README.md), and [`kits/index.json`](kits/index.json) lists each kit's latest release and the binding keys it offers.
+
+| Kit | Lane | What it gives you |
+|---|---|---|
+| [`ia-method`](kits/ia-method/README.md) (`inventarch/ia-method-kit`) | Work | The IA operating loop, the ceiling on work that rests on a provisional foundation, and one method capability (a four-cell orient, plan, act, learn playbook) for every public IA record word, plus one over the vocabulary. |
+| [`ia-kb`](kits/ia-kb/README.md) (`inventarch/ia-kb-kit`) | Knowledge | Where knowledge goes and where workspaces live, binding a document to its record, maintenance, checks, migration and review. |
+| [`ia-authoring`](kits/ia-authoring/README.md) (`inventarch/ia-authoring-kit`) | Delivery | One authoring process in three parts: records of existing IA words, host plugins (lower, project, evaluate, qualify), and plugin catalogues. It replaces the retired `inventarch/host-authoring-kit` and `inventarch/catalogue-authoring-kit`. |
+
+Each lane's entry capability is a whole procedure: a request with no specific activity gets all four phases, and `--phase` selects one.
+
+More kits (meetings, governed work, organisation-wide knowledge custody, workspace and system design, and others) are available with an InventArch account. They are served by the InventArch API and installed into your IA home, never into this repository.
+
+The three kits are also published together as the npm package [`@inventarch/public-kits`](packages/public-kits/README.md), for a door or workspace that has no plugin; [docs/public-kits-package.md](docs/public-kits-package.md) describes it.
+
+### Kit names
+
+Every kit follows one pattern, public or not:
+
+| Part | Name |
+|---|---|
+| Folder | `ia-<name>` |
+| Kit id | `inventarch/ia-<name>-kit` |
+| Main system | `ia-<name>` |
+| Extra systems | `ia-<name>-<part>` (for example `ia-authoring-host`) |
+| Workspace | `ia-<name>-kit` |
+| Distribution | `ia-<name>-distribution` |
+| Steward | `ia-<name>-steward` |
+
+Whether a kit is public is shown by the repository that holds it, never by its name.
+
+---
+
+## 🤝 Set it up for a team
+
+### Offer the catalogue in a team repository
+
+Commit this to the repository's `.claude/settings.json` to have Claude Code offer the catalogue to everyone who opens it:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "inventarch": {
+      "source": { "source": "github", "repo": "inventarch/marketplace" }
+    }
+  },
+  "enabledPlugins": {
+    "ia@inventarch": true
+  }
+}
+```
+
+Claude Code asks each person to trust the folder before it applies these settings. Nothing in this catalogue edits a person's own settings.
 
 ### Bootstrap a repository for every host
 
@@ -119,18 +178,9 @@ A repository can carry its own way in, so that a clone works the same for everyo
 
 Until `@inventarch/mcp-door` ships `ia_session`, `ia_catalogue` and `ia_method` (the framework release after 3.4.1), the 3.4.1 door serves only its read tools, and this plugin's lanes fall back to `scripts/resolve.mjs`.
 
+---
 
-### Coexisting with the CLI-rendered plugin
-
-`ia host claude --user` (IA CLI 3.4.x) renders its own `ia@inventarch` plugin into `~/.ia/claude/marketplace` and registers that folder under the same catalogue name, `inventarch`. The CLI will change so that `ia host` adds this public marketplace and installs `ia@inventarch` from it instead of rendering its own plugin. Until that CLI release, remove the CLI-rendered registration first:
-
-```sh
-claude plugin marketplace remove inventarch
-claude plugin marketplace add inventarch/marketplace
-claude plugin install ia@inventarch
-```
-
-This plugin carries the rendered plugin's `init` and `doctor` skills (`ia:init`, `ia:doctor`).
+## 🧭 How the plugin behaves
 
 ### Names
 
@@ -148,54 +198,57 @@ A repository adopted for governance (it has `.ia/governance.json`) needs a kit t
 
 A kit may declare handlers in a `handlers.json` beside its records: scripts the core runs at session start, on each prompt, before or after an edit or shell command, and when a turn stops, or a plain `context` text it adds at those moments without running anything. Only installed kits whose folder holds the script run them (a kit fetched as a release carries no executables); each kit adds at most 2,000 characters of context; a handler may block a tool call only in a repository that opted in with `.ia/governance.json`. With no kit declaring a handler, the hooks do nothing.
 
+### Kit trust
+
 Only trusted kits run code, through `handlers.json`, `onwrite.json` or `checks.json` alike (decision `public-kit-trust`): the kit's publisher, the first part of its id (`inventarch/…`), is on the plugin's list (`plugins/ia/config/trusted-publishers.json`, `inventarch` alone for now), and its files are the release it recorded. Any other kit is data only: its handlers' `context` text still arrives, its scripts and commands are skipped, and the session says so once at its start. In a governed repository, a kit that names a trusted publisher but whose pre-tool gate cannot run, because its files changed after their release or its gate script is not one it declared, refuses every edit and shell command until you reinstall it (`node <ia plugin>/scripts/kit.mjs add --from <release> --apply`) or remove `.ia/governance.json`; another publisher's kit never blocks. You cannot add a publisher to the list yourself; an agent with a shell could then approve itself. Every script the core starts gets a short list of environment variables instead of all of yours, is stopped with everything it started when its time runs out, and has its output capped. That is hygiene, not a sandbox: a trusted kit's code runs as you. [docs/hosts.md](docs/hosts.md#kit-trust-and-process-hygiene) has the details.
 
 ### Delegating to another model
 
 `/ia:delegate` hands one resolved step to `codex exec` or `claude -p`, with the IA door and the packet, one level deep and with a timeout. It is off until you set `"delegation": true` in `~/.ia/config.json`, and it runs nothing until you confirm the command it shows.
 
-### Set it up for a team repository
-
-Commit this to the repository's `.claude/settings.json` to have Claude Code offer the catalogue to everyone who opens it:
-
-```json
-{
-  "extraKnownMarketplaces": {
-    "inventarch": {
-      "source": { "source": "github", "repo": "inventarch/marketplace" }
-    }
-  },
-  "enabledPlugins": {
-    "ia@inventarch": true
-  }
-}
-```
-
-Claude Code asks each person to trust the folder before it applies these settings. Nothing in this catalogue edits a person's own settings.
-
-## Where workspaces live
+### Where workspaces live
 
 Your workspaces default to `~/Documents/ia/<domain>` (for example `~/Documents/ia/studio`), and you can point elsewhere. `~/.ia` is the IA home only: configuration, state, the location registry and installed kits; the IA CLI refuses a workspace inside it.
 
-## Work on it
+---
 
-Read [AGENTS.md](AGENTS.md), [docs/decisions.md](docs/decisions.md) and [docs/adding-plugins.md](docs/adding-plugins.md) first. Open work is in [docs/roadmap.md](docs/roadmap.md), and host support in [docs/hosts.md](docs/hosts.md). You need Python 3.11+ and Node 22.22.x. Run `npm ci` at the root once in each checkout: it installs lefthook, Biome and the pinned `@inventarch/cli` 3.4.1, and lefthook installs this repository's Git hooks. CI runs the same gates on every pull request into `main` (`.github/workflows/gates.yml`):
+## 📦 What is in the repository
 
-```sh
-python tools/validate.py
-python tools/selection.py --check
-node tools/bundle-kits.mjs --check
-node tools/kit.mjs index --check
-node tools/kit.mjs package --check
-python tools/consistency.py
-npm run lint
-node tools/check-language.mjs
-python -m unittest discover -s tests -v
-node --test "tests/*.test.mjs" "plugins/*/tests/*.test.mjs"
-```
+| Path | What it holds |
+| --- | --- |
+| [`plugins/ia/`](plugins/ia/README.md) | The core plugin: the three lanes, `ia:init`, `ia:doctor` and `ia:delegate`, the reader, checker and worker agents, the door launcher, the session and kit handler hooks, the kit verbs, and the bundled kits under `config/kits/`. |
+| [`kits/`](kits/README.md) | The public kit sources, their release history, the bundle map into the core and the kit index. |
+| [`packages/public-kits/`](packages/public-kits/README.md) | The `@inventarch/public-kits` npm package, generated from the bundled kits. |
+| [`releases/`](releases/README.md) | Pending release notes and the changesets of released plugin versions. |
+| [`.ia/src/`](.ia/src/workspace.ia) | This repository's own IA workspace: its specs, [decisions](docs/decisions.md) and [open work](docs/roadmap.md). |
+| [`docs/`](docs/adding-plugins.md) | How to add or change a plugin, [host support](docs/hosts.md), the decision index and the roadmap. |
+| `tools/`, `tests/`, `schemas/` | The validator, the consistency check, the kit, release and selection tools, and their tests. |
+| `.claude-plugin/`, `.agents/plugins/` | The Claude Code and Codex catalogue manifests. |
 
-`tools/kit.mjs` holds the maintainer verbs (`pack`, `bundle`, `index`, `convert`, `package`); see [the kit README](kits/README.md). `package` generates `@inventarch/public-kits`, the npm package that carries the three kits' archives to a door or workspace without the plugin; [docs/public-kits-package.md](docs/public-kits-package.md) describes it and the operator's publish step.
+## 🚀 Releases
 
-## Licence
+A pull request that changes a file the plugin ships adds a release note (`node tools/release.mjs note`). An operator runs the release pull request workflow, which folds the pending notes into the next version and its changelog entry. Merging it tags `ia-v<version>` and creates the GitHub release. [releases/README.md](releases/README.md) describes the flow, and the [changelog](plugins/ia/CHANGELOG.md) lists every version.
 
-Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+## ✅ Contributing and verification
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md), [docs/decisions.md](docs/decisions.md) and [docs/adding-plugins.md](docs/adding-plugins.md) first. Open work is in [docs/roadmap.md](docs/roadmap.md). You need Python 3.11+ and Node 22.22.x. Run `npm ci` at the root once in each checkout: it installs lefthook, Biome and the pinned `@inventarch/cli` 3.4.1, and lefthook installs this repository's Git hooks. CI runs the same gates on every pull request into `main` (`.github/workflows/gates.yml`):
+
+| Command | What it checks |
+| --- | --- |
+| `python tools/validate.py` | What ships: plugin layout and components, manifests, skills and agents, hooks and the door, and that every decision and document has its record |
+| `python tools/selection.py --check` | `export-selection.json` holds the hash of every shipped file |
+| `node tools/bundle-kits.mjs --check` | The plugin's bundled kits are byte for byte the sources under `kits/` |
+| `node tools/kit.mjs index --check` / `package --check` | The kit index and the `@inventarch/public-kits` claim match the kits |
+| `python tools/consistency.py --base origin/main` | Encoding, links and anchors, IA pins, versions, release notes for shipped changes, and published kit releases left untouched |
+| `node tools/release.mjs check` | Pending release notes and changesets are well formed |
+| `npm run lint` | Biome lint over the JavaScript |
+| `node tools/check-language.mjs` | Every bundled kit and `.ia/src` restored and validated by the pinned CLI |
+| `npm test` | The repository, tool and plugin test suites |
+
+`tools/kit.mjs` holds the maintainer verbs (`pack`, `bundle`, `index`, `convert`, `package`); see [the kit README](kits/README.md). [Security reports](SECURITY.md) go to the maintainers privately; [SUPPORT.md](SUPPORT.md) says where to ask a question.
+
+---
+
+## 📄 License
+
+The IA marketplace is licensed under [Apache-2.0](LICENSE). See [NOTICE](NOTICE) for attribution.

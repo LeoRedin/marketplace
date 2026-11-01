@@ -81,3 +81,25 @@
     owner "InventArch maintainers"
     source "docs/public-kits-package.md"
     covers ["packages/", ".github/workflows/publish-public-kits.yml"]
+
+@spec marketplace-contributing
+  meaning
+    says "How to contribute to the public catalogue: where to report bugs, proposals and security problems, the code of conduct, the prerequisites and gates, the release-note rule, the pull request rules the main rulesets enforce, and the licence of contributions; with the issue and pull request templates, the code owners, Dependabot's configuration and the rulesets themselves."
+    answers "How does someone outside the maintainers report a problem or contribute a change, and what protects main?"
+  work
+    title "Contributing, support and security"
+    status draft
+    owner "InventArch maintainers"
+    source "CONTRIBUTING.md"
+    covers ["SECURITY.md", "SUPPORT.md", "CODE_OF_CONDUCT.md", ".github/ISSUE_TEMPLATE/", ".github/PULL_REQUEST_TEMPLATE.md", ".github/CODEOWNERS", ".github/dependabot.yml", ".github/rulesets/"]
+
+@spec marketplace-releases
+  meaning
+    says "How a plugin is released: the pending release notes a pull request adds, the changesets a release records, the operator-started release pull request that folds the notes into the next version, the release workflow that tags a merged release, and the checks that hold them."
+    answers "How does a change to a plugin become a released, tagged version?"
+  work
+    title "Releases"
+    status draft
+    owner "InventArch maintainers"
+    source "releases/README.md"
+    covers ["releases/", ".github/workflows/release-pr.yml", ".github/workflows/release.yml"]

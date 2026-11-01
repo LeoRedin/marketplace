@@ -1,0 +1,91 @@
+# Tags each release a merged release pull request recorded (decision public-release-notes). A push to main that adds a
+# releases/changesets/<plugin>-<version>.json starts it for that exact commit, so a re-run tags the same commit even
+# after main moves on; a dispatch from main retries. For each changeset without its <plugin>-v<version> tag, it waits for
+# Gates to pass on this commit, then creates the tag and the GitHub release from the changeset. The tags ruleset keeps a
+# tag from moving or being deleted once made. Publishing @inventarch/public-kits stays a separate operator dispatch
+# (publish-public-kits.yml). tests/test_gates.py holds its shape.
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths: ['releases/changesets/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Tag the recorded releases
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # Gates on three systems can take most of this; the wait below polls it.
+    timeout-minutes: 120
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22.22.0'
+      - name: The recorded releases without a tag
+        id: due
+        shell: bash
+        run: |
+          set -euo pipefail
+          due=''
+          for tag in $(node tools/release.mjs list); do
+            git rev-parse -q --verify "refs/tags/$tag" > /dev/null || due="$due $tag"
+          done
+          echo "tags=${due# }" >> "$GITHUB_OUTPUT"
+          echo "Due:${due:- nothing}"
+      - name: Wait for Gates on this exact main commit
+        if: steps.due.outputs.tags != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # A passing pull-request run does not substitute: only a main run qualifies the merged commit.
+          for attempt in $(seq 1 110); do
+            gh api "repos/$GITHUB_REPOSITORY/actions/workflows/gates.yml/runs?head_sha=$RELEASE_SHA&branch=main&per_page=100" > "$RUNNER_TEMP/gates-runs.json"
+            state="$(node -e '
+              const runs = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8")).workflow_runs.filter(
+                run => run.head_sha === process.env.RELEASE_SHA && run.head_branch === "main" && ["push", "workflow_dispatch"].includes(run.event));
+              const passed = runs.find(run => run.conclusion === "success");
+              if (passed) console.log("success " + passed.html_url);
+              else if (runs.some(run => run.status !== "completed")) console.log("running");
+              else if (runs.length) console.log("failed " + runs[0].html_url);
+              else console.log("absent");
+            ' "$RUNNER_TEMP/gates-runs.json")"
+            case "$state" in
+              success*) echo "Gates passed on $RELEASE_SHA: ${state#success }"; exit 0 ;;
+              failed*) echo "::error::Gates failed on $RELEASE_SHA: ${state#failed }. Re-run it, then re-run this workflow."; exit 1 ;;
+            esac
+            echo "Gates on $RELEASE_SHA is $state (check $attempt)"
+            sleep 60
+          done
+          echo "::error::Gates did not pass on $RELEASE_SHA in time"
+          exit 1
+      - name: Tag and publish the GitHub releases
+        if: steps.due.outputs.tags != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAGS: ${{ steps.due.outputs.tags }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for tag in $TAGS; do
+            node tools/release.mjs show "$tag" > "$RUNNER_TEMP/$tag.md"
+            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "${tag%-v*} ${tag##*-v}" --notes-file "$RUNNER_TEMP/$tag.md"
+          done

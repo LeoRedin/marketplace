@@ -1,0 +1,7 @@
+# Code owners are requested for review on every pull request that touches a matching path.
+# Owners must be GitHub users or teams with write access to inventarch/marketplace.
+# InventArch owns this repository; the verified operator administers repository review, and the main-review ruleset
+# lets that operator's own pull requests merge without a second code-owner approval (decision public-main-rulesets).
+# Later lines take precedence over earlier ones.
+
+* @crowncodes

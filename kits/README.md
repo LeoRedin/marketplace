@@ -1,4 +1,6 @@
-# Kits
+# 🧰 Kits
+
+[![Gates](https://github.com/inventarch/marketplace/actions/workflows/gates.yml/badge.svg?branch=main)](https://github.com/inventarch/marketplace/actions/workflows/gates.yml) [![License](https://img.shields.io/badge/license-Apache--2.0-green)](../LICENSE)
 
 This folder is the source of truth for every kit the core carries: `ia-method` (Work), `ia-kb` (Knowledge) and `ia-authoring` (Delivery). Names follow one pattern (folder `ia-<name>`, id `inventarch/ia-<name>-kit`, systems `ia-<name>` and `ia-<name>-<part>`); see the [README](../README.md#kit-names).
 
@@ -24,6 +26,6 @@ Edit `kits/<kit>`, never the copy inside a plugin.
 1. Edit the sources and bump `.ia/release.json` `version`. Commit (the sources commit).
 2. Set `.ia/release.json` `source.commit` to that commit and `source.epoch` to its commit time.
 3. `IA_CLI_PATH=<@inventarch/cli 3.4.1 dist/main.js> node tools/kit.mjs pack <kit>` packs it in a scratch copy and records `releases/<version>.json` and the index row (with `source`).
-4. `node tools/kit.mjs bundle --write`, `node tools/kit.mjs index --write`, `python tools/selection.py --write`; bump the core's version and CHANGELOG. Raise the version in `packages/public-kits/package.json`, then run `node tools/kit.mjs package --write` ([docs/public-kits-package.md](../docs/public-kits-package.md)). Commit (the stamp commit).
+4. `node tools/kit.mjs bundle --write`, `node tools/kit.mjs index --write`, `python tools/selection.py --write`; add a release note for the core (`node tools/release.mjs note --plugin ia ...`, [releases/README.md](../releases/README.md)): the release pull request bumps its version and CHANGELOG. Raise the version in `packages/public-kits/package.json`, then run `node tools/kit.mjs package --write` ([docs/public-kits-package.md](../docs/public-kits-package.md)). Commit (the stamp commit).
 
 `node tools/kit.mjs convert <kit folder>` converts a format 1 `releases.json` to format 2 losslessly and verifies the round trip; `--expand` prints the format 1 document back.

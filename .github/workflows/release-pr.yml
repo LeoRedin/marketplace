@@ -1,0 +1,79 @@
+# The release pull request (decision public-release-notes). Only an operator starts it, by hand, from main: it folds
+# every pending release note into the next plugin versions (tools/release.mjs version --write bumps both manifests,
+# sources.lock.json pluginVersion and the CHANGELOG, and records releases/changesets/<plugin>-<version>.json), records
+# the export selection, and opens or updates one pull request from release/next. Merging that pull request with a merge
+# commit records the release; the Release workflow then tags it. Hand edits to release/next are replaced on the next
+# run: fix the notes on main instead. tests/test_gates.py holds its shape.
+name: Release pull request
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-pr
+  cancel-in-progress: false
+
+jobs:
+  release-pr:
+    name: Release pull request
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # No OIDC token: this job prepares a reviewable branch and never publishes or tags.
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - name: Start only from main
+        shell: bash
+        run: test "$GITHUB_REF" = refs/heads/main || { echo "start from main, not $GITHUB_REF" >&2; exit 1; }
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22.22.0'
+      # Node and Python built-ins only: no dependency install runs with this write token.
+      - name: Fold the pending release notes into the next versions
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tools/release.mjs version --write --pr-body "$RUNNER_TEMP/release-body.md" > "$RUNNER_TEMP/release.json"
+          cat "$RUNNER_TEMP/release.json"
+          node -e 'const r = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8")); console.log(`action=${r.action}\ntitle=${r.title}`);' "$RUNNER_TEMP/release.json" >> "$GITHUB_OUTPUT"
+      - name: Record the export selection
+        if: steps.version.outputs.action == 'release'
+        run: python tools/selection.py --write
+      - name: Open or update the release pull request
+        if: steps.version.outputs.action == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TITLE: ${{ steps.version.outputs.title }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -C release/next
+          git add -A
+          git commit -q -m "Release $RELEASE_TITLE" -m '<img src="https://inventarch.com/mark.svg" width="18" height="18" alt="InventArch" /> **Authored by InventArch · admin@inventarch.dev**'
+          git push --force origin release/next
+          number="$(gh pr list --head release/next --base main --state open --json number --jq '.[0].number // empty')"
+          if [ -n "$number" ]; then
+            gh pr edit "$number" --title "Release $RELEASE_TITLE" --body-file "$RUNNER_TEMP/release-body.md"
+          else
+            gh pr create --head release/next --base main --title "Release $RELEASE_TITLE" --body-file "$RUNNER_TEMP/release-body.md"
+          fi
+          # Pushes and pull requests made with this workflow's token start no other workflow; a dispatch does. Gates
+          # on the release head reports the checks main's ruleset requires.
+          gh workflow run gates.yml --ref release/next
+      - name: Say when nothing is due
+        if: steps.version.outputs.action == 'none'
+        run: echo "No pending release note bumps a plugin; nothing to release."

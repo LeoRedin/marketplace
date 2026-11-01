@@ -238,9 +238,38 @@ class ConsistencyTests(unittest.TestCase):
         self.init_history()
         self.write(PLUGIN_FILE, self.text(PLUGIN_FILE) + '\nA shipped change.\n')
         self.rehash()
-        self.assertProblem(r'ia: shipped bytes changed since HEAD but its version stays 1\.1\.0', base='HEAD')
+        self.assertProblem(r'ia: shipped bytes changed since HEAD but no new release note names it', base='HEAD')
         self.bump('ia', '1.1.1')
         self.assertEqual(check(self.root, base='HEAD'), [])
+
+    def note(self, name, plugins=('ia',), bump='patch'):
+        self.write(f'releases/pending/{name}.json', json.dumps({
+            'format': 'inventarch-marketplace.release-note.v1', 'bump': bump, 'title': 'A shipped change',
+            'summary': 'What a user sees.', 'plugins': list(plugins)}, indent=2) + '\n')
+
+    def test_a_new_release_note_stands_in_for_the_bump(self):
+        # decision public-release-notes: the release pull request bumps; an ordinary one adds a note.
+        self.init_history()
+        self.write(PLUGIN_FILE, self.text(PLUGIN_FILE) + '\nA shipped change.\n')
+        self.rehash()
+        self.note('a-shipped-change', bump='none')
+        self.assertEqual(check(self.root, base='HEAD'), [])
+
+    def test_a_note_already_pending_at_the_base_does_not_count(self):
+        self.note('an-earlier-change')
+        self.init_history()
+        self.write(PLUGIN_FILE, self.text(PLUGIN_FILE) + '\nA shipped change.\n')
+        self.rehash()
+        self.assertProblem(r'ia: shipped bytes changed since HEAD but no new release note names it', base='HEAD')
+        self.edit('releases/pending/an-earlier-change.json', 'What a user sees.', 'What a user sees, and this change too.')
+        self.assertEqual(check(self.root, base='HEAD'), [])
+
+    def test_a_note_for_another_plugin_does_not_count(self):
+        self.init_history()
+        self.write(PLUGIN_FILE, self.text(PLUGIN_FILE) + '\nA shipped change.\n')
+        self.rehash()
+        self.note('another-plugin', plugins=('other',))
+        self.assertProblem(r'ia: shipped bytes changed since HEAD but no new release note names it', base='HEAD')
 
     def test_test_only_change_needs_no_bump(self):
         self.init_history()
@@ -253,7 +282,7 @@ class ConsistencyTests(unittest.TestCase):
         self.write(PLUGIN_FILE, self.text(PLUGIN_FILE) + '\nA shipped change.\n')
         self.rehash()
         self.bump('ia', '0.9.0')
-        self.assertProblem(r'ia: .*version stays|ia: version 0\.9\.0 is not above 1\.1\.0', base='HEAD')
+        self.assertProblem(r'ia: version 0\.9\.0 is not above 1\.1\.0', base='HEAD')
 
     def test_release_ranks_above_its_pre_release(self):
         from consistency import semver
