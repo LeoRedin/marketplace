@@ -109,7 +109,7 @@
       "modules": [
         {
           "path": "config/kits/ia-authoring/scripts/field-lint.mjs",
-          "sha256": "8f0b3a7fff8f6934855c8c3407dfdfb9ff9f2f2764cbb500ca16f58438457f8e",
+          "sha256": "7f4be65c053fe98d7e6712b47a8e2140db916f9adab37ea3029453b3918875c8",
           "imports": [
             "node:fs",
             "../../../../scripts/lib/scratch.mjs",

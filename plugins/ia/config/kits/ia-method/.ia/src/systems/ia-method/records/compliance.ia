@@ -30,7 +30,7 @@
     given "Work records: an open decision; a task that requires it; a made decision; a task that requires the made decision."
     request "Run the ceiling report."
     expected "The first task is within the first layer, the second is clear, and nothing is beyond the ceiling."
-    evaluator "inventarch/tests/ceiling.test.mjs :: REQ-METHOD-01 success: direct dependants stay within the first layer"
+    evaluator "plugins/ia/tests/ceiling.test.mjs :: REQ-METHOD-01 success: direct dependants stay within the first layer"
   relationships
     implements @contract ia-method#REQ-METHOD-01
 
@@ -43,6 +43,6 @@
     given "Work records: a draft spec; a task that cites it; a second task that requires the first task."
     request "Run the ceiling report."
     expected "The second task is beyond the ceiling, naming the draft spec and the task between them, and checking the second task alone exits non-zero."
-    evaluator "inventarch/tests/ceiling.test.mjs :: REQ-METHOD-01 failure: a second layer is beyond the ceiling"
+    evaluator "plugins/ia/tests/ceiling.test.mjs :: REQ-METHOD-01 failure: a second layer is beyond the ceiling"
   relationships
     implements @contract ia-method#REQ-METHOD-01

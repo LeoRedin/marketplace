@@ -13,7 +13,7 @@ A Git install copies a plugin's whole folder, `tests/` included. `tools/validate
 
 - A plugin's entry skills are model-invocable: `ia`'s are its three lanes (`ENTRY_SKILLS` in `tools/validate.py`); any other plugin has one router named after it. At most four model-invocable skills per plugin; the rest set `disable-model-invocation: true` and are reached by path. Every description says what and when.
 - Agents need `model`, a "Use this agent when…" description and a `tools` allowlist (never a denylist).
-- Target exactly `@inventarch/cli` 3.5.0 and `inventarch/language` 3.2.0 (`sources.lock.json`, decision `public-cli-3-5-0`). Never use the `ia` on PATH; use the core's `scripts/ia.mjs` or `npx -y -p @inventarch/cli@3.4.1 -- ia`. IA refuses `ia init` inside its home `~/.ia`.
+- Target exactly `@inventarch/cli` 3.5.0 and `inventarch/language` 3.2.0 (`sources.lock.json`, decision `public-cli-3-5-0`). Never use the `ia` on PATH; use the core's `scripts/ia.mjs` or `npx -y -p @inventarch/cli@3.5.0 -- ia`. IA refuses `ia init` inside its home `~/.ia`.
 - No machine paths, credentials, tenant corpus, people's names or other organisations' material in any file.
 - Manifests: the Claude manifest carries `displayName`; the Codex manifest is the Claude one without it, plus `skills` and Codex's `interface` block (`public-codex-manifest-interface`). Every plugin ships a `CODEX.md`, and every skill opens with the `**Codex:**` bridge line to it. Every manifest and kit says `Apache-2.0` (`public-apache-license`).
 - Bump a plugin's version for every change that ships, in both manifests and `sources.lock.json` `pluginVersion`, and add a CHANGELOG entry.
