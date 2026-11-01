@@ -9,6 +9,8 @@ Re-cut on IA 3.5.0 (decision `public-cli-3-5-0`, which supersedes `public-cli-3-
 - The qualified runtime cohort is regenerated as `config/qualified-runtime-3.5.0.json` (24 packages, checked against the registry integrity in the root lock); `config/qualified-executors.json` follows the changed `lib/cli.mjs`.
 - Bundled kits re-cut with the 3.5.0 CLI: `ia-method` 0.7.1, `ia-kb` 0.9.1 and `ia-authoring` 0.1.1 (recorded releases are immutable, so a new patch version each). `ia-method`'s two case evaluators now name the public path `plugins/ia/tests/ceiling.test.mjs`.
 - The upkeep agent ships (decision `public-upkeep-agent`): `agents/upkeep.md` and `scripts/upkeep.mjs` lose their spike framing and private reference, and state what they do and their limits.
+- The lanes drop their `scripts/resolve.mjs` and `kit.mjs list` fallback (task `drop-door-fallback`, done). `@inventarch/mcp-door@3.5.0` was started over stdio and its `tools/list` holds `ia_session`, `ia_catalogue` and `ia_method` beside the read tools, so the lanes call only the door. `resolve.mjs` stays: `ia:init`, `ia:delegate`, the agents' packets and the kits' cases still use it.
+- Known, for a follow-up kit release: `ia-authoring` 0.1.1's `scripts/field-lint.mjs` and `scripts/probe.mjs` import the plugin's helper `../../../../scripts/lib/scratch.mjs` from outside the kit folder (no other kit script leaves its folder). A kit's code must not resolve a path outside its own folder, so the helper moves into the kit in the next ia-authoring release; 0.1.1 was stamped before this ruling and is not rewritten.
 
 ## 1.1.0
 

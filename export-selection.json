@@ -41,7 +41,7 @@
     },
     {
       "path": "plugins/ia/CHANGELOG.md",
-      "sha256": "73ccfe5aeb536409c3daac696c49f30ae2f5ef6d6fb6c97e3af51af8f2f984e4"
+      "sha256": "a4fdd5fed27d71dbada22c2d4834c602b3023c643b168f55281b467f4fad51a1"
     },
     {
       "path": "plugins/ia/CODEX.md",
@@ -521,7 +521,7 @@
     },
     {
       "path": "plugins/ia/README.md",
-      "sha256": "c7296e425d7e2acf9a51c5b51f0d6a5ff3b10638ab5e42bae0eea6a462fec455"
+      "sha256": "35cf15fb80a3771fe87b95f06147afcfbbceaea3d751c4690467f6b508969e5a"
     },
     {
       "path": "plugins/ia/references/design-service.md",
@@ -721,7 +721,7 @@
     },
     {
       "path": "plugins/ia/skills/delivery/SKILL.md",
-      "sha256": "d91811f798fdde9a9c310e46b8cb0767fc9e9d468d1ca9f19878e67703c10fea"
+      "sha256": "af49cba0b23452968d8a466930563efbe43a264c3afdff70cb31dd7776983fc5"
     },
     {
       "path": "plugins/ia/skills/doctor/SKILL.md",
@@ -733,11 +733,11 @@
     },
     {
       "path": "plugins/ia/skills/knowledge/SKILL.md",
-      "sha256": "f76bcfa7fbb372d39a7673c88d4e1280742e108a4459e9a93a302a555b5bd402"
+      "sha256": "65e4a4986e008a71e6884e8ed7f6076f01e3cc490cc66af763568bfbe4eb9035"
     },
     {
       "path": "plugins/ia/skills/work/SKILL.md",
-      "sha256": "2c54a36585290532577bc9bce4ed9415f0f51a961949dc65a0b7cd70f1d0b0d4"
+      "sha256": "5b73ea7c073eef46176fac5af21020eb99f37095e64756d11d07ca0b8a1e1fa4"
     }
   ]
 }

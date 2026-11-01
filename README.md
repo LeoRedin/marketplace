@@ -4,7 +4,7 @@ The public InventArch plugin catalogue (`inventarch`). It ships one plugin, `ia`
 
 | Plugin | What it is for |
 |---|---|
-| [ia](plugins/ia/README.md) | The core. Three lanes, `ia:work`, `ia:knowledge` and `ia:delivery`, plus the user-invoked `ia:init`, `ia:doctor` and `ia:delegate`; the IA door as its MCP server, whose `ia_session`, `ia_catalogue` and `ia_method` tools deliver a bound method kit's playbook cells as a packet (with a resolver over `ia position` as the fallback); reader, checker and worker profiles; kit lookup, install, dependency and bind verbs; a read-only session bootstrap; and hooks that run the handlers installed kits declare. |
+| [ia](plugins/ia/README.md) | The core. Three lanes, `ia:work`, `ia:knowledge` and `ia:delivery`, plus the user-invoked `ia:init`, `ia:doctor` and `ia:delegate`; the IA door as its MCP server, whose `ia_session`, `ia_catalogue` and `ia_method` tools deliver a bound method kit's playbook cells as a packet; reader, checker and worker profiles; kit lookup, install, dependency and bind verbs; a read-only session bootstrap; and hooks that run the handlers installed kits declare. |
 
 ## Kits
 
@@ -117,7 +117,7 @@ A repository can carry its own way in, so that a clone works the same for everyo
 
 `ia init` and `ia host` (IA CLI) write these pieces for you once the framework release that commits them ships; until then, copy them by hand. With this plugin installed, Claude Code already has the door (the plugin ships it as its MCP server `ia`, whose tools are `mcp__plugin_ia_ia__<tool>`); a committed `.mcp.json` entry then adds a second copy under `mcp__ia__<tool>`, which is harmless, and is still what a teammate without the plugin, or another host, uses. The door finds the kits in `<IA home>/kits`; the plugin's own door also finds the kits it bundles.
 
-The 3.5.0 door serves `ia_session`, `ia_catalogue` and `ia_method`; this plugin's lanes keep their `scripts/resolve.mjs` fallback for a door that lacks them until task `drop-door-fallback` removes it.
+The 3.5.0 door serves `ia_session`, `ia_catalogue` and `ia_method`, and this plugin's lanes use only them (a door older than 3.5.0 does not serve them, so a committed entry should pin 3.5.0 or later).
 
 
 ### Coexisting with the CLI-rendered plugin

@@ -14,7 +14,7 @@ The door is one MCP server, `@inventarch/mcp-door`, started with `npx -y @invent
 
 - **Claude Code with this plugin:** the plugin ships the door (`plugins/ia/.mcp.json`), so nothing else is needed. Agents and permission rules name its tools `mcp__plugin_ia_ia__<tool>`; a bare server key never matches a plugin's server.
 - **Any host, with or without the plugin:** the repository commits the door entry and the instruction block (README, "Bootstrap a repository for every host"). This is the only way in for GitHub Copilot, in VS Code and in the coding agent, which runs no plugin and no hooks; a cloud session keeps only what the repository commits, and never delegates.
-- **Fallback:** the 3.5.0 door serves `ia_session`, `ia_catalogue` and `ia_method`. A door that lacks them (an older pin in a committed entry) still sends the lanes to `scripts/resolve.mjs` and `kit.mjs list`, named in each lane as "until `@inventarch/mcp-door` ships `ia_method`" (task `drop-door-fallback` removes it).
+- **No fallback:** the 3.5.0 door serves `ia_session`, `ia_catalogue` and `ia_method`, and the lanes use only the door (task `drop-door-fallback`, done). A committed entry that pins an older door does not serve them: pin `@inventarch/mcp-door@3.5.0` or later.
 
 The InventArch account is a separate remote MCP server the person adds to their host (`https://api.inventarch.dev/mcp`); the host runs the OAuth sign-in, and nothing in this catalogue stores a token.
 
