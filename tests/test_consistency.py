@@ -173,7 +173,7 @@ class ConsistencyTests(unittest.TestCase):
 
     def test_launcher_pin_drift_refuses(self):
         self.edit('plugins/ia/scripts/lib/cli.mjs', "export const PINNED = '3.5.0';", "export const PINNED = '3.3.0';")
-        self.assertProblem(r'plugins/ia/scripts/lib/cli\.mjs: pins 3\.3\.0, sources\.lock\.json pins 3\.4\.1')
+        self.assertProblem(r'plugins/ia/scripts/lib/cli\.mjs: pins 3\.3\.0, sources\.lock\.json pins 3.5.0')
 
     def test_every_qualified_runtime_literal_must_match_the_lock(self):
         # The core's closure modules: every literal is moved off the pin at once, and each row must name its own drift.
@@ -212,7 +212,7 @@ class ConsistencyTests(unittest.TestCase):
 
     def test_stale_cli_reference_refuses_outside_history(self):
         self.edit(PLUGIN_FILE, '\n# ', '\nRun `npx -y -p @inventarch/cli@3.1.0 -- ia validate`.\n\n# ')
-        self.assertProblem(r'knowledge/SKILL\.md:\d+: @inventarch/cli@3\.1\.0, sources\.lock\.json pins 3\.4\.1')
+        self.assertProblem(r'knowledge/SKILL\.md:\d+: @inventarch/cli@3\.1\.0, sources\.lock\.json pins 3.5.0')
         self.write('plugins/ia/CHANGELOG.md', self.text('plugins/ia/CHANGELOG.md') + '\nWas `@inventarch/cli@2.0.0`.\n')
         self.assertFalse(any('CHANGELOG' in p for p in check(self.root)))
 

@@ -58,7 +58,7 @@ test('package --check refuses a stale claim, a changed field and a declared scri
   write(pkg);
   // A bundled kit whose bytes are not its recorded release makes no claim.
   writeFileSync(join(root, 'plugins/ia/config/kits/ia-kb/.ia/release.json'), readFileSync(join(root, 'plugins/ia/config/kits/ia-kb/.ia/release.json'), 'utf8') + '\n');
-  assert.throws(() => packageClaim(root), /ia-kb is not its recorded release 0\.9\.0/);
+  assert.throws(() => packageClaim(root), /ia-kb is not its recorded release 0.9.1/);
   assert.equal(run(root, '--check').status, 1);
 });
 

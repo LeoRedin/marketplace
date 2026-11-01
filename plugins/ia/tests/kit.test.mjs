@@ -145,7 +145,7 @@ test('kit.mjs root refuses a CLI of an older major than the one the release was 
   const old = run('kit.mjs', ['root', a.id], envFor({ cli: fakeCli(join(dir, 'old'), '2.0.0'), kitsDir, temp: join(dir, 'temp') }));
   assert.equal(old.status, 1, old.stdout + old.stderr);
   assert.equal(old.json.error.code, 'IA-CORE-CLI-UNSUPPORTED');
-  assert.match(old.json.error.message, /packed with @inventarch\/cli 3\.4\.1/);
+  assert.match(old.json.error.message, /packed with @inventarch\/cli 3.5.0/);
   assert.match(old.json.error.message, /resolves 2\.0\.0/);
   assert.deepEqual(readdirSync(join(dir, 'temp')).filter(n => n.startsWith('inventarch-core-')).flatMap(n => readdirSync(join(dir, 'temp', n))), [], 'nothing is restored');
   const same = run('kit.mjs', ['root', a.id], envFor({ cli: fakeCli(join(dir, 'same'), '3.0.0'), kitsDir, temp: join(dir, 'temp') }));
@@ -163,7 +163,7 @@ test('kit.mjs root refuses a CLI of the same major that does not ship the langua
     assert.equal(other.json.error.code, 'IA-CORE-CLI-UNSUPPORTED', refusal);
     assert.match(other.json.error.message, /locks inventarch\/language 3\.2\.0, which this repository's CLI does not ship/);
     assert.match(other.json.error.message, /resolves 3\.2\.2/);
-    assert.match(other.json.error.message, /Pin @inventarch\/cli 3\.4\.1/);
+    assert.match(other.json.error.message, /Pin @inventarch\/cli 3.5.0/);
     assert.deepEqual(readdirSync(join(dir, 'temp')).filter(n => n.startsWith('inventarch-core-')).flatMap(n => readdirSync(join(dir, 'temp', n))), [], 'no partial copy is left');
   }
   // With the CLI the release was packed with, the base is one it ships, so either refusal is a real missing artifact:
