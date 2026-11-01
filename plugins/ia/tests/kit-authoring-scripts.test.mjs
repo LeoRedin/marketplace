@@ -362,9 +362,9 @@ test('an explicit entry or IA_CLI_PATH wins over the workspace install, and a CL
  assert.deepEqual(scratchLeft(tmp),[]);
 }));
 
-// The kit carries one probe and one lint, and the resolver is the core's: this holds every script to it.
-const CORE_HELPER=path.resolve(KIT,'..','..','..','scripts','lib','scratch.mjs');
-test("one resolver and one probe: every script that captures imports the core's scripts/lib/scratch.mjs", async ()=>{
+// The kit carries one probe, one lint and one helper of its own: this holds every script to it and to the kit folder.
+const KIT_HELPER=path.join(KIT,'scripts','lib','scratch.mjs');
+test("one resolver and one probe: every script that captures imports the kit's own scripts/lib/scratch.mjs", async ()=>{
  const files=[];
  const walk=dir=>{for(const e of fs.readdirSync(dir,{withFileTypes:true})){const p=path.join(dir,e.name);if(e.isDirectory())walk(p);else files.push(p);}};
  walk(KIT);
@@ -373,19 +373,19 @@ test("one resolver and one probe: every script that captures imports the core's 
  assert.deepEqual(named('ia.mjs'),[],"the core's scripts/ia.mjs is the launcher");
  assert.deepEqual(named('probe.mjs'),[PROBE]);
  assert.deepEqual(named('ia-rules.md'),[],'the rule sheet is the authoring-ia-rules-* conventions, not a carried body');
- // Static imports: each script that captures a workspace imports exactly the core's helper, and nothing else outside the kit.
+ // Static imports: each script that captures a workspace imports exactly the kit's own helper, and nothing else outside the kit.
  const importers=[];
  for(const f of files.filter(f=>f.endsWith('.mjs'))){
   const text=fs.readFileSync(f,'utf8');
   for(const m of text.matchAll(/from\s+'(\.[^']*)'/g)){
    const target=path.resolve(path.dirname(f),m[1]);
-   if(target===CORE_HELPER){importers.push(path.relative(KIT,f).split(path.sep).join('/'));continue}
+   if(target===KIT_HELPER){importers.push(path.relative(KIT,f).split(path.sep).join('/'));continue}
    assert.ok(!path.relative(KIT,target).startsWith('..'),`${path.relative(KIT,f)} imports ${m[1]} from outside the kit`);
   }
  }
  assert.deepEqual(importers.sort(),['scripts/field-lint.mjs','scripts/probe.mjs']);
  // And the helper exports what the scripts import.
- const helper=await import(pathToFileURL(CORE_HELPER).href);
+ const helper=await import(pathToFileURL(KIT_HELPER).href);
  for(const name of ['copyWorkspace','invokeIa','resolveIa','scratchArtifact','readArtifact'])assert.equal(typeof helper[name],'function',name);
 });
 

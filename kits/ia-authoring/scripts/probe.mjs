@@ -1,4 +1,4 @@
-// authored in inventarch/ia-authoring-kit 0.1.0: the toolchain probe of the ia-authoring-record system; runnable from the kit folder, it imports the core's scratch-capture helper (../../../../scripts/lib/scratch.mjs)
+// authored in inventarch/ia-authoring-kit 0.1.0: the toolchain probe of the ia-authoring-record system; runnable from the kit folder, it imports the kit's own scratch-capture helper (./lib/scratch.mjs)
 // Probe the IA toolchain without touching the real workspace: copy .ia into a scratch directory, drop probe records
 // into one system's folder and/or add whole drafted systems, validate, and report what admission said per file.
 //
@@ -29,7 +29,7 @@
 // given. This is the kit's only copy of the probe; the probing stage (authoring-probing-the-ia-toolchain) runs it.
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
-import {copyWorkspace, readArtifact, invokeIa, resolveIa} from '../../../../scripts/lib/scratch.mjs';
+import {copyWorkspace, readArtifact, invokeIa, resolveIa} from './lib/scratch.mjs';
 import os from 'node:os';
 import path from 'node:path';
 

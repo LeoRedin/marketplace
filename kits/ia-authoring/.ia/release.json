@@ -44,6 +44,10 @@
       "role": "asset"
     },
     {
+      "path": "scripts/lib/scratch.mjs",
+      "role": "asset"
+    },
+    {
       "path": "scripts/probe.mjs",
       "role": "asset"
     }

@@ -1,4 +1,4 @@
-// authored in inventarch/ia-authoring-kit 0.1.0: the governance lint of the ia-authoring-record system; runnable from the kit folder, it imports the core's scratch-capture helper (../../../../scripts/lib/scratch.mjs)
+// authored in inventarch/ia-authoring-kit 0.1.0: the governance lint of the ia-authoring-record system; runnable from the kit folder, it imports the kit's own scratch-capture helper (./lib/scratch.mjs)
 // Governance lint. Closed IA schemas refuse unknown sections (IA-COMP-SECTION-UNKNOWN) and unknown fields inside a
 // declared section (IA-COMP-FIELD-UNKNOWN), with one practical exception: keys under `governance` are compiler-consumed
 // clauses (the variant `requires`, the `severity` dimension) and are never field-checked, so ANY key there is admitted
@@ -11,7 +11,7 @@
 // Writes nothing in the workspace: it captures a temp copy. Without --cli or IA_CLI_PATH the workspace's own
 // node_modules/@inventarch/cli runs, else @inventarch/cli 3.5.0 through npx; never the `ia` on the PATH.
 import fs from 'node:fs';
-import {scratchArtifact, readArtifact} from '../../../../scripts/lib/scratch.mjs';
+import {scratchArtifact, readArtifact} from './lib/scratch.mjs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
