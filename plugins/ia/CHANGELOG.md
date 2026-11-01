@@ -8,6 +8,7 @@ Re-cut on IA 3.5.0 (decision `public-cli-3-5-0`, which supersedes `public-cli-3-
 - The IA door launcher starts `npx -y @inventarch/mcp-door@3.5.0`.
 - The qualified runtime cohort is regenerated as `config/qualified-runtime-3.5.0.json` (24 packages, checked against the registry integrity in the root lock); `config/qualified-executors.json` follows the changed `lib/cli.mjs`.
 - Bundled kits re-cut with the 3.5.0 CLI: `ia-method` 0.7.1, `ia-kb` 0.9.1 and `ia-authoring` 0.1.1 (recorded releases are immutable, so a new patch version each). `ia-method`'s two case evaluators now name the public path `plugins/ia/tests/ceiling.test.mjs`.
+- The upkeep agent ships (decision `public-upkeep-agent`): `agents/upkeep.md` and `scripts/upkeep.mjs` lose their spike framing and private reference, and state what they do and their limits.
 
 ## 1.1.0
 

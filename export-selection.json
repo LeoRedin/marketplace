@@ -33,7 +33,7 @@
     },
     {
       "path": "plugins/ia/agents/upkeep.md",
-      "sha256": "c64351281df18c793a4dc92241e4f715d34111efebcce4f419f1e9536635d4d5"
+      "sha256": "9b77d3204158619e7f8732533abcbef6d935557d164ac02f7fd793399c7b3d05"
     },
     {
       "path": "plugins/ia/agents/worker.md",
@@ -41,7 +41,7 @@
     },
     {
       "path": "plugins/ia/CHANGELOG.md",
-      "sha256": "b3257391469b5d8582bfaef4d0626da0bb5cffd2de2cbc2393073100eaab488f"
+      "sha256": "73ccfe5aeb536409c3daac696c49f30ae2f5ef6d6fb6c97e3af51af8f2f984e4"
     },
     {
       "path": "plugins/ia/CODEX.md",
@@ -521,7 +521,7 @@
     },
     {
       "path": "plugins/ia/README.md",
-      "sha256": "4a10c0f5de86badbd6a2b5ef39a24f54d1708d5739ab12ab5a876c75d200d661"
+      "sha256": "c7296e425d7e2acf9a51c5b51f0d6a5ff3b10638ab5e42bae0eea6a462fec455"
     },
     {
       "path": "plugins/ia/references/design-service.md",
@@ -713,7 +713,7 @@
     },
     {
       "path": "plugins/ia/scripts/upkeep.mjs",
-      "sha256": "bd5331148e7ef874038120814d2cda6817959cef06f56bf340b8f902b95a6c03"
+      "sha256": "6fab1826d72f3cee8722c24298280351c6a3a7d174d3a6d01a3602eb516b1643"
     },
     {
       "path": "plugins/ia/skills/delegate/SKILL.md",
