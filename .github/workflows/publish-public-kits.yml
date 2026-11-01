@@ -1,7 +1,9 @@
 # Publishes @inventarch/public-kits (decision public-kits-package, docs/public-kits-package.md). Only an operator starts
 # it, by hand: there is no other trigger. It checks the package against its sources, refuses a version npm already has,
 # builds the package with the pinned CLI (every archive must be its kit's recorded release), and publishes it with npm
-# provenance through OIDC trusted publishing: no token is stored or passed. tests/test_gates.py holds its shape.
+# provenance through OIDC trusted publishing: no token is stored or passed. The job runs in the npm environment, which
+# GitHub deploys only from main and only after its required reviewer approves; npm trusts this workflow only in that
+# environment, so a copy of this file edited on another branch cannot publish. tests/test_gates.py holds its shape.
 name: Publish public kits
 
 on:
@@ -19,6 +21,9 @@ jobs:
   publish:
     name: Publish @inventarch/public-kits
     runs-on: ubuntu-latest
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/@inventarch/public-kits
     timeout-minutes: 30
     steps:
       - name: Publish only from main

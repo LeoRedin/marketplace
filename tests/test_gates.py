@@ -102,6 +102,11 @@ class PublishPublicKitsWorkflowTests(unittest.TestCase):
             self.assertNotIn(trigger, self.text)
         self.assertIn('test "$GITHUB_REF" = refs/heads/main', self.text)
 
+    def test_runs_in_the_npm_environment(self):
+        # npm trusts the workflow only in this environment, which GitHub deploys from main after its reviewer approves.
+        self.assertIn('    runs-on: ubuntu-latest\n    environment:\n      name: npm\n', self.text)
+        self.assertEqual(self.text.count('environment:'), 1)
+
     def test_publishes_with_oidc_and_no_token(self):
         self.assertIn('permissions:\n  contents: read\n  id-token: write\n', self.text)
         self.assertNotIn('secrets.', self.text)
