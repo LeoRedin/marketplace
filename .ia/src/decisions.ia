@@ -245,7 +245,7 @@
     says "Exactly @inventarch/cli 3.4.1 (language base inventarch/language 3.2.0, archive 7b36e4b4); every changed kit is packed with it; the core's launchers, closure modules and qualified runtime cohort name it."
   work
     title "Pin @inventarch/cli 3.4.1"
-    status made
+    status superseded
     owner "InventArch maintainers"
     start "2026-10-30"
     ended "2026-10-30"
@@ -290,7 +290,7 @@
 
 @decision public-door-mcp
   meaning
-    says "The core ships one MCP server, the IA door, as plugins/ia/.mcp.json: server ia, run as node scripts/door.mjs, a launcher that starts npx -y @inventarch/mcp-door at the plugin's IA pin (3.4.1, lib/cli.mjs PINNED) never through a shell (on Windows, where npx is a .cmd shim, it runs npm's npx-cli.js with node), with stdio passed through and IA_KITS_DIR set to the plugin's config/kits. Codex reads a plugin's .mcp.json too, so the Codex manifest keeps the door off with an empty mcpServers until it is qualified there. Claude Code names its tools mcp__plugin_ia_ia__<tool>, and the reader, checker and worker allowlists name ia_session, ia_catalogue and ia_method that way (reader and worker also ia_position, ia_read and ia_vocabulary). The lanes call ia_session once per session, ia_catalogue {lane} to choose a key and ia_method {key} for the packet; until @inventarch/mcp-door ships ia_method they fall back to scripts/resolve.mjs and kit.mjs list. tools/validate.py admits that one file, exactly."
+    says "The core ships one MCP server, the IA door, as plugins/ia/.mcp.json: server ia, run as node scripts/door.mjs, a launcher that starts npx -y @inventarch/mcp-door at the plugin's IA pin (lib/cli.mjs PINNED, set by the current CLI pin decision) never through a shell (on Windows, where npx is a .cmd shim, it runs npm's npx-cli.js with node), with stdio passed through and IA_KITS_DIR set to the plugin's config/kits. Codex reads a plugin's .mcp.json too, so the Codex manifest keeps the door off with an empty mcpServers until it is qualified there. Claude Code names its tools mcp__plugin_ia_ia__<tool>, and the reader, checker and worker allowlists name ia_session, ia_catalogue and ia_method that way (reader and worker also ia_position, ia_read and ia_vocabulary). The lanes call ia_session once per session, ia_catalogue {lane} to choose a key and ia_method {key} for the packet; the lanes use only the door's tools, with no script fallback (task drop-door-fallback, done). tools/validate.py admits that one file, exactly."
   work
     title "Ship the IA door as the core's MCP server"
     status made
@@ -301,7 +301,7 @@
   decision
     question "How does the core reach the method catalogue and packets without a per-workspace registration?"
     decider "Operator"
-    choice "The core ships one MCP server, the IA door, as plugins/ia/.mcp.json: server ia, run as node scripts/door.mjs, a launcher that starts npx -y @inventarch/mcp-door at the plugin's IA pin (3.4.1, lib/cli.mjs PINNED) never through a shell (on Windows, where npx is a .cmd shim, it runs npm's npx-cli.js with node), with stdio passed through and IA_KITS_DIR set to the plugin's config/kits. Codex reads a plugin's .mcp.json too, so the Codex manifest keeps the door off with an empty mcpServers until it is qualified there. Claude Code names its tools mcp__plugin_ia_ia__<tool>, and the reader, checker and worker allowlists name ia_session, ia_catalogue and ia_method that way (reader and worker also ia_position, ia_read and ia_vocabulary). The lanes call ia_session once per session, ia_catalogue {lane} to choose a key and ia_method {key} for the packet; until @inventarch/mcp-door ships ia_method they fall back to scripts/resolve.mjs and kit.mjs list. tools/validate.py admits that one file, exactly."
+    choice "The core ships one MCP server, the IA door, as plugins/ia/.mcp.json: server ia, run as node scripts/door.mjs, a launcher that starts npx -y @inventarch/mcp-door at the plugin's IA pin (lib/cli.mjs PINNED, set by the current CLI pin decision) never through a shell (on Windows, where npx is a .cmd shim, it runs npm's npx-cli.js with node), with stdio passed through and IA_KITS_DIR set to the plugin's config/kits. Codex reads a plugin's .mcp.json too, so the Codex manifest keeps the door off with an empty mcpServers until it is qualified there. Claude Code names its tools mcp__plugin_ia_ia__<tool>, and the reader, checker and worker allowlists name ia_session, ia_catalogue and ia_method that way (reader and worker also ia_position, ia_read and ia_vocabulary). The lanes call ia_session once per session, ia_catalogue {lane} to choose a key and ia_method {key} for the packet; the lanes use only the door's tools, with no script fallback (task drop-door-fallback, done). tools/validate.py admits that one file, exactly."
     rationale "One door carries every method for every host; launching it from the plugin needs no local path and no second server, and pinning it like the CLI keeps it reviewable."
 
 @decision public-kit-handlers
@@ -383,3 +383,53 @@
     decider "Operator"
     choice "@inventarch/public-kits carries the kits the core bundles as one npm package, generated in packages/public-kits/ by node tools/kit.mjs package from plugins/ia/config/kits and kits/index.json. Its committed package.json holds its own semver, raised whenever a carried release changes (consistency --base checks it), and ia.kits: each kit's id, latest version, IA archive and manifest sha256, sources digest and folder; it has no scripts, dependencies, entry points or exports. The built files, gitignored, are archives/<archive>.ia.tgz (each recorded release packed again with the pinned CLI, refused unless it is that release) with archives/<archive>.distribution.json (its manifest), kits/<folder>/ byte for byte, index.json, LICENSE and NOTICE; the kit folders stay because an archive carries no sidecars. package --check is a gate in lefthook, npm run check and the gates workflow. .github/workflows/publish-public-kits.yml, started only by workflow_dispatch from main, checks the package against its sources, refuses a version npm already has, builds it and runs npm publish --provenance --access public under OIDC trusted publishing with no token; running it is the operator's step."
     rationale "The operator's rulings rereview-ia-q1-default-kits-package, dec-122 and dec-133 (C7, C7b) send the default kits to a bare door as one npm package that a lock records as one entry, with npm as transport only: the IA engine expands each kit from its archive, so the package must carry the archives and their manifests, by the digests their releases recorded. Generating it from the bundled kits keeps it from drifting, and committing only package.json keeps the claim reviewable without a third copy of every kit's bytes in history."
+
+@decision public-cli-3-5-0
+  meaning
+    says "Exactly @inventarch/cli 3.5.0 (language base inventarch/language 3.2.0, archive 7b36e4b4, as bundled by 3.5.0); every changed kit is packed with it; the core's launchers, the IA door pin (@inventarch/mcp-door 3.5.0), closure modules and qualified runtime cohort name it. ia-method 0.7.1, ia-kb 0.9.1 and ia-authoring 0.1.1 are the re-cut on it, because recorded releases are immutable."
+  work
+    title "Pin @inventarch/cli 3.5.0"
+    status made
+    owner "InventArch maintainers"
+    start "2026-11-01"
+    ended "2026-11-01"
+    source "docs/decisions.md"
+  decision
+    question "Which IA CLI do the catalogue and its kits target after the 3.5.0 release?"
+    decider "Operator"
+    choice "Exactly @inventarch/cli 3.5.0 (language base inventarch/language 3.2.0, archive 7b36e4b4, as bundled by 3.5.0); every changed kit is packed with it; the core's launchers, the IA door pin (@inventarch/mcp-door 3.5.0), closure modules and qualified runtime cohort name it. ia-method 0.7.1, ia-kb 0.9.1 and ia-authoring 0.1.1 are the re-cut on it, because recorded releases are immutable."
+    rationale "One exact CLI makes every packed archive reproducible; 3.5.0 supersedes the 3.4.1 pin without changing the language base."
+  relationships
+    supersedes @decision public-cli-3-4-1
+
+@decision public-upkeep-agent
+  meaning
+    says "The core ships the upkeep agent (plugins/ia/agents/upkeep.md, background, isolated in a worktree, model sonnet, a tools allowlist) with its deterministic half scripts/upkeep.mjs. upkeep.mjs stale compares content digests of the inputs a kit's derived.json sidecar declares with the digests recorded in .ia/derived.lock.json, and lists records whose source, cites or grounded-by lines name a changed file; it exits 3 and starts nothing when nothing is stale. The agent acts only on that report and returns a patch from its own worktree: it never edits the caller's tree, commits or pushes, and never overwrites an output a person edited. Limits: staleness is by digest, not meaning; build runs a script the sidecar names only with --allow-code and without the kit trust check handlers take; nothing starts the agent automatically."
+  work
+    title "Ship the upkeep agent"
+    status made
+    owner "InventArch maintainers"
+    start "2026-11-01"
+    ended "2026-11-01"
+    source "docs/decisions.md"
+  decision
+    question "Does the core ship the upkeep agent, and what may it do?"
+    decider "Operator"
+    choice "The core ships the upkeep agent (plugins/ia/agents/upkeep.md, background, isolated in a worktree, model sonnet, a tools allowlist) with its deterministic half scripts/upkeep.mjs. upkeep.mjs stale compares content digests of the inputs a kit's derived.json sidecar declares with the digests recorded in .ia/derived.lock.json, and lists records whose source, cites or grounded-by lines name a changed file; it exits 3 and starts nothing when nothing is stale. The agent acts only on that report and returns a patch from its own worktree: it never edits the caller's tree, commits or pushes, and never overwrites an output a person edited. Limits: staleness is by digest, not meaning; build runs a script the sidecar names only with --allow-code and without the kit trust check handlers take; nothing starts the agent automatically."
+    rationale "Derived outputs and the records that cite changed files drift silently. A digest check costs no model and decides whether an agent is worth starting; confining the agent to a worktree patch keeps it a proposer."
+
+@decision public-door-codex
+  meaning
+    says "The Codex manifest of the core names the IA door: mcpServers ./.codex-mcp.json, a file holding server ia run as node ./scripts/door.mjs with cwd ./ (Codex takes a contained ./ command path and cwd, and does not expand CLAUDE_PLUGIN_ROOT, so it cannot use the Claude .mcp.json). The launcher is the same scripts/door.mjs, which starts npx -y @inventarch/mcp-door at the plugin's IA pin and sets IA_KITS_DIR itself. tools/validate.py holds the file to exactly that; tools/smoke-codex.mjs starts the door through Codex (mcpServerStatus/list) and requires ia_session, ia_catalogue and ia_method. Kit handler hooks stay off in Codex (task codex-door-and-handlers)."
+  work
+    title "Ship the IA door to Codex"
+    status made
+    owner "InventArch maintainers"
+    start "2026-11-01"
+    ended "2026-11-01"
+    source "docs/decisions.md"
+  decision
+    question "How does the core's IA door reach Codex?"
+    decider "Operator"
+    choice "The Codex manifest of the core names the IA door: mcpServers ./.codex-mcp.json, a file holding server ia run as node ./scripts/door.mjs with cwd ./ (Codex takes a contained ./ command path and cwd, and does not expand CLAUDE_PLUGIN_ROOT, so it cannot use the Claude .mcp.json). The launcher is the same scripts/door.mjs, which starts npx -y @inventarch/mcp-door at the plugin's IA pin and sets IA_KITS_DIR itself. tools/validate.py holds the file to exactly that; tools/smoke-codex.mjs starts the door through Codex (mcpServerStatus/list) and requires ia_session, ia_catalogue and ia_method. Kit handler hooks stay off in Codex (task codex-door-and-handlers)."
+    rationale "Codex users get the same method packets through the door the Claude plugin ships, without hand-writing a config entry; a separate file keeps the Claude door file exact."

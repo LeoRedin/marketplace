@@ -1,7 +1,7 @@
 {
   "format": 2,
   "kit": "inventarch/ia-method-kit",
-  "latest": "0.7.0",
+  "latest": "0.7.1",
   "releases": [
     {
       "version": "0.1.0",
@@ -68,6 +68,19 @@
       "source": {
         "repository": "https://github.com/inventarch/marketplace.git",
         "commit": "b3f25d39b72abd2350aece52082fba0cd706aad2"
+      }
+    },
+    {
+      "version": "0.7.1",
+      "archive": "caa4dfc33243c5f91b66247bdf44e4a9ffd52e6d934f7d6d0a03fe4a65807440",
+      "manifest": "ba8c56415ee191584a6a36d80259590d1b250c6ddd11bd2be66a97928907cad7",
+      "sources": "58f69f234401c4cae33575fdccb777b273e8c0dbfe1db83a19cfccfa9c87d7c6",
+      "language": "inventarch/language ^3.2.0",
+      "cli": "@inventarch/cli 3.5.0",
+      "file": "releases/0.7.1.json",
+      "source": {
+        "repository": "https://github.com/inventarch/marketplace.git",
+        "commit": "54c6f1b84381e5218571fbf6a9b28c7afa634489"
       }
     }
   ]

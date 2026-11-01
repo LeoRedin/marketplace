@@ -11,7 +11,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 
 // The CLI the kits' releases were packed with; adoption needs exactly this one.
-export const PINNED = '3.4.1';
+export const PINNED = '3.5.0';
 
 export class CliError extends Error {
   constructor(message, code = 'IA-CORE-CLI') { super(message); this.code = code; }

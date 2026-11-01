@@ -13,7 +13,7 @@ function fixture(t) {
   const kitsDir = join(dir, 'kits'), kit = join(kitsDir, 'ia-kb');
   cpSync(KIT, kit, { recursive: true });
   const cli = resolveCli(dir, { cliPath: CLI });
-  assert.equal(cli.version, '3.4.1');
+  assert.equal(cli.version, '3.5.0');
   const repo = join(dir, 'consumer');
   cpSync(join(kit, '.ia'), join(repo, '.ia'), { recursive: true });
   const restored = runIa(repo, ['restore', '--apply', '--yes'], { cli });

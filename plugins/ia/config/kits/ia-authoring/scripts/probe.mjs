@@ -1,4 +1,4 @@
-// authored in inventarch/ia-authoring-kit 0.1.0: the toolchain probe of the ia-authoring-record system; runnable from the kit folder, it imports the core's scratch-capture helper (../../../../scripts/lib/scratch.mjs)
+// authored in inventarch/ia-authoring-kit 0.1.0: the toolchain probe of the ia-authoring-record system; runnable from the kit folder, it imports the kit's own scratch-capture helper (./lib/scratch.mjs)
 // Probe the IA toolchain without touching the real workspace: copy .ia into a scratch directory, drop probe records
 // into one system's folder and/or add whole drafted systems, validate, and report what admission said per file.
 //
@@ -14,7 +14,7 @@
 //                 misspelled clause is admitted and does nothing. With --lint those count as refusals.
 //   --json        one object with a verdict per probe file (how lowered drafts are marked ready or refused)
 //   --cli         the IA CLI's entry, @inventarch/cli/dist/main.js (or set IA_CLI_PATH). Without either, the workspace's
-//                 own node_modules/@inventarch/cli is used, else @inventarch/cli 3.4.1 through npx; never the `ia` on
+//                 own node_modules/@inventarch/cli is used, else @inventarch/cli 3.5.0 through npx; never the `ia` on
 //                 the PATH. One line on stderr says which CLI ran; ia capture (with --lint, or when validate bound a
 //                 check to a runner that is not built in) adds a warning line when the copy has admission errors.
 //
@@ -29,7 +29,7 @@
 // given. This is the kit's only copy of the probe; the probing stage (authoring-probing-the-ia-toolchain) runs it.
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
-import {copyWorkspace, readArtifact, invokeIa, resolveIa} from '../../../../scripts/lib/scratch.mjs';
+import {copyWorkspace, readArtifact, invokeIa, resolveIa} from './lib/scratch.mjs';
 import os from 'node:os';
 import path from 'node:path';
 

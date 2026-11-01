@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.2.0
+
+Re-cut on IA 3.5.0 (decision `public-cli-3-5-0`, which supersedes `public-cli-3-4-1`).
+
+- Pins `@inventarch/cli` 3.5.0 everywhere the core, its tests and its tools pinned 3.4.1 (`scripts/lib/cli.mjs`, the closure modules, the native runner and verifier, the skills and documents). The language base is unchanged: `inventarch/language` 3.2.0, archive 7b36e4b4.
+- The IA door launcher starts `npx -y @inventarch/mcp-door@3.5.0`.
+- The qualified runtime cohort is regenerated as `config/qualified-runtime-3.5.0.json` (24 packages, checked against the registry integrity in the root lock); `config/qualified-executors.json` follows the changed `lib/cli.mjs`.
+- Bundled kits re-cut with the 3.5.0 CLI: `ia-method` 0.7.1, `ia-kb` 0.9.1 and `ia-authoring` 0.1.1 (recorded releases are immutable, so a new patch version each). `ia-method`'s two case evaluators now name the public path `plugins/ia/tests/ceiling.test.mjs`.
+- The upkeep agent ships (decision `public-upkeep-agent`): `agents/upkeep.md` and `scripts/upkeep.mjs` lose their spike framing and private reference, and state what they do and their limits.
+- The lanes drop their `scripts/resolve.mjs` and `kit.mjs list` fallback (task `drop-door-fallback`, done). `@inventarch/mcp-door@3.5.0` was started over stdio and its `tools/list` holds `ia_session`, `ia_catalogue` and `ia_method` beside the read tools, so the lanes call only the door. `resolve.mjs` stays: `ia:init`, `ia:delegate`, the agents' packets and the kits' cases still use it.
+- No kit code reaches outside its folder. `ia-authoring`'s `scripts/field-lint.mjs` and `scripts/probe.mjs` import the kit's own `scripts/lib/scratch.mjs` (declared as an asset; the copy-workspace, CLI-resolution and capture code they used, no longer `../../../../scripts/lib/scratch.mjs`). The core's `scripts/lib/scratch.mjs` stays for the core. `ia-kb`'s evaluators (`kit-kb` and `kit-kb-ingestion`) name the public `plugins/ia/tests/` paths instead of `inventarch/tests/`.
+- The IA door is on under Codex (decision `public-door-codex`): the Codex manifest names `./.codex-mcp.json` (`node ./scripts/door.mjs`, `cwd` `./`) instead of `"mcpServers": {}`. Codex does not expand `${CLAUDE_PLUGIN_ROOT}`, so the Claude `.mcp.json` stays as it was. `tools/validate.py` holds both door files exact and `tools/smoke-codex.mjs` starts the door through Codex and requires `ia_session`, `ia_catalogue` and `ia_method`. Kit handler hooks stay off in Codex.
+
 ## 1.1.0
 
 The lanes go through the IA door, kits run handlers and depend on other kits, only trusted kits run code, and governance arrives as a kit (decisions `public-door-mcp`, `public-kit-handlers`, `public-kit-trust`, `public-kit-dependencies`, `public-delegate`, `public-governance-probe` and `public-core-hooks`). ia-kb 0.9.0, not yet published, is re-recorded from 57ebf44 with the knowledge-repository layout of the operator's ruling dec-132 (one `.ia/src`; one `@workspace` for a personal or single-team KB; for an organisation store one `@workspace` per department plus an organisation `@workspace` that also declares the root; `workspaces/<name>/` only for a workspace released or adopted on its own); ia-method 0.7.0 and ia-authoring 0.1.0 stand.

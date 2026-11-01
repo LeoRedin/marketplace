@@ -24,7 +24,7 @@ import { PHASES } from '../scripts/lib/workspace.mjs';
 const PLUGIN = fileURLToPath(new URL('..', import.meta.url));
 const KIT = join(PLUGIN, 'config', 'kits', 'ia-method');
 const KIT_ID = 'inventarch/ia-method-kit';
-const VERSION = '0.7.0';
+const VERSION = '0.7.1';
 const SYSTEMS = join(KIT, '.ia', 'src', 'systems');
 const README = join(KIT, 'README.md');
 const WORK_SKILL = join(PLUGIN, 'skills', 'work', 'SKILL.md');
@@ -44,7 +44,7 @@ const text = (system, file) => readFileSync(join(SYSTEMS, system, 'records', fil
 const kit = () => findKit(KIT_ID, DEFAULT_KITS_DIR);
 const names = () => new Set(kitRecordNames(KIT).map(r => r.name));
 const testTitles = () => readdirSync(join(PLUGIN, 'tests')).filter(f => f.endsWith('.test.mjs'))
-  .flatMap(f => [...readFileSync(join(PLUGIN, 'tests', f), 'utf8').matchAll(/^test\('([^']+)'/gm)].map(m => `inventarch/tests/${f} :: ${m[1]}`));
+  .flatMap(f => [...readFileSync(join(PLUGIN, 'tests', f), 'utf8').matchAll(/^test\('([^']+)'/gm)].map(m => `plugins/ia/tests/${f} :: ${m[1]}`));
 
 // Records as `@word name` and their indented block.
 function readKit() {
@@ -122,7 +122,7 @@ test('every kit source is an LF IA 1.0 file, the kit text carries no CR and no m
   assert.deepEqual(readdirSync(SYSTEMS), ['ia-method'], 'one system');
 });
 
-test('the descriptor is the public 0.7.0 release of one system, and the distribution ships that system', () => {
+test('the descriptor is the public 0.7.1 release of one system, and the distribution ships that system', () => {
   const descriptor = readDescriptor(KIT);
   assert.equal(descriptor.id, KIT_ID);
   assert.equal(descriptor.version, VERSION);
@@ -148,7 +148,7 @@ test('every case evaluator names a test that exists in the core', () => {
   const evaluators = [...text('ia-method', 'compliance.ia').matchAll(/evaluator "([^"]+)"/g)].map(m => m[1]);
   assert.ok(evaluators.length >= 2);
   for (const evaluator of evaluators) {
-    assert.match(evaluator, /^inventarch\/tests\/ceiling\.test\.mjs :: /);
+    assert.match(evaluator, /^plugins\/ia\/tests\/ceiling\.test\.mjs :: /);
     assert.ok(titles.has(evaluator), `no test named by ${evaluator}`);
   }
 });
@@ -268,11 +268,11 @@ test('the recommended bindings and the whole-procedure delivery name kit records
   for (const name of ['method-operate', 'method-provisional-foundation']) assert.deepEqual([...new Set(declaredCells(name).map(c => c.address.split('#')[1].split('/')[0]))], PHASES);
 });
 
-test('the recorded release is 0.7.0 and lists the source records, with the sources digest and the CLI it was packed with (fails until the release is recorded)', () => {
+test('the recorded release is 0.7.1 and lists the source records, with the sources digest and the CLI it was packed with (fails until the release is recorded)', () => {
   const { kit: id, releases } = readReleases(KIT);
   const latest = releases.at(-1);
   assert.equal(id, KIT_ID);
-  assert.equal(latest.version, VERSION, 'record the 0.7.0 release');
+  assert.equal(latest.version, VERSION, 'record the 0.7.1 release');
   assert.equal(readDescriptor(KIT).version, latest.version);
   assert.deepEqual(releaseRecords(KIT, latest), kitRecordNames(KIT));
   assert.equal(latest.sources, sourcesDigest(KIT), 'the kit sources changed since the recorded release: bump the version in .ia/release.json and record the release');
@@ -382,7 +382,7 @@ test('real CLI: the CLI\'s public vocabulary is the 30 record words and 14 taxon
 test('real CLI: the sources repack to the recorded release (opt-in: IA_CORE_TEST_CLI; fails until the release is recorded)', { skip: SKIP }, async () => {
   const { resolveCli } = await import('../scripts/lib/cli.mjs');
   const cli = resolveCli(KIT, { env: { IA_CLI_PATH: CLI } });
-  assert.equal(kit().latest.version, VERSION, 'record the 0.7.0 release');
+  assert.equal(kit().latest.version, VERSION, 'record the 0.7.1 release');
   const built = packRelease(kit(), kit().latest, cli);
   built.cleanup();
 });

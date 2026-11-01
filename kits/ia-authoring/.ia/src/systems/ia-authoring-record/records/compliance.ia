@@ -10,7 +10,7 @@
     REQ-AUTH-02 "Every @check in the kit other than the coverage check runs COMP-CHECK and carries exactly one non-empty fixed command in check.scope, and checks.json names only declared checks, each with a shell-free argv that spells its check's command, so the checker runner can execute only the commands the kit declares."
     REQ-AUTH-03 "Every file listed in .ia/release.json exists under the kit root, a Markdown file as documentation and any other as an asset, and every file under assets/ and scripts/ is listed."
     REQ-AUTH-04 "The kit's releases.json names the kit id .ia/release.json declares, and the release recorded for the descriptor's version records the (system, word, name) triples read from the sources and their sources digest."
-    REQ-AUTH-05 "The probe and the governance lint run from the kit folder with no file outside it but the core's scripts/lib/scratch.mjs: the governance lint reports a misspelled clause and exits 1, and the probe refuses a usage error with exit 2 before anything is copied."
+    REQ-AUTH-05 "The probe and the governance lint run from the kit folder with no file outside it (they import the kit's own scripts/lib/scratch.mjs): the governance lint reports a misspelled clause and exits 1, and the probe refuses a usage error with exit 2 before anything is copied."
   relationships
     governs @law authoring-run-before-claim
     governs @law authoring-stewards-write-their-folders
@@ -155,14 +155,14 @@
 
 @case authoring-req-05-success
   meaning
-    says "The probe and the governance lint run from the kit folder, importing only the core's scratch-capture helper, and the lint reports a misspelled clause."
+    says "The probe and the governance lint run from the kit folder, importing only the kit's own scratch-capture helper, and the lint reports a misspelled clause."
     answers "Do the carried scripts run from the kit?"
   scenario
     kind success
     given "The kit folder as shipped, a synthetic compiled snapshot and node."
     request "Check every static import of the kit's scripts, then run scripts/field-lint.mjs --artifact on a snapshot holding governance.aplies."
-    expected "Each script that captures imports exactly ../../../../scripts/lib/scratch.mjs, and the lint prints the finding with its suggestion and exits 1."
-    evaluator "plugins/ia/tests/kit-authoring-scripts.test.mjs :: one resolver and one probe: every script that captures imports the core's scripts/lib/scratch.mjs ; plugins/ia/tests/kit-authoring-scripts.test.mjs :: field-lint: the CLI reads --artifact, prints JSON and exits 1 on findings"
+    expected "Each script that captures imports exactly ./lib/scratch.mjs, which the kit carries, and the lint prints the finding with its suggestion and exits 1."
+    evaluator "plugins/ia/tests/kit-authoring-scripts.test.mjs :: one resolver and one probe: every script that captures imports the kit's own scripts/lib/scratch.mjs ; plugins/ia/tests/kit-authoring-scripts.test.mjs :: field-lint: the CLI reads --artifact, prints JSON and exits 1 on findings"
   relationships
     implements @contract ia-authoring-record#REQ-AUTH-05
 

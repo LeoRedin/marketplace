@@ -6,18 +6,19 @@
       "folder": "kits/ia-authoring",
       "releases": "kits/ia-authoring/releases.json",
       "latest": {
-        "version": "0.1.0",
-        "archive": "083f016a55944ed8583bbce46e5439ec74bd7cb8b5df991b9e6123829084dafe",
-        "cli": "@inventarch/cli 3.4.1",
+        "version": "0.1.1",
+        "archive": "7b2a11d1eef91b5a753ef4c948d95b3a48451a72468027e6020bc0e833b18cda",
+        "cli": "@inventarch/cli 3.5.0",
         "language": "inventarch/language ^3.2.0",
-        "file": "kits/ia-authoring/releases/0.1.0.json",
+        "file": "kits/ia-authoring/releases/0.1.1.json",
         "source": {
           "repository": "https://github.com/inventarch/marketplace.git",
-          "commit": "b3f25d39b72abd2350aece52082fba0cd706aad2"
+          "commit": "f2b2bd1b3758b64ae7247d62f3c1d90e483b7a24"
         }
       },
       "versions": [
-        "0.1.0"
+        "0.1.0",
+        "0.1.1"
       ],
       "offers": [
         "delivery.*",
@@ -36,14 +37,14 @@
       "folder": "kits/ia-kb",
       "releases": "kits/ia-kb/releases.json",
       "latest": {
-        "version": "0.9.0",
-        "archive": "cb8ea3db9f6d7a0b8172615074a415a479f7d18be952fd8ca8611ab20ed13aa6",
-        "cli": "@inventarch/cli 3.4.1",
+        "version": "0.9.1",
+        "archive": "8a2e043bf84a3dee5fe832f7f63febca519bcf0f3f57fec8cd5209c8fd018ecb",
+        "cli": "@inventarch/cli 3.5.0",
         "language": "inventarch/language ^3.2.0",
-        "file": "kits/ia-kb/releases/0.9.0.json",
+        "file": "kits/ia-kb/releases/0.9.1.json",
         "source": {
           "repository": "https://github.com/inventarch/marketplace.git",
-          "commit": "57ebf446990b9aa5991702291ca97a59a2d90e8c"
+          "commit": "6c83794804c7fbb0ddff87a975ed3c9d582eef81"
         }
       },
       "versions": [
@@ -55,7 +56,8 @@
         "0.6.0",
         "0.7.0",
         "0.8.0",
-        "0.9.0"
+        "0.9.0",
+        "0.9.1"
       ],
       "offers": [
         "knowledge.*",
@@ -74,14 +76,14 @@
       "folder": "kits/ia-method",
       "releases": "kits/ia-method/releases.json",
       "latest": {
-        "version": "0.7.0",
-        "archive": "54dcfe7801c322502bed7039471b8500c46ffd4efce53be3f6bdac09f45c9109",
-        "cli": "@inventarch/cli 3.4.1",
+        "version": "0.7.1",
+        "archive": "caa4dfc33243c5f91b66247bdf44e4a9ffd52e6d934f7d6d0a03fe4a65807440",
+        "cli": "@inventarch/cli 3.5.0",
         "language": "inventarch/language ^3.2.0",
-        "file": "kits/ia-method/releases/0.7.0.json",
+        "file": "kits/ia-method/releases/0.7.1.json",
         "source": {
           "repository": "https://github.com/inventarch/marketplace.git",
-          "commit": "b3f25d39b72abd2350aece52082fba0cd706aad2"
+          "commit": "54c6f1b84381e5218571fbf6a9b28c7afa634489"
         }
       },
       "versions": [
@@ -91,7 +93,8 @@
         "0.4.0",
         "0.5.0",
         "0.6.0",
-        "0.7.0"
+        "0.7.0",
+        "0.7.1"
       ],
       "offers": [
         "knowledge.vocabulary",
