@@ -13,7 +13,7 @@
     },
     {
       "path": "plugins/ia/.claude-plugin/plugin.json",
-      "sha256": "5524fa93e1c043efaf0b3222715f0ace3ab1782c124918231326fc9402ae22f7"
+      "sha256": "f60f8b83ffff973087e3f039070c4546b1cf267679c31839a06a99703bb8b475"
     },
     {
       "path": "plugins/ia/.codex-mcp.json",
@@ -21,7 +21,7 @@
     },
     {
       "path": "plugins/ia/.codex-plugin/plugin.json",
-      "sha256": "6609687dd4d494c40eba4f013cc7572cf037e31fa18d82a9a919ae650834e770"
+      "sha256": "b58eb6e35e4cd6521a43b09e154b103c2303f1617c11e4bb752f938f07e83274"
     },
     {
       "path": "plugins/ia/.mcp.json",
@@ -29,7 +29,7 @@
     },
     {
       "path": "plugins/ia/CHANGELOG.md",
-      "sha256": "3bcdbd100b3c27061ae8016dd5e8c3d243fc0c7e2dcddbf2ec337dac51fb3f1d"
+      "sha256": "9bcb688b0e98af442aa33f681e9b86a193d258db7addc95b15c8a8c8a1023f9f"
     },
     {
       "path": "plugins/ia/CODEX.md",
