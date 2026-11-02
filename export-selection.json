@@ -28,6 +28,18 @@
       "sha256": "973ef0879b994a4d28d87e979743a167ed5abb44fcfe36465cc81a50a40b91ec"
     },
     {
+      "path": "plugins/ia/CHANGELOG.md",
+      "sha256": "3bcdbd100b3c27061ae8016dd5e8c3d243fc0c7e2dcddbf2ec337dac51fb3f1d"
+    },
+    {
+      "path": "plugins/ia/CODEX.md",
+      "sha256": "c19c5a1317832fc8c804d5d08a4375e41e27a5b6ff8603290e83d93bd504fab0"
+    },
+    {
+      "path": "plugins/ia/README.md",
+      "sha256": "7eb508767eee22a7fccac1bb5452cb5ca951a1b89b8172a489ebf6073ce42964"
+    },
+    {
       "path": "plugins/ia/agents/checker.md",
       "sha256": "25dabb17be8d48cdc1f2314ad4351f3d0877a28c4ec3b6e11f562d4123428e20"
     },
@@ -44,12 +56,8 @@
       "sha256": "b93da617b17f260745f96dea99f626e1b72efe7811540976dfdd02923aabc383"
     },
     {
-      "path": "plugins/ia/CHANGELOG.md",
-      "sha256": "3bcdbd100b3c27061ae8016dd5e8c3d243fc0c7e2dcddbf2ec337dac51fb3f1d"
-    },
-    {
-      "path": "plugins/ia/CODEX.md",
-      "sha256": "c19c5a1317832fc8c804d5d08a4375e41e27a5b6ff8603290e83d93bd504fab0"
+      "path": "plugins/ia/config/kits/README.md",
+      "sha256": "f4cd44189eccdcc78e1990fc584d1ea1870b7f9f25c2e1ba586265c081721882"
     },
     {
       "path": "plugins/ia/config/kits/ia-authoring/.ia/distributions.lock.json",
@@ -160,6 +168,10 @@
       "sha256": "7ebd9f221bc13e29092e08c68adebf263147a17b2cef0cf450beaac5515286d2"
     },
     {
+      "path": "plugins/ia/config/kits/ia-authoring/README.md",
+      "sha256": "cf5acdd0b538e49a8012a8464901bc42dfb4c90f82ee5f6bec2d919a6dd731c2"
+    },
+    {
       "path": "plugins/ia/config/kits/ia-authoring/assets/probe-examples/admitted.ia",
       "sha256": "ceefae05522c67eab4255b9f9a1025b033975cd0a3b5ffa5ca99ecbeb3be8416"
     },
@@ -182,10 +194,6 @@
     {
       "path": "plugins/ia/config/kits/ia-authoring/delivery.json",
       "sha256": "d8e3273a0a1ebfa23d39e9ad9f11aa91ba96675ef2997c498355d9ed21c6d1bc"
-    },
-    {
-      "path": "plugins/ia/config/kits/ia-authoring/README.md",
-      "sha256": "cf5acdd0b538e49a8012a8464901bc42dfb4c90f82ee5f6bec2d919a6dd731c2"
     },
     {
       "path": "plugins/ia/config/kits/ia-authoring/releases/0.1.0.json",
@@ -260,6 +268,14 @@
       "sha256": "48bc83b9d4e28c97dd22b5248a282c45d9a0f927a727836b9881bc060f81dffb"
     },
     {
+      "path": "plugins/ia/config/kits/ia-kb/README.md",
+      "sha256": "00a7d9432fe43b7d2649f01b69e6633de7feefbbd02aaaaa78a5b5b55a730b41"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-kb/assets/examples/split-body/README.md",
+      "sha256": "bd80a23b654c1ae0ef26de737524aa15414a06cb98463a3e0ed7470587d39a11"
+    },
+    {
       "path": "plugins/ia/config/kits/ia-kb/assets/examples/split-body/anchor.ia",
       "sha256": "7e8b4cb7c1932769c71e32d773a0638cb5575e496af6ff027a957b9dadf59b67"
     },
@@ -270,10 +286,6 @@
     {
       "path": "plugins/ia/config/kits/ia-kb/assets/examples/split-body/model-api.md",
       "sha256": "fab3edf9e31907a4d481a8a6119cae0dcf670be00936e7295eaa37c549ad2103"
-    },
-    {
-      "path": "plugins/ia/config/kits/ia-kb/assets/examples/split-body/README.md",
-      "sha256": "bd80a23b654c1ae0ef26de737524aa15414a06cb98463a3e0ed7470587d39a11"
     },
     {
       "path": "plugins/ia/config/kits/ia-kb/assets/kb-document-binding.md",
@@ -298,10 +310,6 @@
     {
       "path": "plugins/ia/config/kits/ia-kb/delivery.json",
       "sha256": "cadba286f381771a0aeb368ed2be203a87f5f91d0de234c34b5fef37799b3376"
-    },
-    {
-      "path": "plugins/ia/config/kits/ia-kb/README.md",
-      "sha256": "00a7d9432fe43b7d2649f01b69e6633de7feefbbd02aaaaa78a5b5b55a730b41"
     },
     {
       "path": "plugins/ia/config/kits/ia-kb/releases/0.1.0.json",
@@ -452,16 +460,16 @@
       "sha256": "d51d307fe0789c49c2743b56a5ab768b1d6f7521a20344bbac1f13846cb153ef"
     },
     {
+      "path": "plugins/ia/config/kits/ia-method/README.md",
+      "sha256": "a7072b72fb4fdbfd93d087127044bcd5ce9d730efb28ffc13b8a1fe8d7bb5724"
+    },
+    {
       "path": "plugins/ia/config/kits/ia-method/bindings.json",
       "sha256": "050648ebc93f92c22631ced802b1682d79bf4d9fa0923bac77df998f0f556195"
     },
     {
       "path": "plugins/ia/config/kits/ia-method/delivery.json",
       "sha256": "67c099f7f08198fe2e6fbc805e7b50bce80cb88a1b58db099a1e74cc046f95a4"
-    },
-    {
-      "path": "plugins/ia/config/kits/ia-method/README.md",
-      "sha256": "a7072b72fb4fdbfd93d087127044bcd5ce9d730efb28ffc13b8a1fe8d7bb5724"
     },
     {
       "path": "plugins/ia/config/kits/ia-method/releases/0.1.0.json",
@@ -500,10 +508,6 @@
       "sha256": "33420ddb310b7c68725aaed10c79643c76146cc1a65408c316901b830e50e8f5"
     },
     {
-      "path": "plugins/ia/config/kits/README.md",
-      "sha256": "f4cd44189eccdcc78e1990fc584d1ea1870b7f9f25c2e1ba586265c081721882"
-    },
-    {
       "path": "plugins/ia/config/method-qualification-ia-kb.json",
       "sha256": "26c34723ae53b366b4f0ac9a8b0967fdebecbc6c3a6acc8ce721ce79af85fb92"
     },
@@ -526,10 +530,6 @@
     {
       "path": "plugins/ia/hooks/hooks.json",
       "sha256": "6c439631d59d902220c60f99ef2c22f8ad5e013800ae78cbc48b1859d7a2cd12"
-    },
-    {
-      "path": "plugins/ia/README.md",
-      "sha256": "7eb508767eee22a7fccac1bb5452cb5ca951a1b89b8172a489ebf6073ce42964"
     },
     {
       "path": "plugins/ia/references/design-service.md",

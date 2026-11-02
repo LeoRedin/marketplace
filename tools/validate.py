@@ -287,7 +287,8 @@ def plugin_files(root, name):
     tests/ as well; only the candidate ZIP leaves tests out."""
     base = root / 'plugins' / name
     found = []
-    for path in sorted(base.rglob('*')):
+    # Sort by case-sensitive parts, as POSIX paths compare: Windows paths compare without case, which reorders the selection.
+    for path in sorted(base.rglob('*'), key=lambda p: p.relative_to(root).as_posix().split('/')):
         rel = path.relative_to(root).as_posix()
         parts = rel.split('/')
         require(not path.is_symlink(), 'symlink in plugin: ' + rel)
