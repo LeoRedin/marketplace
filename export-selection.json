@@ -585,7 +585,7 @@
     },
     {
       "path": "plugins/ia/scripts/lib/account.mjs",
-      "sha256": "ea0e3ec688b69b721f581803e0cf100d6cefe0cfab678e5fcb66cfc54f14465e"
+      "sha256": "f79f7269fbe8d6c428ff326bcd912a10fb86e9d5b1a010d4c7f18b4ce6750444"
     },
     {
       "path": "plugins/ia/scripts/lib/binding.mjs",

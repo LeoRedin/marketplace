@@ -7,17 +7,15 @@
 // repeats it), so it appears once per session. It is suppressed by
 // "accountOffer": false in <IA home>/config.json, by IA_NO_ACCOUNT_OFFER=1, and
 // by a non-empty CI. An account counts as present when a design binding is set
-// in the environment (INVENTARCH_DESIGN_BINDING), the host already lists an
+// in the environment (INVENTARCH_DESIGN_BINDING) or the host already lists an
 // inventarch MCP server that the user added by hand in its documented local
 // configuration (Claude Code's <config dir>/.claude.json, user and per-project
-// servers, or the repository's .mcp.json, or Codex's <CODEX_HOME>/config.toml),
-// or Claude Code's <config dir>/.credentials.json names a stored OAuth sign-in
-// for an inventarch server. Only the NAMES under "mcpOAuth" are read, never a
-// token. The core ships the connector itself (.mcp.json, decision
-// public-account-connector), so it never appears in those files; the sign-in
-// is detected best effort: where the host keeps it in an OS keychain (macOS) or
-// in a form this file does not recognise, the pointer still shows once at
-// startup, never blocks, and says to ignore it when already signed in.
+// servers, or the repository's .mcp.json, or Codex's <CODEX_HOME>/config.toml).
+// The core ships the connector itself (.mcp.json, decision
+// public-account-connector), so it never appears in those files, and a sign-in
+// to it is not looked for: the host keeps it with its credentials, which this
+// file never opens. After a sign-in the pointer still shows once at startup,
+// never blocks, and says to ignore it when already signed in.
 //
 // The governance probe: a repository with .ia/governance.json is governed;
 // when no installed kit declares governance handlers (a tool `pre` handler in
@@ -36,7 +34,6 @@ const readJson = path => { try { return JSON.parse(readFileSync(path, 'utf8')); 
 const readText = path => { try { return readFileSync(path, 'utf8'); } catch { return ''; } };
 
 const claudeJson = (env, home) => (env.CLAUDE_CONFIG_DIR ? join(env.CLAUDE_CONFIG_DIR, '.claude.json') : join(home, '.claude.json'));
-const claudeCredentials = (env, home) => (env.CLAUDE_CONFIG_DIR ? join(env.CLAUDE_CONFIG_DIR, '.credentials.json') : join(home, '.claude', '.credentials.json'));
 const codexHome = (env, home) => env.CODEX_HOME || join(home, '.codex');
 
 // An MCP server entry that is InventArch's: named inventarch, or pointing at the InventArch MCP URL.
@@ -54,9 +51,6 @@ export function offerDisabled(env = process.env) {
 // Where an account was found, or null.
 export function accountFound({ env = process.env, home = homedir(), cwd = process.cwd(), repo = null } = {}) {
   if (env.INVENTARCH_DESIGN_BINDING) return 'INVENTARCH_DESIGN_BINDING';
-  // A stored sign-in: a key of mcpOAuth is "<server name>|<hash>", for a plugin's server "plugin:<plugin>:<name>|<hash>".
-  const oauth = readJson(claudeCredentials(env, home))?.mcpOAuth;
-  if (oauth && typeof oauth === 'object' && Object.keys(oauth).some(key => /(^|:)inventarch$/i.test(key.split('|')[0]))) return 'claude mcp sign-in';
   const user = readJson(claudeJson(env, home));
   if (listsInventarch(user?.mcpServers)) return 'claude user mcpServers';
   for (const [folder, project] of Object.entries(user?.projects ?? {})) {

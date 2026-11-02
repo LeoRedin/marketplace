@@ -71,23 +71,13 @@ test('an account is found from a design binding or an inventarch MCP server in t
   assert.equal(accountOffer({ env, source: 'startup', cwd: repo, repo }), null, 'no offer once an account is found');
 });
 
-test('a stored Claude Code sign-in for the inventarch connector counts as an account, reading only key names', t => {
+test('the host credentials file is never read: a stored sign-in there is not an account', t => {
   const dir = sandbox(t, 'ia-core-account-');
   const env = isolated(dir), repo = join(dir, 'repo');
   mkdirSync(repo);
-  const credentials = join(env.CLAUDE_CONFIG_DIR, '.credentials.json');
-  const write = keys => writeFileSync(credentials, JSON.stringify({ mcpOAuth: Object.fromEntries(keys.map(k => [k, { accessToken: 'secret-token' }])) }));
-  write(['other|abc123', 'plugin:ia:other|def']);
-  assert.equal(accountFound({ env, cwd: repo, repo }), null, 'another server is not an account');
-  write(['plugin:ia:inventarch|abc123']);
-  assert.equal(accountFound({ env, cwd: repo, repo }), 'claude mcp sign-in');
-  assert.equal(accountOffer({ env, source: 'startup', cwd: repo, repo }), null, 'no pointer once signed in');
-  write(['inventarch|abc123']);
-  assert.equal(accountFound({ env, cwd: repo, repo }), 'claude mcp sign-in');
-  writeFileSync(credentials, '{ not json');
-  assert.equal(accountFound({ env, cwd: repo, repo }), null, 'an unreadable credentials file never throws and finds nothing');
-  writeFileSync(credentials, JSON.stringify({ mcpOAuth: 'x' }));
+  writeFileSync(join(env.CLAUDE_CONFIG_DIR, '.credentials.json'), JSON.stringify({ mcpOAuth: { 'plugin:ia:inventarch|abc123': { accessToken: 'secret-token' } } }));
   assert.equal(accountFound({ env, cwd: repo, repo }), null);
+  assert.match(accountOffer({ env, source: 'startup', cwd: repo, repo }), /if you already have, ignore this/);
 });
 
 test('the hook shows the offer once at startup outside a workspace too, never on resume, and writes nothing', t => {
