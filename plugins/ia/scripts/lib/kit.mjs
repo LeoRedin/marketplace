@@ -605,14 +605,50 @@ export function readLock(root) {
   return JSON.parse(readFileSync(lockPath, 'utf8'));
 }
 
-// The installed kit, if any: the lock entry for the kit's id.
+// The kit rows of the lock: its `packages` rows, then the kit rows of every package
+// carrier in `entries` (kind: 'package'), which the engine installs as ordinary
+// releases. Each is { via: 'package' | 'entry', row }.
+function lockedKitRows(root) {
+  const lock = readLock(root);
+  const rows = (lock?.packages ?? []).map(row => ({ via: 'package', row }));
+  for (const entry of Array.isArray(lock?.entries) ? lock.entries : []) {
+    if (entry?.kind !== 'package' || !Array.isArray(entry.kits)) continue;
+    for (const row of entry.kits) if (row && typeof row.id === 'string') rows.push({ via: 'entry', row });
+  }
+  return rows;
+}
+
+// The installed kit, if any: the lock's row for the kit's id, from `packages` or from
+// a package carrier's `entries`.
 export function installedKit(root, kitId) {
-  return (readLock(root)?.packages ?? []).find(p => p.id === kitId);
+  return lockedKitRows(root).find(({ row }) => row.id === kitId)?.row;
 }
 
 // Every installed package other than the language base: the kits a workspace carries.
 export function installedKits(root) {
-  return (readLock(root)?.packages ?? []).filter(p => p.id !== 'inventarch/language').map(p => ({ id: p.id, version: p.version, archive: p.archive }));
+  return lockedKitRows(root).filter(({ row }) => row.id !== 'inventarch/language').map(({ row }) => ({ id: row.id, version: row.version, archive: row.archive }));
+}
+
+// The lock's row for the kit and where it came from, or null when no row names it.
+export function kitInstallation(root, kitId) {
+  const found = lockedKitRows(root).find(({ row }) => row.id === kitId);
+  return found ? { via: found.via, version: found.row.version, archive: found.row.archive ?? null } : null;
+}
+
+// Presence: a repository-bound method runs a kit only while the repository's own lock
+// installs it. Any row naming the kit counts, at any version and archive: a task pin
+// runs its own retained bytes, which may be older than the version the lock now
+// installs. A kit no row names refuses before anything is retained or run, and
+// nothing answers for it from another copy.
+export function requireKitInstalled(root, kit) {
+  if (kitInstallation(root, kit.id) === null) throw new KitError(`kit ${kit.id} is bound by this repository but its lock does not install it; run ia install ${kit.id} (or kit.mjs add ${kit.id}), then resolve again`, 'IA-CORE-KIT-NOT-INSTALLED');
+}
+
+// Identity: true only when the lock's row for the kit carries exactly this version
+// and archive. Never throws on a mismatch.
+export function kitInstallMatches(root, kit) {
+  const row = kitInstallation(root, kit.id);
+  return row !== null && row.version === kit.version && row.archive === (kit.archive ?? null);
 }
 
 // Installs a kit's latest recorded release into the IA workspace at root.
