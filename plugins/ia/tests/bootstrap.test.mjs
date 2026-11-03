@@ -38,7 +38,7 @@ test('inside a workspace it prints one SessionStart payload of at most 2000 char
   assert.equal(payload.hookSpecificOutput.hookEventName, 'SessionStart');
   const text = payload.hookSpecificOutput.additionalContext;
   assert.ok(text.length <= LIMIT && LIMIT === 2500, `${text.length} chars`);
-  assert.match(text, /^This repository is an InventArch workspace\. Before any other skill/, 'the routing instruction comes first');
+  assert.match(text, /^This repository is an InventArch workspace\. When a task needs a method, route it through the lanes of the ia plugin/, 'the routing instruction comes first, and only when a method is needed');
   assert.match(text, /`ia:delivery`.*`ia:work`.*`ia:knowledge`/s);
   assert.match(text, /workspace-system\/definition\/workspace\/fake/);
   assert.match(text, /revision rev-fake/);
@@ -63,7 +63,7 @@ test('bound keys are grouped by kit, and however many there are the resolve inst
   assert.ok(text.length <= LIMIT, `${text.length} chars`);
   assert.match(text, /inventarch\/alpha-kit: delivery\.\{review, change\}, work\.\*; inventarch\/beta-kit: work\.\*, delivery\.\{activity-number-0, /, 'a key with two candidates is listed under both kits');
   assert.match(text, / \.\.\. \(truncated; bind\.mjs show lists every key\); precedence inventarch\/alpha-kit > inventarch\/beta-kit\./);
-  assert.match(text, /\nResolve before acting: node "<plugin>\/scripts\/resolve\.mjs" --entry .*\(ia:init has the protocol\)\.$/, 'the resolve instruction is whole and last');
+  assert.match(text, /\nWhen a method is needed, resolve before acting: node "<plugin>\/scripts\/resolve\.mjs" --entry .*\(ia:init has the protocol\)\.$/, 'the resolve instruction is whole and last');
   assert.equal(boundKeys({ bindings: { 'work.task': [one, { kit: alpha.id, capability: 'other' }] } }), 'inventarch/alpha-kit: work.task', 'two candidates of one kit list the key once');
 });
 
@@ -105,4 +105,97 @@ test('after a compaction it re-injects the current task pin, the one written las
   assert.doesNotMatch(text, /old-method|not-this-one/);
   const startup = run('bootstrap.mjs', [], env, { input: JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup', cwd: repo }) });
   assert.doesNotMatch(startup.json.hookSpecificOutput.additionalContext, /Current task pin/, 'only a compaction re-injects the pin');
+});
+
+// The conditional bootstrap: contribution needs no binding; only an operation that needs a method refuses.
+const MARKER_LINE = 'ia-bootstrap v1 public-contribution=available needs-method=ia:work,ia:knowledge,ia:delivery needs-authority=declared-operations';
+const MARKER = /^ia-bootstrap v1( [a-z-]+=\S+)+$/m;
+const AVAILABLE = /public[- ]contribution[^\n]{0,80}available|available[^\n]{0,80}public[- ]contribution/i;
+const NEEDS_BINDING = /(need|require)s?[^\n]{0,60}(bound method|binding|private authority)/i;
+const SENTENCE = 'Operations that need a bound method or private authority refuse alone, naming it; everything else continues.';
+const contextOf = (out) => JSON.parse(out.stdout).hookSpecificOutput.additionalContext;
+const withoutMarker = (text) => text.split('\n').filter(line => !MARKER.test(line)).join('\n');
+
+// Asserts what every output of the bootstrap carries, whatever the repository holds.
+function assertConditional(text) {
+  assert.ok(text.length <= LIMIT, `${text.length} chars`);
+  assert.equal(text.split('\n').filter(line => MARKER.test(line)).join(''), MARKER_LINE, 'the marker line, whole');
+  assert.match(text, AVAILABLE);
+  assert.ok(text.split('\n').includes(SENTENCE), 'the required sentence, on one line');
+  assert.match(withoutMarker(text), NEEDS_BINDING, 'the sentence states what needs a binding apart from the marker');
+  assert.doesNotMatch(text, /Before any other skill, plan or action/i);
+  assert.doesNotMatch(text, /For any task, use one lane/);
+  assert.match(text, /When a task needs a method, route it through the lanes of the ia plugin/);
+  assert.match(text, /Reading, building, testing and editing need none of this\./);
+  assert.match(text, /When a method is needed, resolve before acting:/);
+}
+
+test('F1 no bindings: the marker is there, routing is conditional, and only a method-dependent operation refuses', t => {
+  const dir = sandbox(t, 'ia-core-boot-');
+  const repo = makeRepo(join(dir, 'repo'));
+  const env = envFor({ cli: fakeCli(dir), kitsDir: join(dir, 'kits'), temp: dir, extra: { CLAUDE_PLUGIN_ROOT: '<plugin>' } });
+  const out = hook(repo, env);
+  assert.equal(out.status, 0, out.stderr);
+  const text = contextOf(out);
+  assertConditional(text);
+  assert.match(text, /no method is bound; only an operation that needs a method refuses with IA-CORE-NO-METHOD until kit\.mjs bind <kit> --apply writes the keys a kit recommends[^\n]*reading, building, testing and editing continue/);
+});
+
+test('F2 a bound workspace still shows the lanes, under "When a task needs a method"', t => {
+  const dir = sandbox(t, 'ia-core-boot-');
+  const kitsDir = join(dir, 'kits');
+  const alpha = makeKit(kitsDir, { folder: 'alpha', id: 'inventarch/alpha-kit' });
+  const repo = makeRepo(join(dir, 'repo'), { bindings: { format: 1, bindings: { 'delivery.review': { kit: alpha.id, capability: alpha.capability } }, precedence: [alpha.id], defaults: {} } });
+  const env = envFor({ cli: fakeCli(dir), kitsDir, temp: dir, extra: { CLAUDE_PLUGIN_ROOT: '<plugin>' } });
+  const text = contextOf(hook(repo, env));
+  assertConditional(text);
+  assert.match(text, /When a task needs a method, route it through the lanes of the ia plugin:.*`ia:delivery`.*`ia:work`.*`ia:knowledge`/s);
+  assert.match(text, /Bindings \(\.ia\/bindings\.json\): inventarch\/alpha-kit: delivery\.review/);
+});
+
+test('F3 a locked kit this plugin does not carry is named alone, and the marker still stands', t => {
+  const dir = sandbox(t, 'ia-core-boot-');
+  const kitsDir = join(dir, 'kits');
+  const carried = makeKit(kitsDir, { folder: 'alpha', id: 'inventarch/alpha-kit' });
+  const lock = { engine: '0.1.0', formatVersion: 1, packages: [{ id: 'inventarch/language', version: '1.2.0', archive: 'a'.repeat(64) }, { id: carried.id, version: '0.1.0', archive: carried.archive }, { id: 'acme/uncarried-kit', version: '2.0.0', archive: 'c'.repeat(64) }] };
+  const repo = makeRepo(join(dir, 'repo'), { lock });
+  const env = envFor({ cli: fakeCli(dir), kitsDir, temp: dir, extra: { CLAUDE_PLUGIN_ROOT: '<plugin>', IA_CORE_NO_HOME_KITS: '1' } });
+  const text = contextOf(hook(repo, env));
+  assertConditional(text);
+  assert.match(text, /Kit bytes this plugin does not carry: acme\/uncarried-kit; only an operation that needs one of them refuses\./);
+  assert.doesNotMatch(text, /does not carry: [^\n]*alpha-kit/);
+});
+
+test('F4 no CLI and no door: exit 0, the marker, and a payload within the limit', t => {
+  const dir = sandbox(t, 'ia-core-boot-');
+  const repo = makeRepo(join(dir, 'repo'));
+  const env = envFor({ cli: join(dir, 'absent', 'main.js'), kitsDir: join(dir, 'kits'), temp: dir, extra: { IA_CORE_NO_NPX: '1', CLAUDE_PLUGIN_ROOT: '<plugin>' } });
+  const out = hook(repo, env);
+  assert.equal(out.status, 0, out.stderr);
+  const text = contextOf(out);
+  assertConditional(text);
+  assert.match(text, /IA CLI unavailable: IA-CORE-CLI-MISSING/);
+});
+
+test('40 bound keys still fit, and the marker and the sentence survive truncation', t => {
+  const dir = sandbox(t, 'ia-core-boot-');
+  const kitsDir = join(dir, 'kits');
+  const beta = makeKit(kitsDir, { folder: 'beta', id: 'inventarch/beta-kit' });
+  for (const count of [40, 400]) {
+    const many = Object.fromEntries(Array.from({ length: count }, (_, i) => [`delivery.activity-number-${i}`, { kit: beta.id, capability: beta.capability }]));
+    const repo = makeRepo(join(dir, `repo-${count}`), { bindings: { format: 1, bindings: many, precedence: [beta.id] } });
+    const env = envFor({ cli: fakeCli(dir), kitsDir, temp: dir, extra: { CLAUDE_PLUGIN_ROOT: '<plugin>' } });
+    const text = contextOf(hook(repo, env));
+    assertConditional(text);
+    assert.match(text, /delivery\.\{activity-number-0, /);
+  }
+});
+
+test('the marker is the one spelling the committed bootstrap block carries, and parses to the same keys', async () => {
+  const { BOOTSTRAP_MARKER, BOOTSTRAP_MARKER_PATTERN } = await import('../scripts/bootstrap.mjs');
+  assert.equal(BOOTSTRAP_MARKER, MARKER_LINE);
+  assert.equal(BOOTSTRAP_MARKER_PATTERN.source, MARKER.source);
+  assert.equal(BOOTSTRAP_MARKER_PATTERN.source, '^ia-bootstrap v1( [a-z-]+=\\S+)+$');
+  const keys = Object.fromEntries(BOOTSTRAP_MARKER.split(' ').slice(2).map(pair => pair.split('=')));
+  assert.deepEqual(keys, { 'public-contribution': 'available', 'needs-method': 'ia:work,ia:knowledge,ia:delivery', 'needs-authority': 'declared-operations' });
 });

@@ -10,7 +10,8 @@
 // most 2,500 characters (LIMIT): the workspace identity and revision, the kits
 // the repository installed, whether .ia/bindings.json exists and which keys it
 // binds, grouped by kit and shortened to fit, and the one instruction to
-// resolve before acting, which always fits. Any error exits 0 silently; every
+// resolve when a method is needed, with the marker and the sentence that say
+// contributing needs no binding, all of which always fit. Any error exits 0 silently; every
 // CLI call is bounded so the whole hook ends inside 10 s.
 // Reads the hook's stdin JSON ({ cwd, source, ... }); prints
 // { systemMessage?, hookSpecificOutput: { hookEventName, additionalContext } }.
@@ -19,13 +20,19 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveCli, runIa } from './lib/cli.mjs';
 import { readBindings } from './lib/binding.mjs';
-import { installedKits } from './lib/kit.mjs';
+import { homeKits, homeKitsDir, installedKits, kitsDir, listKits } from './lib/kit.mjs';
 import { accountOffer, governanceNotice } from './lib/account.mjs';
 import { findWorkspace } from './lib/workspace.mjs';
 import { iaHome } from './lib/home.mjs';
 import { readPin } from './lib/pin.mjs';
 
 export const LIMIT = 2500;
+// One line, in the committed block too, that says in a form a program can read that contributing needs no binding and which
+// operations do. Parse it with BOOTSTRAP_MARKER_PATTERN; a key a reader does not know is ignored.
+export const BOOTSTRAP_MARKER = 'ia-bootstrap v1 public-contribution=available needs-method=ia:work,ia:knowledge,ia:delivery needs-authority=declared-operations';
+export const BOOTSTRAP_MARKER_PATTERN = /^ia-bootstrap v1( [a-z-]+=\S+)+$/m;
+// The one prose sentence, on a single line, that names what needs a bound method or private authority.
+export const BOOTSTRAP_SENTENCE = 'Operations that need a bound method or private authority refuse alone, naming it; everything else continues.';
 const CLI_BUDGET_MS = 7000;
 
 function input() {
@@ -65,10 +72,15 @@ function fit(text, max, marker) {
   return text.slice(0, cut > 0 ? cut : room) + marker;
 }
 
+// The ids of the kits this plugin can resolve (its own and the IA home's), or null when that cannot be read.
+function carriedKitIds(env) {
+  try { return new Set([...listKits(kitsDir(env)), ...homeKits(homeKitsDir(env))].map(k => k.id)); } catch { return null; }
+}
+
 export function context(root, env = process.env) {
   const lines = [];
-  // The routing instruction comes first: in an adopted workspace, activation starts here, not in the skill listing.
-  lines.push('This repository is an InventArch workspace. Before any other skill, plan or action, route requests through the lanes of the ia plugin: reviewing, changing, diagnosing, designing or delivering what this workspace delivers (authoring IA records, host plugins or catalogues, probing what IA admits) -> `ia:delivery`; starting, resuming, coordinating, planning or closing a task, recording a decision or asking what is next -> `ia:work`; finding, explaining or reconciling documents, records, decisions or what this workspace holds, or whether its records can be trusted -> `ia:knowledge`. Each resolves the method this repository binds and delivers it as a packet; each lane entry runs orient, plan, act and learn, and --phase selects one; other skills apply only when that packet asks for them. Unrelated requests need no IA skill.');
+  // The routing instruction comes first, as a condition: in an adopted workspace, activation starts here, not in the skill listing.
+  lines.push('This repository is an InventArch workspace. When a task needs a method, route it through the lanes of the ia plugin: reviewing, changing, diagnosing, designing or delivering what this workspace delivers (authoring IA records, host plugins or catalogues, probing what IA admits) -> `ia:delivery`; starting, resuming, coordinating, planning or closing a task, recording a decision or asking what is next -> `ia:work`; finding, explaining or reconciling documents, records, decisions or what this workspace holds, or whether its records can be trusted -> `ia:knowledge`. Each resolves the method this repository binds and delivers it as a packet; each lane entry runs orient, plan, act and learn, and --phase selects one; other skills apply only when that packet asks for them. Unrelated requests need no IA skill. Reading, building, testing and editing need none of this.');
   let identity = null, revision = null, cliNote = 'IA CLI not asked';
   try {
     // Only an explicit or installed CLI: the npx fallback could fetch, which a hook must not wait on.
@@ -83,7 +95,10 @@ export function context(root, env = process.env) {
   const declared = declaredWorkspace(root);
   lines.push(`InventArch workspace at ${root}: ${identity ?? (declared ? `@workspace ${declared} (identity unread)` : 'identity unread')}${revision ? `, revision ${revision.slice(0, 12)}` : ''}; ${cliNote}.`);
   const kits = installedKits(root);
+  const carried = carriedKitIds(env);
   lines.push(kits.length ? `Kits installed: ${kits.map(k => `${k.id}@${k.version}`).join(', ')}.` : 'Kits installed: none (.ia/distributions.lock.json pins no kit; node "<plugin>/scripts/kit.mjs" list shows what this plugin carries).');
+  const uncarried = carried ? kits.filter(k => !carried.has(k.id)).map(k => k.id) : [];
+  if (uncarried.length) lines.push(`Kit bytes this plugin does not carry: ${uncarried.join(', ')}; only an operation that needs one of them refuses.`);
   let bindings = null;
   try { bindings = readBindings(root); } catch (error) { lines.push(`.ia/bindings.json is malformed: ${error.message}`); }
   let bound = null;
@@ -91,18 +106,19 @@ export function context(root, env = process.env) {
     const keys = Object.keys(bindings.bindings).length ? boundKeys(bindings) : 'no keys';
     const defaults = Object.keys(bindings.defaults);
     bound = { head: 'Bindings (.ia/bindings.json): ', keys, rest: `${defaults.length ? `; defaults for ${defaults.join(', ')}` : ''}${bindings.precedence.length ? `; precedence ${bindings.precedence.join(' > ')}` : ''}.` };
-  } else if (!existsSync(join(root, '.ia', 'bindings.json'))) lines.push('Bindings: no .ia/bindings.json, so no method is bound; a resolve refuses with IA-CORE-NO-METHOD until kit.mjs bind <kit> --apply writes the keys a kit recommends (kit.mjs list shows the kits).');
+  } else if (!existsSync(join(root, '.ia', 'bindings.json'))) lines.push('Bindings: no .ia/bindings.json, so no method is bound; only an operation that needs a method refuses with IA-CORE-NO-METHOD until kit.mjs bind <kit> --apply writes the keys a kit recommends (kit.mjs list shows the kits); reading, building, testing and editing continue.');
   const plugin = (env.CLAUDE_PLUGIN_ROOT || fileURLToPath(new URL('..', import.meta.url))).replace(/\\/g, '/').replace(/\/+$/, '');
-  const resolveLine = `Resolve before acting: node "${plugin}/scripts/resolve.mjs" --entry <work|delivery|knowledge> --activity <activity> [--subject <s>] --json, then follow only the packet it prints (ia:init has the protocol).`;
-  // The resolve instruction always survives: what comes before it is cut to the
+  const resolveLine = `When a method is needed, resolve before acting: node "${plugin}/scripts/resolve.mjs" --entry <work|delivery|knowledge> --activity <activity> [--subject <s>] --json, then follow only the packet it prints (ia:init has the protocol).`;
+  // The sentence, the marker and the resolve instruction always survive: what comes before them is cut to the
   // room left, the bound keys first, then the earlier lines.
-  const room = LIMIT - resolveLine.length - 1;
+  const tail = [BOOTSTRAP_SENTENCE, BOOTSTRAP_MARKER, resolveLine].join(String.fromCharCode(10));
+  const room = LIMIT - tail.length - 1;
   let head = lines.join('\n');
   if (bound) {
     const left = room - head.length - 1 - bound.head.length - bound.rest.length;
     head += `\n${bound.head}${fit(bound.keys, Math.max(0, left), ' ... (truncated; bind.mjs show lists every key)')}${bound.rest}`;
   }
-  return `${fit(head, room, '~')}\n${resolveLine}`;
+  return `${fit(head, room, '~')}\n${tail}`;
 }
 
 export const PIN_LIMIT = 800;

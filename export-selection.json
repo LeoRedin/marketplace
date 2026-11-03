@@ -545,7 +545,7 @@
     },
     {
       "path": "plugins/ia/scripts/bootstrap.mjs",
-      "sha256": "c6c5b74fc022e613f93ff626ed8e4d8a3d5b9578ec295790d3aaed8d37a56f29"
+      "sha256": "0fe4b51878211512de1f93cfa69e209f735dbf5225d945c0a9a1eff327b56bb4"
     },
     {
       "path": "plugins/ia/scripts/ceiling.mjs",
