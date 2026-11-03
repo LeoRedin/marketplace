@@ -5,7 +5,7 @@
 // packets: every cell of the bound playbook read by identity, for a
 // whole-procedure activity or when the position delivers none of them.
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { WHOLE_PROCEDURE } from '../scripts/lib/workspace.mjs';
@@ -544,4 +544,21 @@ test('legacy Development task pins require an explicit persisted Delivery rebind
     assert.equal(again.status, 0, again.stdout + again.stderr);
     assert.equal(again.json.binding.revision, 4, 'the migrated key resolves without another rebind');
   }
+});
+
+test('a workspace with no bindings refuses only the method it asks for, writes nothing, and reads on', t => {
+  const { dir, env } = world(t);
+  const repo = makeRepo(join(dir, 'repo'));
+  const files = (folder) => readdirSync(folder, { recursive: true }).map(String).sort();
+  const before = files(repo);
+  const out = resolve(['--entry', 'work', '--activity', 'task', '--root', repo], env());
+  assert.equal(out.status, 1);
+  assert.equal(out.json.error.code, 'IA-CORE-NO-METHOD');
+  assert.equal(out.json.error.key, 'work.task');
+  assert.match(out.json.error.message, /^no method is bound for work\.task in this repository: .ia\/bindings\.json names no work\.task, no work\.\*, and no defaults\.work\./);
+  assert.doesNotMatch(out.json.error.message, /private|plugin is required|install/i, 'the refusal names the missing binding and nothing else');
+  assert.deepEqual(files(repo), before, 'the refusal writes nothing into the repository');
+  assert.equal(existsSync(join(dir, 'temp', 'closures')), false, 'nor a retained closure');
+  const listed = run('kit.mjs', ['list'], env(), { cwd: repo });
+  assert.equal(listed.status, 0, listed.stdout + listed.stderr);
 });
