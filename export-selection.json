@@ -553,7 +553,7 @@
     },
     {
       "path": "plugins/ia/scripts/check.mjs",
-      "sha256": "57b577992a72552bb604af1a2bee82c3728d2beb9dac4fa1a50f96e61e1644e4"
+      "sha256": "bc16470d879a8a8913badf423201d4d43b267951f08ffad64ae69a0f977dc7cd"
     },
     {
       "path": "plugins/ia/scripts/delegate.mjs",
@@ -721,7 +721,7 @@
     },
     {
       "path": "plugins/ia/scripts/resolve.mjs",
-      "sha256": "704aedf27a766404950e07ad5ebc583f19b7c23bc721b08e415ba4178b23b456"
+      "sha256": "3abbd656bf1cee6e80ced3e1d11c1a8dfebe5f02aec3c8f56d0d6decd338091f"
     },
     {
       "path": "plugins/ia/scripts/upkeep.mjs",

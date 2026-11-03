@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
-import { writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { installedKit, installedKits, kitInstallMatches, kitInstallation, requireKitInstalled } from '../scripts/lib/kit.mjs';
-import { makeRepo, sandbox } from './helpers/fixtures.mjs';
+import { envFor, fakeCli, makeKit, makeRepo, recordSources, run, sandbox } from './helpers/fixtures.mjs';
 
 // Which kits a repository's own lock installs: presence is one question, identity another.
 const KIT = 'inventarch/ia-kb-kit';
@@ -78,3 +79,222 @@ test('the error code is IA-CORE-KIT-NOT-INSTALLED and not IA-CORE-PIN-UNAVAILABL
   });
 });
 function writeLock(repo, text) { writeFileSync(join(repo, '.ia', 'distributions.lock.json'), text); }
+
+// ---------------------------------------------------------------------------
+// Bound execution: resolve.mjs and check.mjs, ordinary and qualified routes.
+// ---------------------------------------------------------------------------
+const NOT_INSTALLED = 'IA-CORE-KIT-NOT-INSTALLED';
+
+// Every file under the roots, by path and content hash.
+function snapshot(...roots) {
+  const seen = {};
+  const walk = path => {
+    if (!existsSync(path)) { seen[path] = 'absent'; return; }
+    if (statSync(path).isDirectory()) { seen[path] = 'dir'; for (const name of readdirSync(path)) walk(join(path, name)); return; }
+    seen[path] = createHash('sha256').update(readFileSync(path)).digest('hex');
+  };
+  for (const root of roots) walk(root);
+  return seen;
+}
+
+// One repository that binds work.task to a carried kit. `lock` builds the
+// lock the repository has (none by default); `carried: false` leaves the kit
+// out of the plugin's folder and puts it in the IA home only. Every child
+// process the stand-in CLI or the kit's check script starts appends to the
+// spawn log.
+function fixture(t, { lock, carried = true, bindings = true } = {}) {
+  const dir = sandbox(t, 'ia-install-guard-run-'), kitsDir = join(dir, 'kits'), home = join(dir, 'home'), spawnLog = join(dir, 'spawned.log');
+  mkdirSync(kitsDir, { recursive: true });
+  const kit = carried ? makeKit(kitsDir) : makeKit(join(home, 'kits', 'fake'), { folder: '0.1.0' });
+  writeFileSync(join(kit.dir, 'check-ok.mjs'), `import { appendFileSync } from 'node:fs';\nappendFileSync(${JSON.stringify(spawnLog)}, 'check ran\\n');\nprocess.stdout.write('check ' + process.env.IA_CORE_CHECK + ' ran in ' + process.cwd() + '\\n');\n`);
+  recordSources(kit.dir);
+  const repo = makeRepo(join(dir, 'repo'), { ...(bindings ? { bindings: { format: 1, bindings: { 'work.task': { kit: kit.id, capability: kit.capability } } } } : {}), lock: lock ? lock(kit) : null });
+  const cli = fakeCli(dir);
+  writeFileSync(cli, `import { appendFileSync as spawnedLog } from 'node:fs';\nspawnedLog(${JSON.stringify(spawnLog)}, process.argv.slice(2).join(' ') + '\\n');\n` + readFileSync(cli, 'utf8'));
+  const runRoot = join(dir, 'run'), temp = join(dir, 'temp');
+  const env = envFor({ cli, kitsDir, temp, runRoot, extra: { IA_HOME: home } });
+  const resolve = (extra = [], over = {}) => run('resolve.mjs', ['--entry', 'work', '--activity', 'task', '--root', repo, ...extra], { ...env, ...over });
+  const check = (extra = [], over = {}) => run('check.mjs', ['fake-gate', '--root', repo, ...extra], { ...env, ...over });
+  const roots = [repo, runRoot, temp, home];
+  const lockPath = join(repo, '.ia', 'distributions.lock.json');
+  const setLock = value => writeFileSync(lockPath, JSON.stringify(value) + '\n');
+  return { dir, kit, repo, runRoot, temp, home, env, cli, spawnLog, resolve, check, roots, setLock, snapshot: () => snapshot(...roots), spawned: () => (existsSync(spawnLog) ? readFileSync(spawnLog, 'utf8') : '') };
+}
+const packagesLock = (version = '0.1.0') => kit => ({ packages: [{ ...base }, { id: kit.id, version, archive: kit.archive }] });
+const entriesLock = kit => ({ packages: [{ ...base }], entries: [carrier([{ id: kit.id, version: kit.version, archive: kit.archive }])] });
+const unrelatedLock = () => ({ packages: [{ ...base }, { id: 'inventarch/other-kit', version: '1.0.0', archive: 'f'.repeat(64) }] });
+const NO_CLI = f => ({ IA_CLI_PATH: join(f.dir, 'no-such-cli', 'main.js') });
+
+function assertRefused(f, ran, what) {
+  assert.equal(ran.status, 1, `${what}: ${ran.stdout}${ran.stderr}`);
+  assert.equal(ran.json?.error?.code, NOT_INSTALLED, `${what}: ${ran.stdout}`);
+  assert.ok(ran.json.error.message.includes(f.kit.id), 'the refusal names the kit');
+}
+
+test('resolve refuses a bound kit with no lock row and writes nothing', t => {
+  const f = fixture(t, { lock: unrelatedLock });
+  const before = f.snapshot();
+  assertRefused(f, f.resolve(['--pin']), 'resolve');
+  assert.deepEqual(f.snapshot(), before, 'no retained closure, no pin, nothing written in the repository, the run root, the temp folder or the IA home');
+  assert.equal(f.spawned(), '', 'no kit script and no CLI process started');
+  assert.equal(existsSync(join(f.temp, 'closures')), false);
+  assert.equal(existsSync(join(f.runRoot, 'binding.json')), false);
+});
+
+test('resolve refuses when the repository has no lock at all', t => {
+  const f = fixture(t);
+  const before = f.snapshot();
+  assertRefused(f, f.resolve(['--pin']), 'resolve');
+  assert.deepEqual(f.snapshot(), before);
+  assert.equal(f.spawned(), '');
+});
+
+test('check refuses separately from resolve', t => {
+  const f = fixture(t, { lock: unrelatedLock });
+  const before = f.snapshot();
+  assertRefused(f, f.check(), 'check');
+  assert.deepEqual(f.snapshot(), before);
+  assert.equal(f.spawned(), '', 'the check script never started');
+});
+
+test('qualified resolve refuses a bound, uninstalled kit before any runtime work', t => {
+  const f = fixture(t, { lock: unrelatedLock });
+  const before = f.snapshot();
+  // The CLI path and the qualification file do not exist: a refusal that comes first is the guard's.
+  const ran = f.resolve(['--qualified', '--qualification', join(f.dir, 'missing-qualification.json'), '--pin'], NO_CLI(f));
+  assertRefused(f, ran, 'qualified resolve');
+  assert.deepEqual(f.snapshot(), before, 'no method-closures-v1 store entry, no pin, nothing else');
+  assert.equal(existsSync(join(f.home, 'method-closures-v1')), false);
+  assert.equal(f.spawned(), '');
+});
+
+test('qualified check refuses a bound, uninstalled kit before reading the input', t => {
+  const f = fixture(t, { lock: unrelatedLock });
+  const missing = join(f.dir, 'no-such-input.json');
+  // Bound by the repository's bindings (the task holds no pin yet).
+  assertRefused(f, f.check(['--qualified-input', missing, '--activity', 'work.task'], NO_CLI(f)), 'qualified check, bound by bindings');
+  assert.deepEqual(f.snapshot(), f.snapshot());
+  // Bound by a format 4 pin the task already holds.
+  mkdirSync(f.runRoot, { recursive: true });
+  writeFileSync(join(f.runRoot, 'binding.json'), JSON.stringify({ format: 4, revision: 1, supersedes: null, workspace: { identity: 'workspace-system/definition/workspace/repo', revision: 'a'.repeat(64) }, kits: { [f.kit.id]: { id: f.kit.id, version: f.kit.version, closureSha256: 'b'.repeat(64) } }, keys: { 'work.task': { kit: f.kit.id, capability: 'agent-composition-system/definition/capability/fake-operate', profile: null } }, task: null }));
+  const pinned = f.snapshot();
+  assertRefused(f, f.check(['--qualified-input', missing, '--activity', 'work.task'], NO_CLI(f)), 'qualified check, bound by a pin');
+  assert.deepEqual(f.snapshot(), pinned, 'the refusal writes nothing');
+  assert.equal(f.spawned(), '');
+});
+
+test('qualified resolve and qualified check go past the guard when the lock installs the kit', t => {
+  // Running the qualified route to its end needs a qualified runtime cohort; here the proof is that the guard lets an
+  // installed kit through and the route fails later, for its own reason (the stand-in CLI is not a cohort).
+  const f = fixture(t, { lock: packagesLock() });
+  const resolved = f.resolve(['--qualified', '--qualification', join(f.dir, 'missing-qualification.json')], NO_CLI(f));
+  assert.notEqual(resolved.json?.error?.code, NOT_INSTALLED, resolved.stdout + resolved.stderr);
+  assert.notEqual(resolved.status, 0);
+  const checked = f.check(['--qualified-input', join(f.dir, 'no-such-input.json'), '--activity', 'work.task'], NO_CLI(f));
+  assert.notEqual(checked.json?.error?.code, NOT_INSTALLED, checked.stdout + checked.stderr);
+  assert.notEqual(checked.status, 0);
+});
+
+test('V1 a kit that exists only as an IA-home copy refuses with no fallback', t => {
+  const f = fixture(t, { carried: false, lock: unrelatedLock });
+  assert.ok(existsSync(join(f.home, 'kits', 'fake', '0.1.0', 'releases.json')), 'the IA home holds the kit');
+  const before = f.snapshot();
+  const resolved = f.resolve(['--pin']), checked = f.check();
+  assertRefused(f, resolved, 'resolve');
+  assertRefused(f, checked, 'check');
+  assert.equal(resolved.json.instructions, undefined, 'no packet');
+  assert.equal(checked.json.exitCode, undefined, 'no receipt');
+  assert.deepEqual(f.snapshot(), before);
+  assert.equal(f.spawned(), '');
+});
+
+test('V2 an npm carrier entries row installs: resolve and check execute', t => {
+  const f = fixture(t, { lock: entriesLock });
+  const resolved = f.resolve(['--pin']);
+  assert.equal(resolved.status, 0, resolved.stdout + resolved.stderr);
+  const checked = f.check();
+  assert.equal(checked.status, 0, checked.stdout + checked.stderr);
+  assert.match(f.spawned(), /check ran/);
+});
+
+test('V3 a packages row installs', t => {
+  const f = fixture(t, { lock: packagesLock() });
+  const resolved = f.resolve(['--pin']);
+  assert.equal(resolved.status, 0, resolved.stdout + resolved.stderr);
+  const checked = f.check();
+  assert.equal(checked.status, 0, checked.stdout + checked.stderr);
+});
+
+test('a pinned key refuses when the lock no longer installs its kit', t => {
+  const f = fixture(t, { lock: packagesLock() });
+  assert.equal(f.resolve(['--pin']).status, 0);
+  const pin = readFileSync(join(f.runRoot, 'binding.json'));
+  f.setLock(unrelatedLock());
+  const before = f.snapshot();
+  assertRefused(f, f.resolve(['--pin']), 'pinned resolve');
+  assertRefused(f, f.resolve(['--pin', '--rebind']), 'rebind');
+  assertRefused(f, f.check(), 'pinned check');
+  assert.deepEqual(f.snapshot(), before, 'no fallback to the retained copy, and nothing written');
+  assert.deepEqual(readFileSync(join(f.runRoot, 'binding.json')), pin);
+});
+
+test('a pin older than the installed version still runs from its retained bytes', t => {
+  const f = fixture(t, { lock: packagesLock('0.1.0') });
+  assert.equal(f.resolve(['--pin']).status, 0);
+  f.setLock(packagesLock('9.9.9')(f.kit));
+  const resolved = f.resolve(['--pin']);
+  assert.equal(resolved.status, 0, resolved.stdout + resolved.stderr);
+  const checked = f.check();
+  assert.equal(checked.status, 0, checked.stdout + checked.stderr);
+});
+
+test('an unrelated field change does not turn a refusal into a pass', t => {
+  const f = fixture(t, { lock: packagesLock() });
+  assert.equal(f.resolve(['--pin']).status, 0);
+  const path = join(f.runRoot, 'binding.json'), pin = JSON.parse(readFileSync(path, 'utf8'));
+  pin.kits[f.kit.id].implementation = '0'.repeat(64);
+  writeFileSync(path, JSON.stringify(pin));
+  f.setLock(unrelatedLock());
+  const resolved = f.resolve(['--pin']), checked = f.check();
+  assertRefused(f, resolved, 'resolve');
+  assertRefused(f, checked, 'check');
+  assert.notEqual(resolved.json.error.code, 'IA-CORE-PIN-UNAVAILABLE');
+});
+
+test('V4 the unbound route resolves with no lock row and executes nothing', t => {
+  const f = fixture(t);
+  const outside = join(f.dir, 'outside');
+  mkdirSync(outside);
+  const unbound = run('resolve.mjs', ['--entry', 'work', '--activity', 'task', '--root', outside, '--kit', f.kit.id, '--capability', f.kit.capability], { ...f.env, IA_CORE_RUN_ROOT: '' });
+  assert.equal(unbound.status, 0, unbound.stdout + unbound.stderr);
+  assert.equal(unbound.json.binding.via, 'unbound');
+  assert.doesNotMatch(f.spawned(), /check ran/);
+  const inside = f.resolve(['--kit', f.kit.id, '--capability', f.kit.capability], { IA_CORE_RUN_ROOT: '' });
+  assert.equal(inside.json.error.code, 'IA-CORE-UNBOUND-IN-WORKSPACE', 'inside a workspace --kit is still refused, as before');
+});
+
+test('--kit with no binding in a workspace still runs (the plugin-only route)', t => {
+  const f = fixture(t, { bindings: false });
+  const checked = f.check(['--kit', f.kit.id]);
+  assert.equal(checked.status, 0, checked.stdout + checked.stderr);
+  assert.match(f.spawned(), /check ran/);
+});
+
+test('--kit naming a bound, uninstalled kit refuses', t => {
+  const f = fixture(t, { lock: unrelatedLock });
+  const before = f.snapshot();
+  assertRefused(f, f.check(['--kit', f.kit.id]), 'check --kit');
+  assert.deepEqual(f.snapshot(), before);
+  assert.equal(f.spawned(), '');
+});
+
+test('check refuses when any carried kit the bindings name is not installed, not only the one that declares the check', t => {
+  const f = fixture(t, { lock: packagesLock() });
+  makeKit(join(f.dir, 'kits'), { folder: 'second', id: 'inventarch/second-kit', capability: 'x', playbook: 'x', checks: [] });
+  writeFileSync(join(f.repo, '.ia', 'bindings.json'), JSON.stringify({ format: 1, bindings: { 'work.task': { kit: f.kit.id, capability: f.kit.capability }, 'knowledge.find': { kit: 'inventarch/second-kit', capability: 'x' } } }));
+  const ran = f.check();
+  assert.equal(ran.status, 1, ran.stdout + ran.stderr);
+  assert.equal(ran.json.error.code, NOT_INSTALLED);
+  assert.ok(ran.json.error.message.includes('inventarch/second-kit'));
+  assert.equal(f.spawned(), '');
+});
