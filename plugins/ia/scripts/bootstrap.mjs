@@ -11,7 +11,9 @@
 // the repository installed, whether .ia/bindings.json exists and which keys it
 // binds, grouped by kit and shortened to fit, and the one instruction to
 // resolve when a method is needed, with the marker and the sentence that say
-// contributing needs no binding, all of which always fit. Any error exits 0 silently; every
+// contributing needs no binding, all of which always fit. The limit covers the
+// whole additionalContext: the notices and a compaction's pin share the room
+// the bound keys leave, and a long plugin path shortens the resolve instruction. Any error exits 0 silently; every
 // CLI call is bounded so the whole hook ends inside 10 s.
 // Reads the hook's stdin JSON ({ cwd, source, ... }); prints
 // { systemMessage?, hookSpecificOutput: { hookEventName, additionalContext } }.
@@ -64,10 +66,11 @@ export function boundKeys(bindings) {
   return [...byKit].map(([kit, entries]) => `${kit}: ${[...entries].map(([entry, activities]) => (activities.length === 1 ? `${entry}.${activities[0]}` : `${entry}.{${activities.join(', ')}}`)).join(', ')}`).join('; ');
 }
 
-// Cuts text to at most max characters at a word boundary, ending in the marker.
+// Cuts text to at most max characters at a word boundary, ending in the marker; never longer than max.
 function fit(text, max, marker) {
   if (text.length <= max) return text;
-  const room = Math.max(0, max - marker.length);
+  if (max <= marker.length) return text.slice(0, Math.max(0, max));
+  const room = max - marker.length;
   const cut = text.lastIndexOf(' ', room);
   return text.slice(0, cut > 0 ? cut : room) + marker;
 }
@@ -77,10 +80,29 @@ function carriedKitIds(env) {
   try { return new Set([...listKits(kitsDir(env)), ...homeKits(homeKitsDir(env))].map(k => k.id)); } catch { return null; }
 }
 
-export function context(root, env = process.env) {
+// The public path, in the words the committed block uses: what needs no binding, plugin, door or private access.
+export const PUBLIC_PATH = "Reading, building, testing, editing and submitting a change need no binding, plugin, door or private access; follow the repository's own contributing guide.";
+const MIN_HEAD = 1200;
+
+// The resolve instruction in the longest form that leaves the rest of the payload MIN_HEAD characters: the plugin's own
+// path first, then a placeholder for it, then no path at all.
+function resolveInstruction(plugin, fixed, limit) {
+  const forms = [
+    `When a method is needed, resolve before acting: node "${plugin}/scripts/resolve.mjs" --entry <work|delivery|knowledge> --activity <activity> [--subject <s>] --json, then follow only the packet it prints (ia:init has the protocol).`,
+    'When a method is needed, resolve before acting: node "<plugin>/scripts/resolve.mjs" --entry <work|delivery|knowledge> --activity <activity> [--subject <s>] --json (<plugin> is the ia plugin folder), then follow only the packet it prints.',
+    "When a method is needed, resolve it through the ia door (ia_method) or the ia plugin's scripts/resolve.mjs, then follow only the packet it prints.",
+  ];
+  return forms.find(form => fixed + form.length + MIN_HEAD <= limit) ?? forms[forms.length - 1];
+}
+
+// The whole SessionStart context, at most LIMIT characters: extras are the optional notices that follow it (a task pin, the
+// governance notice, the account reminder). The sentence and the marker are reserved first and never cut; the resolve
+// instruction takes the room next, shortened as its path requires; the identity lines, the bound keys and the extras share
+// the rest, the bound keys giving way first.
+export function context(root, env = process.env, extras = []) {
   const lines = [];
   // The routing instruction comes first, as a condition: in an adopted workspace, activation starts here, not in the skill listing.
-  lines.push('This repository is an InventArch workspace. When a task needs a method, route it through the lanes of the ia plugin: reviewing, changing, diagnosing, designing or delivering what this workspace delivers (authoring IA records, host plugins or catalogues, probing what IA admits) -> `ia:delivery`; starting, resuming, coordinating, planning or closing a task, recording a decision or asking what is next -> `ia:work`; finding, explaining or reconciling documents, records, decisions or what this workspace holds, or whether its records can be trusted -> `ia:knowledge`. Each resolves the method this repository binds and delivers it as a packet; each lane entry runs orient, plan, act and learn, and --phase selects one; other skills apply only when that packet asks for them. Unrelated requests need no IA skill. Reading, building, testing and editing need none of this.');
+  lines.push('This repository is an InventArch workspace. When a task needs a method, route it through the lanes of the ia plugin: reviewing, changing, diagnosing, designing or delivering what this workspace delivers (authoring IA records, host plugins or catalogues, probing what IA admits) -> `ia:delivery`; starting, resuming, coordinating, planning or closing a task, recording a decision or asking what is next -> `ia:work`; finding, explaining or reconciling documents, records, decisions or what this workspace holds, or whether its records can be trusted -> `ia:knowledge`. Each resolves the method this repository binds and delivers it as a packet; each lane entry runs orient, plan, act and learn, and --phase selects one; for method-dependent work, other skills apply only when that packet asks for them. Unrelated requests need no IA skill.' + ` ${PUBLIC_PATH}`);
   let identity = null, revision = null, cliNote = 'IA CLI not asked';
   try {
     // Only an explicit or installed CLI: the npx fallback could fetch, which a hook must not wait on.
@@ -108,17 +130,20 @@ export function context(root, env = process.env) {
     bound = { head: 'Bindings (.ia/bindings.json): ', keys, rest: `${defaults.length ? `; defaults for ${defaults.join(', ')}` : ''}${bindings.precedence.length ? `; precedence ${bindings.precedence.join(' > ')}` : ''}.` };
   } else if (!existsSync(join(root, '.ia', 'bindings.json'))) lines.push('Bindings: no .ia/bindings.json, so no method is bound; only an operation that needs a method refuses with IA-CORE-NO-METHOD until kit.mjs bind <kit> --apply writes the keys a kit recommends (kit.mjs list shows the kits); reading, building, testing and editing continue.');
   const plugin = (env.CLAUDE_PLUGIN_ROOT || fileURLToPath(new URL('..', import.meta.url))).replace(/\\/g, '/').replace(/\/+$/, '');
-  const resolveLine = `When a method is needed, resolve before acting: node "${plugin}/scripts/resolve.mjs" --entry <work|delivery|knowledge> --activity <activity> [--subject <s>] --json, then follow only the packet it prints (ia:init has the protocol).`;
-  // The sentence, the marker and the resolve instruction always survive: what comes before them is cut to the
-  // room left, the bound keys first, then the earlier lines.
-  const tail = [BOOTSTRAP_SENTENCE, BOOTSTRAP_MARKER, resolveLine].join(String.fromCharCode(10));
-  const room = LIMIT - tail.length - 1;
+  // Three newlines join the head, the sentence, the marker and the resolve instruction.
+  const reserved = BOOTSTRAP_SENTENCE.length + BOOTSTRAP_MARKER.length + 3;
+  const resolveLine = resolveInstruction(plugin, reserved, LIMIT);
+  const tail = [BOOTSTRAP_SENTENCE, BOOTSTRAP_MARKER, resolveLine].join('\n');
+  const room = Math.max(0, LIMIT - tail.length - 1);
+  const optional = extras.filter(Boolean).join('\n');
+  const tailing = optional ? optional.length + 1 : 0;
   let head = lines.join('\n');
   if (bound) {
-    const left = room - head.length - 1 - bound.head.length - bound.rest.length;
+    const left = room - tailing - head.length - 1 - bound.head.length - bound.rest.length;
     head += `\n${bound.head}${fit(bound.keys, Math.max(0, left), ' ... (truncated; bind.mjs show lists every key)')}${bound.rest}`;
   }
-  return `${fit(head, room, '~')}\n${tail}`;
+  head = fit(head, Math.max(0, room - tailing), '~');
+  return `${fit(optional ? `${head}\n${optional}` : head, room, '~')}\n${tail}`;
 }
 
 export const PIN_LIMIT = 800;
@@ -174,17 +199,16 @@ export function payload(hook, env = process.env) {
   const offer = accountOffer({ env, source: hook.source, cwd, repo: root });
   const governed = governanceNotice({ env, source: hook.source, root });
   if (!root && !offer && !governed) return null;
-  const parts = [];
-  if (root) parts.push(context(root, env));
+  const extras = [];
   if (root && hook.source === 'compact') {
     const plugin = (env.CLAUDE_PLUGIN_ROOT || fileURLToPath(new URL('..', import.meta.url))).replace(/\\/g, '/').replace(/\/+$/, '');
     const pinned = pinSummary(root, env, plugin);
-    if (pinned) parts.push(pinned);
+    if (pinned) extras.push(pinned);
   }
-  if (governed) parts.push('This repository is governed (.ia/governance.json) and no installed kit declares governance handlers: tell the person before changing anything, and never treat the repository as ungoverned; the ia-governance kit (ia kit add) supplies them.');
-  if (offer) parts.push('The person was shown the InventArch account offer once at startup: do not repeat it and do not wait for it.');
+  if (governed) extras.push('This repository is governed (.ia/governance.json) and no installed kit declares governance handlers: tell the person before changing anything, and never treat the repository as ungoverned; the ia-governance kit (ia kit add) supplies them.');
+  if (offer) extras.push('The person was shown the InventArch account offer once at startup: do not repeat it and do not wait for it.');
   const notice = [governed, offer].filter(Boolean).join('\n');
-  return { ...(notice ? { systemMessage: notice } : {}), hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: parts.join('\n') } };
+  return { ...(notice ? { systemMessage: notice } : {}), hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: root ? context(root, env, extras) : extras.join('\n') } };
 }
 
 function main() {

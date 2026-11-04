@@ -126,7 +126,9 @@ function assertConditional(text) {
   assert.doesNotMatch(text, /Before any other skill, plan or action/i);
   assert.doesNotMatch(text, /For any task, use one lane/);
   assert.match(text, /When a task needs a method, route it through the lanes of the ia plugin/);
-  assert.match(text, /Reading, building, testing and editing need none of this\./);
+  assert.ok(text.includes("Reading, building, testing, editing and submitting a change need no binding, plugin, door or private access; follow the repository's own contributing guide."), 'the committed block\'s public-path sentence, whole');
+  assert.match(text, /for method-dependent work, other skills apply only when that packet asks for them/);
+  assert.doesNotMatch(text, /; other skills apply only when that packet asks/, 'the restriction is scoped to method-dependent work');
   assert.match(text, /When a method is needed, resolve before acting:/);
 }
 
@@ -198,4 +200,67 @@ test('the marker is the one spelling the committed bootstrap block carries, and 
   assert.equal(BOOTSTRAP_MARKER_PATTERN.source, '^ia-bootstrap v1( [a-z-]+=\\S+)+$');
   const keys = Object.fromEntries(BOOTSTRAP_MARKER.split(' ').slice(2).map(pair => pair.split('=')));
   assert.deepEqual(keys, { 'public-contribution': 'available', 'needs-method': 'ia:work,ia:knowledge,ia:delivery', 'needs-authority': 'declared-operations' });
+});
+
+// The budget covers the whole additionalContext, the optional notices and a compaction's pin included.
+const lines = text => text.split('\n');
+const assertTail = text => {
+  const all = lines(text);
+  assert.ok(all.includes(SENTENCE), 'the sentence survives');
+  assert.ok(all.includes(MARKER_LINE), 'the marker survives');
+  assert.match(text, /When a method is needed, resolve/);
+};
+
+function budgetFixture(t, count) {
+  const dir = sandbox(t, 'ia-core-boot-');
+  const kitsDir = join(dir, 'kits');
+  const beta = makeKit(kitsDir, { folder: 'beta', id: 'inventarch/beta-kit' });
+  const many = Object.fromEntries(Array.from({ length: count }, (_, i) => [`delivery.activity-number-${i}`, { kit: beta.id, capability: beta.capability }]));
+  const repo = makeRepo(join(dir, 'repo'), { bindings: { format: 1, bindings: many, precedence: [beta.id] } });
+  writeFileSync(join(repo, '.ia', 'governance.json'), '{}\n');
+  const home = join(dir, 'home');
+  mkdirSync(home, { recursive: true });
+  return { dir, kitsDir, repo, home };
+}
+
+test('the final payload, notices and compaction pin included, stays within the limit for 40 and 400 keys', t => {
+  for (const count of [40, 400]) {
+    const { dir, kitsDir, repo, home } = budgetFixture(t, count);
+    const extra = { CLAUDE_PLUGIN_ROOT: '<plugin>', IA_HOME: home, HOME: home, USERPROFILE: home, CI: '', IA_NO_ACCOUNT_OFFER: '' };
+    const env = envFor({ cli: fakeCli(dir), kitsDir, temp: dir, extra });
+    const startup = run('bootstrap.mjs', [], env, { input: JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup', cwd: repo }) });
+    assert.equal(startup.status, 0, startup.stderr);
+    const text = startup.json.hookSpecificOutput.additionalContext;
+    assert.ok(text.length <= LIMIT, `${count} keys at startup: ${text.length} chars`);
+    assertTail(text);
+    assert.match(text, /This repository is governed/, 'the governance reminder is kept');
+    assert.ok(startup.json.systemMessage, 'the notices are shown to the person');
+
+    const folder = join(home, 'work-v1', 'proj', 'task');
+    mkdirSync(folder, { recursive: true });
+    writeFileSync(join(folder, 'binding.json'), JSON.stringify({ format: 3, revision: 2, workspace: { root: repo, revision: 'r' }, task: 'task', kits: { 'inventarch/beta-kit': { version: '0.3.0', archive: 'a'.repeat(64), sources: 'b'.repeat(64) } }, keys: Object.fromEntries(Array.from({ length: 30 }, (_, i) => [`work.key-number-${i}`, { kit: 'inventarch/beta-kit', capability: 'some-capability', records: [], scopeKey: null, intent: null }])) }));
+    const compact = run('bootstrap.mjs', [], env, { input: JSON.stringify({ hook_event_name: 'SessionStart', source: 'compact', cwd: repo }) });
+    assert.equal(compact.status, 0, compact.stderr);
+    const after = compact.json.hookSpecificOutput.additionalContext;
+    assert.ok(after.length <= LIMIT, `${count} keys after a compaction: ${after.length} chars`);
+    assertTail(after);
+    assert.match(after, /Current task pin/);
+  }
+});
+
+test('a very long plugin path cannot push the reserved sentence and marker past the limit', t => {
+  for (const length of [200, 1200, 2400, 6000]) {
+    const { dir, kitsDir, repo, home } = budgetFixture(t, 400);
+    const plugin = `/${'p'.repeat(length)}`;
+    const env = envFor({ cli: fakeCli(dir), kitsDir, temp: dir, extra: { CLAUDE_PLUGIN_ROOT: plugin, IA_HOME: home, HOME: home, USERPROFILE: home } });
+    for (const source of ['startup', 'compact']) {
+      const out = run('bootstrap.mjs', [], env, { input: JSON.stringify({ hook_event_name: 'SessionStart', source, cwd: repo }) });
+      assert.equal(out.status, 0, out.stderr);
+      const text = out.json.hookSpecificOutput.additionalContext;
+      assert.ok(text.length <= LIMIT, `plugin path of ${length}, ${source}: ${text.length} chars`);
+      assertTail(text);
+      assert.ok(text.endsWith(lines(text).at(-1)) && lines(text).includes(MARKER_LINE));
+      if (length >= 2400) assert.ok(!text.includes(plugin), 'a path that cannot fit is left out of the resolve instruction');
+    }
+  }
 });
