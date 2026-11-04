@@ -37,7 +37,7 @@
     },
     {
       "path": "plugins/ia/README.md",
-      "sha256": "300ea3f86d3946876ed336df93c257ae194a5dc73a0e7e57f08396e84d8b6278"
+      "sha256": "1a2beb0692afc433f32373b97d28ba1d3c2f39a07ddbd5d804081d51f64883c5"
     },
     {
       "path": "plugins/ia/agents/checker.md",
@@ -553,7 +553,7 @@
     },
     {
       "path": "plugins/ia/scripts/check.mjs",
-      "sha256": "bc16470d879a8a8913badf423201d4d43b267951f08ffad64ae69a0f977dc7cd"
+      "sha256": "58bd985752e663ff94bfe6f7f150b917580d94c31f8327049b05fb92516a594c"
     },
     {
       "path": "plugins/ia/scripts/delegate.mjs",
@@ -645,7 +645,7 @@
     },
     {
       "path": "plugins/ia/scripts/lib/kit.mjs",
-      "sha256": "14adf7770a10ed1097d3d32a43a01bbc683745d813151a977956b7430872d14f"
+      "sha256": "1769a2856e3c093d0476b1f1dad1497e2a92e5854d37947aceefe073f5925a1d"
     },
     {
       "path": "plugins/ia/scripts/lib/method-check.mjs",
@@ -713,7 +713,7 @@
     },
     {
       "path": "plugins/ia/scripts/lib/workspace.mjs",
-      "sha256": "cbe4296637b07e583de9cb47d90f73272e6aa00183b37bbbf1c9934f04bb11ce"
+      "sha256": "4aab33991e8b7e136e87250d0b91f925d06e8b02e67860871b0cf2a13f3bd68c"
     },
     {
       "path": "plugins/ia/scripts/on-write.mjs",

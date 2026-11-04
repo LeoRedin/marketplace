@@ -37,7 +37,7 @@ import { childEnv } from './lib/hygiene.mjs';
 import { kitTrust } from './lib/trust.mjs';
 import { checkArguments } from './lib/check-arguments.mjs';
 import { readBindings, selectBinding } from './lib/binding.mjs';
-import { assertPinnedKit, findKit, installedKits, kitChecks, listKits, requireKitInstalled } from './lib/kit.mjs';
+import { assertPinnedKit, canonicalKitId, findKit, installedKits, kitChecks, listKits, requireKitInstalled } from './lib/kit.mjs';
 import { retainedKit } from './lib/retained.mjs';
 import { closureStore } from './lib/home.mjs';
 import { pinRootFor, readPin } from './lib/pin.mjs';
@@ -54,7 +54,7 @@ class CheckError extends Error {
 }
 
 // The kit ids a repository's bindings name, keys and defaults alike.
-const boundKitIds = bindings => (bindings ? [...new Set([...Object.values(bindings.bindings).flat(), ...Object.values(bindings.defaults)].map(b => b.kit))] : []);
+const boundKitIds = bindings => (bindings ? [...new Set([...Object.values(bindings.bindings).flat(), ...Object.values(bindings.defaults)].map(b => canonicalKitId(b.kit)))] : []);
 
 // A repository-bound method runs a kit only while the repository's own lock installs it (lib/kit.mjs
 // requireKitInstalled, the one guard resolve.mjs and every route here share). It comes before any kit is retained,

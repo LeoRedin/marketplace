@@ -170,7 +170,7 @@ test('isolation: two repositories with different bindings resolve different kits
   assert.equal(JSON.parse(readFileSync(join(taskA, 'binding.json'), 'utf8')).revision, 1);
 });
 
-test('pin per key (private-core-task-pin-per-key): a new key joins the task in a new revision, at the version the task holds for its kit; another kit joins beside it; a pinned key whose binding changed needs --rebind', t => {
+test('pin per key: a new key joins the task in a new revision, at the version the task holds for its kit; another kit joins beside it; a pinned key whose binding changed needs --rebind', t => {
   const { dir, kitsDir, alpha, beta, env } = world(t);
   const second = makeKit(kitsDir, { folder: 'alpha2', id: 'inventarch/alpha2-kit', capability: 'alpha2-review', playbook: 'alpha2-operate', checks: [], profile: null });
   const repo = makeRepo(join(dir, 'repo'), { bindings: { format: 1, bindings: { 'work.task': { kit: alpha.id, capability: alpha.capability }, 'work.meeting': { kit: alpha.id, capability: alpha.capability }, 'work.completion': { kit: beta.id, capability: beta.capability } } }, lock: installLock({ bindings: { a: { kit: alpha.id }, b: { kit: beta.id }, c: { kit: second.id } } }) });
@@ -232,7 +232,7 @@ test('a format 1 pin is read as its one key and written as format 3 on its next 
   assert.equal(resolve(['--entry', 'work', '--activity', 'task', '--root', repo], env(taskRoot)).json.error.code, 'IA-CORE-PIN-MALFORMED', 'a key whose kit the pin does not hold');
 });
 
-test('unbound resolve (private-core-unbound-resolve): outside an IA workspace --kit and --capability name the method, nothing is pinned; inside one it is refused', t => {
+test('unbound resolve: outside an IA workspace --kit and --capability name the method, nothing is pinned; inside one it is refused', t => {
   const { dir, alpha, env } = world(t);
   const plain = join(dir, 'plain');
   mkdirSync(join(plain, '.git'), { recursive: true });
