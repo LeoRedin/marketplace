@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "id": "inventarch/ia-kb-kit",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "distribution": "workspace-system/definition/distribution/ia-kb-distribution",
   "engine": "^0.1.1",
   "language": [
@@ -24,10 +24,6 @@
   ],
   "assets": [
     {
-      "path": "assets/examples/split-body/README.md",
-      "role": "documentation"
-    },
-    {
       "path": "assets/examples/split-body/anchor.ia",
       "role": "asset"
     },
@@ -37,6 +33,10 @@
     },
     {
       "path": "assets/examples/split-body/model-api.md",
+      "role": "documentation"
+    },
+    {
+      "path": "assets/examples/split-body/README.md",
       "role": "documentation"
     },
     {
@@ -50,6 +50,18 @@
     {
       "path": "assets/kb-placement.md",
       "role": "documentation"
+    },
+    {
+      "path": "bindings.json",
+      "role": "asset"
+    },
+    {
+      "path": "checks.json",
+      "role": "asset"
+    },
+    {
+      "path": "delivery.json",
+      "role": "asset"
     },
     {
       "path": "scripts/check-decisions.mjs",

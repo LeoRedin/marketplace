@@ -1,7 +1,7 @@
 {
   "formatVersion": 1,
   "id": "inventarch/ia-authoring-kit",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "distribution": "workspace-system/definition/distribution/ia-authoring-distribution",
   "engine": "^0.1.1",
   "language": [
@@ -34,6 +34,18 @@
     {
       "path": "assets/trigger-config.md",
       "role": "documentation"
+    },
+    {
+      "path": "bindings.json",
+      "role": "asset"
+    },
+    {
+      "path": "checks.json",
+      "role": "asset"
+    },
+    {
+      "path": "delivery.json",
+      "role": "asset"
     },
     {
       "path": "scripts/eval-triggers.mjs",
