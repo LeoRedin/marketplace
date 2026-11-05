@@ -149,4 +149,4 @@ jobs:
           pattern: native-qualification-${{ matrix.os }}-shard-*
           path: native-reports
       - name: Every native case once, passed, on one source
-        run: node tools/run-native-tests.mjs --verify native-reports/*
+        run: node tools/run-native-tests.mjs --verify native-reports
