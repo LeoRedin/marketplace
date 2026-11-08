@@ -274,7 +274,8 @@
     answers "What do release N's notes say?"
   work
     title "Release notes for release N"
-    status open
+    status closed
+    ended "2026-11-08"
     milestone @milestone cli-3-6-0-release-n
     owner "InventArch maintainers"
     expected-artifact "releases/pending/*.json"
@@ -289,7 +290,8 @@
     answers "How are the kits re-cut for release N?"
   work
     title "Re-cut the kits for release N"
-    status open
+    status closed
+    ended "2026-11-08"
     milestone @milestone cli-3-6-0-release-n
     owner "InventArch maintainers"
     expected-artifact "kits/*/releases/<version>.json, kits/index.json, packages/public-kits/package.json"
@@ -304,7 +306,8 @@
     answers "Do the hosts accept release N?"
   work
     title "Host gates for release N"
-    status open
+    status closed
+    ended "2026-11-08"
     milestone @milestone cli-3-6-0-release-n
     owner "InventArch maintainers"
     expected-artifact "the Codex smoke report"
