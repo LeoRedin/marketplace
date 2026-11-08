@@ -26,14 +26,15 @@ Release N migrates users onto installed kits on the 3.5.x pins; release N+1 move
 | Task | Standing | Record |
 |---|---|---|
 | Record the 3.6.0 decisions and tasks. | closed | `cli-3-6-0-record-decisions` |
-| Migrate users to installed kits (package route). | open | `cli-3-6-0-install-migration` |
+| Migrate users to installed kits (package route). | closed | `cli-3-6-0-install-migration` |
 | Install the catalogue's own kits locally. | closed | `cli-3-6-0-own-lock` |
 | Change the kits' install guidance. | open | `cli-3-6-0-kit-guidance` |
 | Release notes for release N. | open | `cli-3-6-0-release-notes-n` |
 | Re-cut the kits for release N. | open | `cli-3-6-0-kit-stamp-n` |
 | Host gates for release N. | open | `cli-3-6-0-host-gates-n` |
-| Release N and publish the kits. | open | `cli-3-6-0-release-n` |
-| Resolver parity with door 3.6.0. | open | `cli-3-6-0-resolver-parity` |
+| Release N and publish the kits; `@inventarch/public-kits@<the version in plugins/ia/config/public-kits.json>` is on npm (`npm view`) before the release pull request merges. | open | `cli-3-6-0-release-n` |
+| Resolver parity with door 3.6.0. | closed | `cli-3-6-0-resolver-parity` |
+| Guard `bind.mjs set` and `recommend` against a kit the lock does not install; the resolver guard catches it at resolve time. | proposed | `cli-3-6-0-bind-mjs-guard` |
 
 ### Release N+1: 3.6.0 sources merged (`cli-3-6-0-sources`)
 

@@ -3,9 +3,9 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join, sep } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { test } from 'node:test';
-import { installedKit, installedKits, kitInstallMatches, kitInstallation, requireKitInstalled } from '../scripts/lib/kit.mjs';
+import { installedKit, installedKits, installRemedy, installRoute, kitInstallMatches, kitInstallation, publicKitsPackage, requireKitInstalled, shadowingRows } from '../scripts/lib/kit.mjs';
 import { envFor, fakeCli, makeKit, makeRepo, recordSources, run, sandbox } from './helpers/fixtures.mjs';
 
 // Which kits a repository's own lock installs: presence is one question, identity another.
@@ -86,9 +86,32 @@ test('the error code is IA-CORE-KIT-NOT-INSTALLED and not IA-CORE-PIN-UNAVAILABL
     assert.equal(error.code, 'IA-CORE-KIT-NOT-INSTALLED');
     assert.notEqual(error.code, 'IA-CORE-PIN-UNAVAILABLE');
     assert.equal(error.kit, KIT, 'the refusal carries the kit as a field');
-    assert.equal(error.message, `kit ${KIT} is bound by this repository but its lock does not install it; run ia install ${KIT} (or kit.mjs add ${KIT}), then resolve again`);
+    assert.equal(error.message, `kit ${KIT} is bound by this repository but its lock does not install it; run kit.mjs bind ${KIT} --install --apply (or ia install --package ${publicKitsPackage().spec} --apply --yes), then resolve again`);
     return true;
   });
+});
+
+test('the remedy depends on the kit: the package route for a kit the public-kits package carries, the add route for any other', t => {
+  const spec = publicKitsPackage().spec;
+  assert.match(spec, /^@inventarch\/public-kits@\d+\.\d+\.\d+$/, 'the shipped manifest names the package and a version');
+  assert.equal(installRemedy(KIT), `run kit.mjs bind ${KIT} --install --apply (or ia install --package ${spec} --apply --yes)`);
+  const repo = repoWith(t, { packages: [base] });
+  assert.throws(() => requireKitInstalled(repo, { id: 'inventarch/other-kit' }), error => {
+    assert.equal(error.message, 'kit inventarch/other-kit is bound by this repository but its lock does not install it; run kit.mjs add inventarch/other-kit --apply (or ia install inventarch/other-kit), then resolve again');
+    return true;
+  });
+});
+
+test('a missing or malformed package manifest keeps the add route and never throws', t => {
+  const dir = sandbox(t, 'ia-install-guard-manifest-');
+  const add = `run kit.mjs add ${KIT} --apply (or ia install ${KIT})`;
+  const withFile = text => { const file = join(dir, 'public-kits.json'); if (text !== null) writeFileSync(file, text); return { ...process.env, IA_CORE_KITS_DIR: fileURLToPath(new URL('../config/kits', import.meta.url)), IA_CORE_PUBLIC_KITS: file }; };
+  assert.equal(installRemedy(KIT, withFile(null)), add, 'no file');
+  for (const text of ['{ not json', '[]', 'null', '{"package":"@inventarch/public-kits"}', '{"package":"a b","version":"1.0.0"}', '{"package":"@inventarch/public-kits","version":"latest"}']) {
+    assert.equal(publicKitsPackage(withFile(text)), null, text);
+    assert.equal(installRemedy(KIT, withFile(text)), add, text);
+  }
+  assert.equal(installRemedy(KIT, withFile('{"package":"@inventarch/public-kits","version":"1.0.1"}')), `run kit.mjs bind ${KIT} --install --apply (or ia install --package @inventarch/public-kits@1.0.1 --apply --yes)`);
 });
 function writeLock(repo, text) { writeFileSync(join(repo, '.ia', 'distributions.lock.json'), text); }
 
@@ -358,4 +381,27 @@ test('check refuses when any carried kit the bindings name is not installed, not
   assert.equal(ran.json.error.code, NOT_INSTALLED);
   assert.ok(ran.json.error.message.includes('inventarch/second-kit'));
   assert.equal(f.spawned(), '');
+});
+
+test('IA_CORE_PUBLIC_KITS is a test hook: it is read only together with IA_CORE_KITS_DIR', t => {
+  const dir = sandbox(t, 'ia-install-guard-hook-');
+  const file = join(dir, 'public-kits.json');
+  writeFileSync(file, '{"package":"@inventarch/public-kits","version":"9.9.9"}');
+  assert.notEqual(publicKitsPackage({ ...process.env, IA_CORE_KITS_DIR: '', IA_CORE_PUBLIC_KITS: file })?.version, '9.9.9');
+  assert.equal(publicKitsPackage({ ...process.env, IA_CORE_KITS_DIR: dir, IA_CORE_PUBLIC_KITS: file }).version, '9.9.9');
+});
+
+test('while a direct package row for a kit the package carries shadows the entry, the remedy is kit.mjs add, not bind --install', t => {
+  const carried = 'inventarch/ia-method-kit';
+  const repo = repoWith(t, { packages: [base, { id: carried, version: '0.9.0', archive: ARCHIVE }] });
+  assert.deepEqual(shadowingRows(repo), [carried]);
+  assert.equal(installRoute(KIT, repo), 'add');
+  assert.equal(installRoute(KIT), 'package', 'without a lock to look at, the package route');
+  assert.throws(() => requireKitInstalled(repo, { id: KIT }), error => {
+    assert.equal(error.message, `kit ${KIT} is bound by this repository but its lock does not install it; run kit.mjs add ${KIT} --apply (or ia install ${KIT}), then resolve again`);
+    return true;
+  });
+  const clean = repoWith(t, { packages: [base] });
+  assert.deepEqual(shadowingRows(clean), []);
+  assert.equal(installRoute(KIT, clean), 'package');
 });

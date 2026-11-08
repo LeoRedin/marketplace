@@ -226,7 +226,8 @@
     answers "How does the plugin move users onto installed kits before the door enforces it?"
   work
     title "Migrate users to installed kits (package route)"
-    status open
+    status closed
+    ended "2026-11-08"
     milestone @milestone cli-3-6-0-release-n
     owner "InventArch maintainers"
     action "Change lib/kit-ops.mjs bindOp, scripts/bootstrap.mjs, lib/kit.mjs installedKits and installedKit, and every doc and skill that names the bind-only route: the init and lane skills, the doctor skill, plugins/ia/README.md, README.md and SUPPORT.md. Seed the language lock from a bundled kit's lock filtered to inventarch/language, as tools/check-language.mjs does. Update tests/bootstrap.test.mjs and kit-authoring.test.mjs. Add a test that runs the real doors 3.5.0 and 3.6.0 against a repository that binds a kit, before and after the remedy."
@@ -312,7 +313,7 @@
 
 @task cli-3-6-0-release-n
   meaning
-    says "The operator dispatches .github/workflows/release-pr.yml and merges the release pull request it opens, which tags ia-v<version>. The operator then dispatches .github/workflows/publish-public-kits.yml, so that the package the docs name exists."
+    says "The operator dispatches .github/workflows/release-pr.yml and merges the release pull request it opens, which tags ia-v<version>. The operator then dispatches .github/workflows/publish-public-kits.yml, so that the package the docs name exists. The package version in plugins/ia/config/public-kits.json is published, which npm view @inventarch/public-kits@<that version> shows, before the release pull request merges: the plugin's install route fails until it is."
     answers "How is release N released and the public kits published?"
   work
     title "Release N and publish the kits"
@@ -361,7 +362,8 @@
     answers "How do the plugin's own resolver and the door agree on a bound kit that is not installed?"
   work
     title "Resolver parity with door 3.6.0"
-    status open
+    status closed
+    ended "2026-11-08"
     milestone @milestone cli-3-6-0-release-n
     owner "InventArch maintainers"
     action "Confirm that the guard covers the qualified route and that the tests expect the refusal, and run the plugin tests."
@@ -370,6 +372,17 @@
   relationships
     requires @decision public-cli-3-6-0-resolver
     requires @task cli-3-6-0-install-migration
+
+@task cli-3-6-0-bind-mjs-guard
+  meaning
+    says "scripts/bind.mjs set and recommend can still write keys for a kit the lock does not install, which kit.mjs bind now refuses (public-cli-3-6-0-bind). The resolver guard catches it at resolve time. Decide whether bind.mjs should refuse them too, or leave the guard as the one place."
+  work
+    title "Guard bind.mjs against an uninstalled kit"
+    status proposed
+    milestone @milestone cli-3-6-0-release-n
+    owner "Unassigned"
+    start "2026-11-08"
+    source "docs/roadmap.md"
 
 @task cli-3-6-0-default-workspace
   meaning

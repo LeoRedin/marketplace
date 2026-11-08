@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, utimesSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { boundKeys, LIMIT } from '../scripts/bootstrap.mjs';
+import { boundKeys, LIMIT, NOTICE_LIMIT, notInstalledNotice } from '../scripts/bootstrap.mjs';
 import { envFor, fakeCli, makeKit, makeRepo, run, sandbox } from './helpers/fixtures.mjs';
 
 const hook = (cwd, env) => run('bootstrap.mjs', [], env, { input: JSON.stringify({ session_id: 's', hook_event_name: 'SessionStart', cwd }) });
@@ -77,7 +77,7 @@ test('without any CLI it still reports from the sources, and without bindings it
   assert.match(text, /@workspace repo \(identity unread\)/);
   assert.match(text, /IA CLI unavailable: IA-CORE-CLI-MISSING/);
   assert.match(text, /Kits installed: none/);
-  assert.match(text, /no \.ia\/bindings\.json, so no method is bound.*kit\.mjs bind <kit> --apply/);
+  assert.match(text, /no \.ia\/bindings\.json, so no method is bound.*kit\.mjs bind <kit> --install --apply installs a kit and writes the keys it recommends/);
   assert.ok(text.length <= LIMIT);
 });
 
@@ -140,7 +140,7 @@ test('F1 no bindings: the marker is there, routing is conditional, and only a me
   assert.equal(out.status, 0, out.stderr);
   const text = contextOf(out);
   assertConditional(text);
-  assert.match(text, /no method is bound; only an operation that needs a method refuses with IA-CORE-NO-METHOD until kit\.mjs bind <kit> --apply writes the keys a kit recommends[^\n]*reading, building, testing and editing continue/);
+  assert.match(text, /no method is bound; only an operation that needs a method refuses with IA-CORE-NO-METHOD until kit\.mjs bind <kit> --install --apply installs a kit and writes the keys it recommends[^\n]*reading, building, testing and editing continue/);
 });
 
 test('F2 a bound workspace still shows the lanes, under "When a task needs a method"', t => {
@@ -263,4 +263,123 @@ test('a very long plugin path cannot push the reserved sentence and marker past 
       if (length >= 2400) assert.ok(!text.includes(plugin), 'a path that cannot fit is left out of the resolve instruction');
     }
   }
+});
+
+// The bound kits the repository's lock does not install: one reserved line, capped, ahead of the unchanged tail.
+const NOTICE_HEAD = "Bound kits this repository's lock does not install: ";
+const noticeLines = text => lines(text).filter(line => line.startsWith(NOTICE_HEAD));
+
+test('a bound kit the lock does not install is named with the remedy, ahead of the tail, and an installed one is not', t => {
+  const dir = sandbox(t, 'ia-core-boot-');
+  const kitsDir = join(dir, 'kits');
+  const alpha = makeKit(kitsDir, { folder: 'alpha', id: 'inventarch/alpha-kit' });
+  const beta = makeKit(kitsDir, { folder: 'beta', id: 'inventarch/beta-kit', capability: 'beta-operate' });
+  const bindings = { format: 1, bindings: { 'work.*': { kit: alpha.id, capability: alpha.capability }, 'delivery.review': [{ kit: beta.id, capability: beta.capability }] }, precedence: [alpha.id], defaults: { knowledge: { kit: 'alpha-folder-alias-not-a-kit', capability: 'x' }, work: { kit: alpha.id, capability: alpha.capability } } };
+  const lock = { engine: '0.1.0', formatVersion: 1, packages: [{ id: 'inventarch/language', version: '3.2.0', archive: 'a'.repeat(64) }, { id: alpha.id, version: '0.1.0', archive: alpha.archive }] };
+  const repo = makeRepo(join(dir, 'repo'), { bindings, lock });
+  const env = envFor({ cli: fakeCli(dir), kitsDir, temp: dir, extra: { CLAUDE_PLUGIN_ROOT: '<plugin>', IA_CORE_NO_HOME_KITS: '1' } });
+  const text = contextOf(hook(repo, env));
+  assertConditional(text);
+  assertTail(text);
+  assert.deepEqual(noticeLines(text), [`${NOTICE_HEAD}${beta.id}, alpha-folder-alias-not-a-kit; run kit.mjs add <id> --apply.`], "alpha is a direct row here, which shadows the package entry, so every remedy is add");
+  const open = makeRepo(join(dir, "repo-open"), { bindings, lock: { ...lock, packages: [lock.packages[0]] } });
+  assert.deepEqual(noticeLines(contextOf(hook(open, env))), [`${NOTICE_HEAD}${alpha.id}, ${beta.id}, alpha-folder-alias-not-a-kit (add); run kit.mjs bind <id> --install --apply, or kit.mjs add <id> --apply for those marked (add).`], "no shadow: the package kits bind --install, the kit it does not carry is marked add");
+  const all = lines(text);
+  assert.equal(all.indexOf(SENTENCE), all.length - 3, 'the tail keeps its order: the sentence, the marker, the resolve instruction');
+  assert.equal(all.indexOf(noticeLines(text)[0]), all.indexOf(SENTENCE) - 1, 'the notice sits just ahead of the tail');
+  // The installed lock silences it, through an entry as through a packages row.
+  const viaEntry = makeRepo(join(dir, 'repo-entry'), { bindings, lock: { ...lock, packages: [lock.packages[0]], entries: [{ kind: 'package', name: '@inventarch/public-kits', version: '1.0.0', kits: [alpha, beta].map(k => ({ id: k.id, version: '0.1.0', archive: k.archive })) }] } });
+  assert.deepEqual(noticeLines(contextOf(hook(viaEntry, env))), [`${NOTICE_HEAD}alpha-folder-alias-not-a-kit; run kit.mjs add <id> --apply.`]);
+});
+
+test('with 40 long kit ids the notice is capped and the context stays within the limit; overflow keeps the notice and the tail order', t => {
+  const dir = sandbox(t, 'ia-core-boot-');
+  const kitsDir = join(dir, 'kits');
+  const keep = makeKit(kitsDir, { folder: 'beta', id: 'inventarch/beta-kit' });
+  const ids = Array.from({ length: 40 }, (_, i) => `some-organisation-with-a-long-name/an-especially-long-kit-name-number-${i}`);
+  const many = Object.fromEntries(Array.from({ length: 400 }, (_, i) => [`delivery.activity-number-${i}`, { kit: keep.id, capability: keep.capability }]));
+  const kitBindings = Object.fromEntries(ids.map((id, i) => [`work.k${i}`, { kit: id, capability: 'c' }]));
+  const repo = makeRepo(join(dir, 'repo'), { bindings: { format: 1, bindings: { ...many, ...kitBindings }, precedence: [keep.id] }, lock: { engine: '0.1.0', formatVersion: 1, packages: [{ id: keep.id, version: '0.1.0', archive: keep.archive }] } });
+  writeFileSync(join(repo, '.ia', 'governance.json'), '{}\n');
+  const home = join(dir, 'home');
+  mkdirSync(home, { recursive: true });
+  const env = envFor({ cli: fakeCli(dir), kitsDir, temp: dir, extra: { CLAUDE_PLUGIN_ROOT: '<plugin>', IA_HOME: home, HOME: home, USERPROFILE: home, CI: '', IA_NO_ACCOUNT_OFFER: '' } });
+  for (const source of ['startup', 'compact']) {
+    const out = run('bootstrap.mjs', [], env, { input: JSON.stringify({ hook_event_name: 'SessionStart', source, cwd: repo }) });
+    assert.equal(out.status, 0, out.stderr);
+    const text = out.json.hookSpecificOutput.additionalContext;
+    assert.ok(text.length <= LIMIT, `${source}: ${text.length} chars`);
+    assertTail(text);
+    const [notice] = noticeLines(text);
+    assert.ok(notice && notice.length <= NOTICE_LIMIT, `the notice is capped at ${NOTICE_LIMIT}: ${notice?.length}`);
+    assert.match(notice, / \.\.\. and \d+ more; run kit\.mjs add <id> --apply\.$/);
+    assert.ok(notice.includes(ids[0]), 'the first kits are named');
+    const all = lines(text);
+    assert.equal(all.indexOf(SENTENCE), all.length - 3, 'the tail order is unchanged');
+    assert.equal(all[all.indexOf(SENTENCE) - 1], notice, 'the notice is whole, just ahead of the tail');
+  }
+});
+
+test('notInstalledNotice names every kit that fits, counts the rest, and never exceeds its cap', () => {
+  assert.equal(notInstalledNotice([]), '');
+  assert.equal(notInstalledNotice(['a/b']), `${NOTICE_HEAD}a/b; run kit.mjs bind <id> --install --apply.`);
+  const huge = [`${'x'.repeat(NOTICE_LIMIT * 2)}`, 'a/b'];
+  assert.ok(notInstalledNotice(huge).length <= NOTICE_LIMIT, 'a single oversized id is cut, not allowed through');
+  const forty = Array.from({ length: 40 }, (_, i) => `org/kit-name-${i}`);
+  const line = notInstalledNotice(forty);
+  assert.ok(line.length <= NOTICE_LIMIT);
+  assert.match(line, / and (\d+) more; run kit\.mjs/);
+  const shown = line.slice(NOTICE_HEAD.length).split(' ... and ')[0].split(', ').length;
+  assert.equal(Number(/and (\d+) more/.exec(line)[1]), 40 - shown);
+});
+
+test('a corrupt lock never silences the hook: the payload still prints, with the unreadable lock named', t => {
+  const dir = sandbox(t, 'ia-core-boot-');
+  const kitsDir = join(dir, 'kits');
+  const alpha = makeKit(kitsDir, { folder: 'alpha', id: 'inventarch/alpha-kit' });
+  const repo = makeRepo(join(dir, 'repo'), { bindings: { format: 1, bindings: { 'work.*': { kit: alpha.id, capability: alpha.capability } }, precedence: [alpha.id] } });
+  writeFileSync(join(repo, '.ia', 'distributions.lock.json'), '{ not json');
+  const env = envFor({ cli: fakeCli(dir), kitsDir, temp: dir, extra: { CLAUDE_PLUGIN_ROOT: '<plugin>', IA_CORE_NO_HOME_KITS: '1' } });
+  const out = hook(repo, env);
+  assert.equal(out.status, 0, out.stderr);
+  const text = contextOf(out);
+  assertConditional(text);
+  assert.match(text, /\.ia\/distributions\.lock\.json could not be read/);
+  assert.match(text, /Bindings \(\.ia\/bindings\.json\): inventarch\/alpha-kit: work\.\*/);
+  assert.deepEqual(noticeLines(text), [], 'no notice can be computed from a lock that cannot be read');
+});
+
+test('a single kit id longer than the cap is cut, never the remedy; the add kits are marked when the kinds are mixed', () => {
+  const line = notInstalledNotice(['x'.repeat(NOTICE_LIMIT * 3), 'a/b']);
+  assert.ok(line.length <= NOTICE_LIMIT, `${line.length}`);
+  assert.match(line, /~ \.\.\. and 1 more; run kit\.mjs bind <id> --install --apply\.$/);
+  const cutAdd = notInstalledNotice(['x'.repeat(NOTICE_LIMIT * 3), 'a/b'], ['x'.repeat(NOTICE_LIMIT * 3), 'a/b']);
+  assert.ok(cutAdd.length <= NOTICE_LIMIT);
+  assert.match(cutAdd, /; run kit\.mjs add <id> --apply\.$/);
+  const mixed = notInstalledNotice(['p/one', 'q/two'], ['q/two']);
+  assert.equal(mixed, `${NOTICE_HEAD}p/one, q/two (add); run kit.mjs bind <id> --install --apply, or kit.mjs add <id> --apply for those marked (add).`);
+  const longMixed = notInstalledNotice(['y'.repeat(900), 'q/two'], ['y'.repeat(900)]);
+  assert.ok(longMixed.length <= NOTICE_LIMIT && longMixed.includes('~ (add)'), longMixed);
+});
+
+test('a notice of 400 characters with long extras keeps the tail and the head minimum', t => {
+  const dir = sandbox(t, 'ia-core-boot-');
+  const kitsDir = join(dir, 'kits');
+  const keep = makeKit(kitsDir, { folder: 'beta', id: 'inventarch/beta-kit' });
+  const bound = { 'work.big': { kit: `some-organisation/${'k'.repeat(900)}`, capability: 'c' }, 'work.keep': { kit: keep.id, capability: keep.capability } };
+  const repo = makeRepo(join(dir, 'repo'), { bindings: { format: 1, bindings: bound, precedence: [keep.id] }, lock: { engine: '0.1.0', formatVersion: 1, packages: [{ id: keep.id, version: '0.1.0', archive: keep.archive }] } });
+  writeFileSync(join(repo, '.ia', 'governance.json'), '{}\n');
+  const home = join(dir, 'home');
+  mkdirSync(home, { recursive: true });
+  const folder = join(home, 'work-v1', 'proj', 'task');
+  mkdirSync(folder, { recursive: true });
+  writeFileSync(join(folder, 'binding.json'), JSON.stringify({ format: 3, revision: 2, workspace: { root: repo, revision: 'r' }, task: 'task', kits: { [keep.id]: { version: '0.3.0', archive: 'a'.repeat(64), sources: 'b'.repeat(64) } }, keys: Object.fromEntries(Array.from({ length: 30 }, (_, i) => [`work.pinned-activity-${i}`, { kit: keep.id, capability: keep.capability }])), createdAt: 'x' }));
+  const env = envFor({ cli: fakeCli(dir), kitsDir, temp: dir, extra: { CLAUDE_PLUGIN_ROOT: `/${'p'.repeat(1200)}`, IA_HOME: home, HOME: home, USERPROFILE: home, CI: '', IA_NO_ACCOUNT_OFFER: '' } });
+  const out = run('bootstrap.mjs', [], env, { input: JSON.stringify({ hook_event_name: 'SessionStart', source: 'compact', cwd: repo }) });
+  const text = out.json.hookSpecificOutput.additionalContext;
+  assert.ok(text.length <= LIMIT, `${text.length}`);
+  assertTail(text);
+  const [notice] = noticeLines(text);
+  assert.ok(notice && notice.length <= NOTICE_LIMIT && notice.endsWith('; run kit.mjs add <id> --apply.'), notice);
+  assert.ok(text.startsWith('This repository is an InventArch workspace.') && text.indexOf(notice) > 100, 'the head stays ahead of the notice');
 });

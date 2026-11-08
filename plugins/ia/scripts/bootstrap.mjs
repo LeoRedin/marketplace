@@ -9,7 +9,9 @@
 // nothing else. Inside one it hands the session at
 // most 2,500 characters (LIMIT): the workspace identity and revision, the kits
 // the repository installed, whether .ia/bindings.json exists and which keys it
-// binds, grouped by kit and shortened to fit, and the one instruction to
+// binds, grouped by kit and shortened to fit, the one line that names every
+// bound kit the repository's lock does not install (at most about 400 characters,
+// with the remedy kit.mjs bind <kit> --install --apply), and the one instruction to
 // resolve when a method is needed, with the marker and the sentence that say
 // contributing needs no binding, all of which always fit. The limit covers the
 // whole additionalContext: the notices and a compaction's pin share the room
@@ -22,7 +24,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveCli, runIa } from './lib/cli.mjs';
 import { readBindings } from './lib/binding.mjs';
-import { homeKits, homeKitsDir, installedKits, kitsDir, listKits } from './lib/kit.mjs';
+import { canonicalKitId, homeKits, homeKitsDir, installedKits, installRoute, kitInstallation, kitsDir, listKits } from './lib/kit.mjs';
 import { accountOffer, governanceNotice } from './lib/account.mjs';
 import { findWorkspace } from './lib/workspace.mjs';
 import { iaHome } from './lib/home.mjs';
@@ -64,6 +66,41 @@ export function boundKeys(bindings) {
     }
   }
   return [...byKit].map(([kit, entries]) => `${kit}: ${[...entries].map(([entry, activities]) => (activities.length === 1 ? `${entry}.${activities[0]}` : `${entry}.{${activities.join(', ')}}`)).join(', ')}`).join('; ');
+}
+
+// The kits the bindings and defaults name, each once under its canonical id, that the repository's lock does not install.
+// Never throws: an unreadable lock names none.
+export function unlockedBoundKits(root, bindings) {
+  try {
+    const ids = [];
+    for (const { kit } of [...Object.values(bindings.bindings).flat(), ...Object.values(bindings.defaults ?? {})]) {
+      const id = typeof kit === 'string' ? canonicalKitId(kit) : null;
+      if (id && !ids.includes(id)) ids.push(id);
+    }
+    return ids.filter(id => kitInstallation(root, id) === null);
+  } catch { return []; }
+}
+
+export const NOTICE_LIMIT = 400;
+// The one line that names the bound kits the lock does not install, at most NOTICE_LIMIT characters ("... and N more").
+// The remedy is kit.mjs bind <id> --install --apply for a kit the public-kits package installs, and kit.mjs add <id> --apply
+// for the kits in addIds (not carried by the package, no manifest, or a direct row shadows the package entry); with both
+// kinds the add kits carry "(add)". An id too long for the line is cut, never the remedy.
+export function notInstalledNotice(ids, addIds = []) {
+  if (!ids.length) return '';
+  const adds = new Set(addIds);
+  const some = ids.some(id => adds.has(id)), all = ids.every(id => adds.has(id));
+  const head = "Bound kits this repository's lock does not install: ";
+  const tail = all ? '; run kit.mjs add <id> --apply.' : some ? '; run kit.mjs bind <id> --install --apply, or kit.mjs add <id> --apply for those marked (add).' : '; run kit.mjs bind <id> --install --apply.';
+  const mark = id => (some && !all && adds.has(id) ? ' (add)' : '');
+  const line = shown => `${head}${shown.join(', ')}${shown.length < ids.length ? ` ... and ${ids.length - shown.length} more` : ''}${tail}`;
+  let shown = ids.map(id => id + mark(id));
+  while (shown.length > 1 && line(shown).length > NOTICE_LIMIT) shown = shown.slice(0, -1);
+  if (line(shown).length > NOTICE_LIMIT) {
+    const room = NOTICE_LIMIT - line(['']).length - mark(ids[0]).length;
+    shown = [`${ids[0].slice(0, Math.max(1, room - 1))}~${mark(ids[0])}`];
+  }
+  return line(shown);
 }
 
 // Cuts text to at most max characters at a word boundary, ending in the marker; never longer than max.
@@ -116,7 +153,8 @@ export function context(root, env = process.env, extras = []) {
   } catch (error) { cliNote = `IA CLI unavailable: ${error.code ?? error.message}${error.code === 'IA-CORE-CLI-MISSING' ? ' (no explicit path and no @inventarch/cli installed in the repository; a hook never fetches one)' : ''}`; }
   const declared = declaredWorkspace(root);
   lines.push(`InventArch workspace at ${root}: ${identity ?? (declared ? `@workspace ${declared} (identity unread)` : 'identity unread')}${revision ? `, revision ${revision.slice(0, 12)}` : ''}; ${cliNote}.`);
-  const kits = installedKits(root);
+  let kits = [];
+  try { kits = installedKits(root); } catch (error) { lines.push(`.ia/distributions.lock.json could not be read: ${error.code ?? error.message}`); }
   const carried = carriedKitIds(env);
   lines.push(kits.length ? `Kits installed: ${kits.map(k => `${k.id}@${k.version}`).join(', ')}.` : 'Kits installed: none (.ia/distributions.lock.json pins no kit; node "<plugin>/scripts/kit.mjs" list shows what this plugin carries).');
   const uncarried = carried ? kits.filter(k => !carried.has(k.id)).map(k => k.id) : [];
@@ -128,13 +166,17 @@ export function context(root, env = process.env, extras = []) {
     const keys = Object.keys(bindings.bindings).length ? boundKeys(bindings) : 'no keys';
     const defaults = Object.keys(bindings.defaults);
     bound = { head: 'Bindings (.ia/bindings.json): ', keys, rest: `${defaults.length ? `; defaults for ${defaults.join(', ')}` : ''}${bindings.precedence.length ? `; precedence ${bindings.precedence.join(' > ')}` : ''}.` };
-  } else if (!existsSync(join(root, '.ia', 'bindings.json'))) lines.push('Bindings: no .ia/bindings.json, so no method is bound; only an operation that needs a method refuses with IA-CORE-NO-METHOD until kit.mjs bind <kit> --apply writes the keys a kit recommends (kit.mjs list shows the kits); reading, building, testing and editing continue.');
+  } else if (!existsSync(join(root, '.ia', 'bindings.json'))) lines.push('Bindings: no .ia/bindings.json, so no method is bound; only an operation that needs a method refuses with IA-CORE-NO-METHOD until kit.mjs bind <kit> --install --apply installs a kit and writes the keys it recommends (kit.mjs list shows the kits); reading, building, testing and editing continue.');
   const plugin = (env.CLAUDE_PLUGIN_ROOT || fileURLToPath(new URL('..', import.meta.url))).replace(/\\/g, '/').replace(/\/+$/, '');
   // Three newlines join the head, the sentence, the marker and the resolve instruction.
-  const reserved = BOOTSTRAP_SENTENCE.length + BOOTSTRAP_MARKER.length + 3;
+  // The not-installed notice is reserved too: it follows the head and the optional lines, and nothing cuts it.
+  const unlocked = bindings ? unlockedBoundKits(root, bindings) : [];
+  const notice = notInstalledNotice(unlocked, unlocked.filter(id => installRoute(id, root) === 'add'));
+  const noticeCost = notice ? notice.length + 1 : 0;
+  const reserved = BOOTSTRAP_SENTENCE.length + BOOTSTRAP_MARKER.length + 3 + noticeCost;
   const resolveLine = resolveInstruction(plugin, reserved, LIMIT);
   const tail = [BOOTSTRAP_SENTENCE, BOOTSTRAP_MARKER, resolveLine].join('\n');
-  const room = Math.max(0, LIMIT - tail.length - 1);
+  const room = Math.max(0, LIMIT - tail.length - 1 - noticeCost);
   const optional = extras.filter(Boolean).join('\n');
   const tailing = optional ? optional.length + 1 : 0;
   let head = lines.join('\n');
@@ -143,7 +185,7 @@ export function context(root, env = process.env, extras = []) {
     head += `\n${bound.head}${fit(bound.keys, Math.max(0, left), ' ... (truncated; bind.mjs show lists every key)')}${bound.rest}`;
   }
   head = fit(head, Math.max(0, room - tailing), '~');
-  return `${fit(optional ? `${head}\n${optional}` : head, room, '~')}\n${tail}`;
+  return `${fit(optional ? `${head}\n${optional}` : head, room, '~')}${notice ? `\n${notice}` : ''}\n${tail}`;
 }
 
 export const PIN_LIMIT = 800;
