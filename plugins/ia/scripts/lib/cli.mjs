@@ -11,7 +11,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 
 // The CLI the kits' releases were packed with; adoption needs exactly this one.
-export const PINNED = '3.5.0';
+export const PINNED = '3.6.0';
 
 export class CliError extends Error {
   constructor(message, code = 'IA-CORE-CLI') { super(message); this.code = code; }
@@ -86,11 +86,14 @@ export function resolveCli(root, { cliPath, env = process.env, platform = proces
 }
 
 // Runs `ia <args> --root <root>`; with json, appends --json and parses stdout.
+// IA_NO_HANDOFF=1 keeps the chosen CLI the one that runs: from 3.6.0 the CLI
+// otherwise hands its command to the repository's installed CLI (decision
+// public-cli-3-6-0-handoff).
 export function runIa(root, args, { json = true, cli, timeoutMs = 180_000 } = {}) {
   const resolved = cli ?? resolveCli(root);
   const [command, ...prefix] = resolved.argv;
   const argv = [...prefix, ...args, '--root', root, ...(json ? ['--json'] : [])];
-  const ran = spawnSync(command, argv, { cwd: root, encoding: 'utf8', timeout: timeoutMs, maxBuffer: 64 * 1024 * 1024, windowsHide: true });
+  const ran = spawnSync(command, argv, { cwd: root, env: { ...process.env, IA_NO_HANDOFF: '1' }, encoding: 'utf8', timeout: timeoutMs, maxBuffer: 64 * 1024 * 1024, windowsHide: true });
   if (ran.error) throw new CliError(`ia ${args[0]} did not run: ${ran.error.message}`);
   const result = { code: ran.status, stdout: ran.stdout, stderr: ran.stderr, cli: resolved };
   if (json) {

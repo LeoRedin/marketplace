@@ -32,7 +32,7 @@ Release N migrates users onto installed kits on the 3.5.x pins; release N+1 move
 | Release notes for release N. | closed | `cli-3-6-0-release-notes-n` |
 | Re-cut the kits for release N. | closed | `cli-3-6-0-kit-stamp-n` |
 | Host gates for release N. | closed | `cli-3-6-0-host-gates-n` |
-| Release N and publish the kits; `@inventarch/public-kits@<the version in plugins/ia/config/public-kits.json>` is on npm (`npm view`) before the release pull request merges. | open | `cli-3-6-0-release-n` |
+| Release N and publish the kits; `@inventarch/public-kits@<the version in plugins/ia/config/public-kits.json>` is on npm (`npm view`) before the release pull request merges. | closed | `cli-3-6-0-release-n` |
 | Resolver parity with door 3.6.0. | closed | `cli-3-6-0-resolver-parity` |
 | Guard `bind.mjs set` and `recommend` against a kit the lock does not install; the resolver guard catches it at resolve time. | proposed | `cli-3-6-0-bind-mjs-guard` |
 
@@ -40,11 +40,11 @@ Release N migrates users onto installed kits on the 3.5.x pins; release N+1 move
 
 | Task | Standing | Record |
 |---|---|---|
-| Move the pins and cohort to 3.6.0. | open | `cli-3-6-0-pins` |
-| Guard the chosen CLI against hand-off. | open | `cli-3-6-0-handoff-guard` |
-| Closure default workspace under 3.6.0. | open | `cli-3-6-0-default-workspace` |
-| Change the kits' toolchain to 3.6.0. | open | `cli-3-6-0-kit-sources` |
-| Release notes for 3.6.0. | open | `cli-3-6-0-release-notes` |
+| Move the pins and cohort to 3.6.0. | closed | `cli-3-6-0-pins` |
+| Guard the chosen CLI against hand-off. | closed | `cli-3-6-0-handoff-guard` |
+| Closure default workspace under 3.6.0. | closed | `cli-3-6-0-default-workspace` |
+| Change the kits' toolchain to 3.6.0. | closed | `cli-3-6-0-kit-sources` |
+| Release notes for 3.6.0. | closed | `cli-3-6-0-release-notes` |
 
 ### Release N+1: 3.6.0 released and qualified (`cli-3-6-0-released`)
 
