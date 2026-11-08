@@ -65,7 +65,7 @@
     },
     {
       "path": "plugins/ia/config/kits/ia-authoring/.ia/release.json",
-      "sha256": "8c977aa7c1922740b61509445b8773bff1cb6958a52fbda46c5b312de2ad5925"
+      "sha256": "17fc58972edf75567c827e2c04d4d6c84d881bdf0e1ec56217b327257d119b24"
     },
     {
       "path": "plugins/ia/config/kits/ia-authoring/.ia/src/systems/ia-authoring/records/capabilities.ia",
@@ -208,8 +208,12 @@
       "sha256": "1d97c23fa2ffe7bb1b1d1b965deef0072493c239f3c5cd16deae8144244bd730"
     },
     {
+      "path": "plugins/ia/config/kits/ia-authoring/releases/0.1.3.json",
+      "sha256": "1d2203af10fd4cc8ce041198a665c8737a6f909d511900db4937cdbf8ce7e994"
+    },
+    {
       "path": "plugins/ia/config/kits/ia-authoring/releases.json",
-      "sha256": "7ac205052ac1e96b2bc24d8be594925cbe2fcb1651980978a3086252eb62ed77"
+      "sha256": "2c43ea228323a9ed059d347e97cffb419713c89e53091ca5377a02f115da7093"
     },
     {
       "path": "plugins/ia/config/kits/ia-authoring/scripts/eval-triggers.mjs",
@@ -233,7 +237,7 @@
     },
     {
       "path": "plugins/ia/config/kits/ia-kb/.ia/release.json",
-      "sha256": "d699e6e51b2c79ee5fee5645139200a23a7df3d3f40ea54ee0ca325fb040767e"
+      "sha256": "2ba34187b82e5aed2fa23ec3070989d7af6950b70bf5b151b13d4b4ec461de26"
     },
     {
       "path": "plugins/ia/config/kits/ia-kb/.ia/src/systems/ia-kb/records/capabilities.ia",
@@ -360,8 +364,12 @@
       "sha256": "9627a4bcc42240b53f25c24a1eac2367f489d0dc57642a2b0cdc2a4733699912"
     },
     {
+      "path": "plugins/ia/config/kits/ia-kb/releases/0.9.3.json",
+      "sha256": "a51777d9f08cd11f4cb3b5d1a931b0a460a6526ca1f58ab2f56d6a7e52ddca3e"
+    },
+    {
       "path": "plugins/ia/config/kits/ia-kb/releases.json",
-      "sha256": "ce2bb3a90a51a9486373a3ca351c188840945aef8e5edf82a9226b2b57dc067f"
+      "sha256": "bbcc3f5dc4a69f8be36fd7c6564d86aa0c6692ff5573fe5148ae561bb593281a"
     },
     {
       "path": "plugins/ia/config/kits/ia-kb/scripts/check-decisions.mjs",
@@ -525,7 +533,7 @@
     },
     {
       "path": "plugins/ia/config/public-kits.json",
-      "sha256": "8dbe90ebde51b40f06ba361d1dec68b9577184a7d6523bb137799223d115e332"
+      "sha256": "36518283a34a0ea2171d41b9fb156b1740d4007134ff53cad380224c65d68625"
     },
     {
       "path": "plugins/ia/config/qualified-executors.json",
