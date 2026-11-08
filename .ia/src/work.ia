@@ -259,7 +259,8 @@
     answers "What do the kits say about installing a kit in release N?"
   work
     title "Change the kits' install guidance"
-    status open
+    status closed
+    ended "2026-11-08"
     milestone @milestone cli-3-6-0-release-n
     owner "InventArch maintainers"
     expected-artifact "kits/ia-authoring, kits/ia-kb, kits/ia-method"

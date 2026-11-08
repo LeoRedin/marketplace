@@ -28,7 +28,7 @@ Release N migrates users onto installed kits on the 3.5.x pins; release N+1 move
 | Record the 3.6.0 decisions and tasks. | closed | `cli-3-6-0-record-decisions` |
 | Migrate users to installed kits (package route). | closed | `cli-3-6-0-install-migration` |
 | Install the catalogue's own kits locally. | closed | `cli-3-6-0-own-lock` |
-| Change the kits' install guidance. | open | `cli-3-6-0-kit-guidance` |
+| Change the kits' install guidance. | closed | `cli-3-6-0-kit-guidance` |
 | Release notes for release N. | open | `cli-3-6-0-release-notes-n` |
 | Re-cut the kits for release N. | open | `cli-3-6-0-kit-stamp-n` |
 | Host gates for release N. | open | `cli-3-6-0-host-gates-n` |

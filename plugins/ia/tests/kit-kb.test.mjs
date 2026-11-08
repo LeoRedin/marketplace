@@ -1165,7 +1165,7 @@ function assertDelivery(packet, row, where, expectedSeat = null) {
   assert.deepEqual(kinds, row.required.length ? ['enforcement'] : [], `${label}: missing ${JSON.stringify(packet.missing)}`);
 }
 
-test('REQ-KB-08 success: every recommended binding delivers its whole playbook and the laws, restored and adopted', { skip: SKIP }, async t => {
+test('REQ-KB-08 success: every recommended binding delivers its whole playbook and the laws once the kit is installed, and an uninstalled kit is refused', { skip: SKIP }, async t => {
   const { bound, rows } = readmeDelivery();
   assert.equal(Object.keys(bound).length, Object.keys(BINDINGS).length);
   assert.deepEqual(rows.map(r => r.key).sort(), Object.keys(bound).sort(), 'the delivery table covers every bind.mjs line, once');
@@ -1177,15 +1177,14 @@ test('REQ-KB-08 success: every recommended binding delivers its whole playbook a
   const env = { ...ENV_CLEAN(process.env), IA_CLI_PATH: CLI, TMPDIR: temp, TEMP: temp, TMP: temp, IA_CORE_CLOSURES_DIR: join(temp, 'closures') };
   const jobs = (root, seat) => rows.flatMap(row => activitiesOf(row.key).map(activity => async () => ({ row, packet: await resolveAsync(root, activity, env, seat) })));
 
-  // From the restored kit root: the workspace does not install the kit.
+  // A workspace that binds the kit while its lock does not install it is refused.
   const restored = initWorkspace(base, 'restored');
   writeBindings(restored, bound);
-  const [first, ...rest] = jobs(restored, null);
-  const warm = await first();
-  for (const { row, packet } of [warm, ...(await pool(rest))]) {
-    assert.equal(packet.envelope.kitInstalled, false);
-    assertDelivery(packet, row, 'restored');
-  }
+  const refused = spawnSync(process.execPath, [join(PLUGIN, 'scripts', 'resolve.mjs'), '--entry', 'knowledge', '--activity', 'check', '--root', restored, '--json'], { env, encoding: 'utf8', windowsHide: true, timeout: 180_000 });
+  assert.equal(refused.status, 1, refused.stdout + refused.stderr);
+  const refusal = JSON.parse(refused.stdout).error;
+  assert.equal(refusal.code, 'IA-CORE-KIT-NOT-INSTALLED');
+  assert.equal(refusal.kit, KIT_ID);
 
   // In a repository that adopted the kit and holds a @spec, at its workspace
   // seat and with --seat at the @spec.
@@ -1214,13 +1213,18 @@ test('REQ-KB-08 failure: a capability delivery.json leaves out arrives as the po
   t.after(() => rmSync(base, { recursive: true, force: true }));
   const kits = join(base, 'kits');
   cpSync(KIT, join(kits, 'ia-kb'), { recursive: true });
-  const delivery = join(kits, 'ia-kb', 'delivery.json');
-  const parsed = JSON.parse(readFileSync(delivery, 'utf8'));
-  writeFileSync(delivery, JSON.stringify({ ...parsed, whole: parsed.whole.filter(n => n !== 'kb-check') }, null, 2) + '\n');
   const temp = join(base, 'temp');
   mkdirSync(temp);
   const repo = initWorkspace(base, 'repo');
   writeBindings(repo, { 'knowledge.check': 'kb-check' });
+  // The lock must install the kit before a binding to it runs: adopt the unchanged copy, then leave kb-check out of
+  // the scratch copy's delivery.json (the resolver reads the declaration from IA_CORE_KITS_DIR).
+  const { resolveCli } = await import('../scripts/lib/cli.mjs');
+  const { adopt } = await import('../scripts/lib/kit.mjs');
+  assert.ok(adopt(repo, findKit(KIT_ID, kits), { cli: resolveCli(repo, { env: { IA_CLI_PATH: CLI } }) }).written.length > 0);
+  const delivery = join(kits, 'ia-kb', 'delivery.json');
+  const parsed = JSON.parse(readFileSync(delivery, 'utf8'));
+  writeFileSync(delivery, JSON.stringify({ ...parsed, whole: parsed.whole.filter(n => n !== 'kb-check') }, null, 2) + '\n');
   const env = { ...ENV_CLEAN(process.env), IA_CLI_PATH: CLI, TMPDIR: temp, TEMP: temp, TMP: temp, IA_CORE_KITS_DIR: kits, IA_CORE_CLOSURES_DIR: join(temp, 'closures') };
   const packet = await resolveAsync(repo, 'check', env, null);
   assert.deepEqual(packet.instructions.map(c => [c.address, c.source]), [['governance-system/definition/procedure/kb-check#orient/Attention', 'position']]);
