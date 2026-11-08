@@ -238,11 +238,12 @@
 
 @task cli-3-6-0-own-lock
   meaning
-    says "Keep the catalogue's lock ignored, and make the contributor setup run kit.mjs add <kit> . --apply for the three kits (public-cli-3-6-0-own-lock B). Add vendor/ia/ to .gitignore, and say how in CONTRIBUTING.md and AGENTS.md."
+    says "Keep the catalogue's lock ignored, and make the contributor setup run kit.mjs add <kit> . --apply for the three kits through npm run kits:install (public-cli-3-6-0-own-lock B). Add vendor/ia/ to .gitignore and to tools/consistency.py's ignored paths, and say how in CONTRIBUTING.md and AGENTS.md."
     answers "How do contributors' lanes in this repository satisfy the door?"
   work
     title "Install the catalogue's own kits locally"
-    status open
+    status closed
+    ended "2026-11-08"
     milestone @milestone cli-3-6-0-release-n
     owner "InventArch maintainers"
     action "After the setup, call ia_method for delivery.design at the repository root through door 3.6.0 and keep the packet, which shows no IA-CORE-KIT-NOT-INSTALLED."

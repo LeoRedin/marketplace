@@ -233,7 +233,7 @@ A pull request that changes a file the plugin ships adds a release note (`node t
 
 ## ✅ Contributing and verification
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md), [docs/decisions.md](docs/decisions.md) and [docs/adding-plugins.md](docs/adding-plugins.md) first. Open work is in [docs/roadmap.md](docs/roadmap.md). You need Python 3.11+ and Node 22.22.x. Run `npm ci` at the root once in each checkout: it installs lefthook, Biome and the pinned `@inventarch/cli` 3.5.0, and lefthook installs this repository's Git hooks. CI runs the same gates on every pull request into `main` (`.github/workflows/gates.yml`):
+Read [CONTRIBUTING.md](CONTRIBUTING.md), [AGENTS.md](AGENTS.md), [docs/decisions.md](docs/decisions.md) and [docs/adding-plugins.md](docs/adding-plugins.md) first. Open work is in [docs/roadmap.md](docs/roadmap.md). You need Python 3.11+ and Node 22.22.x. Run `npm ci` at the root once in each checkout: it installs lefthook, Biome and the pinned `@inventarch/cli` 3.5.0, and lefthook installs this repository's Git hooks. `npm run kits:install` then installs the three kits this repository's own lanes run (see CONTRIBUTING.md). CI runs the same gates on every pull request into `main` (`.github/workflows/gates.yml`):
 
 | Command | What it checks |
 | --- | --- |
