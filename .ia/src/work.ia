@@ -321,9 +321,11 @@
     answers "How is release N released and the public kits published?"
   work
     title "Release N and publish the kits"
-    status open
+    status closed
+    ended "2026-11-08"
     milestone @milestone cli-3-6-0-release-n
     owner "Operator"
+    action "Done: the operator merged the release pull request (#30), which tagged ia-v1.4.0 at 8f32d9fb, and published the package: npm view @inventarch/public-kits versions lists 1.0.3. A repository that installed the kits by the package route returned packets from door 3.5.x and door 3.6.0, the catalogue lanes resolved and the host gates passed (the description of pull request #29)."
     expected-artifact "tag ia-v<version>; @inventarch/public-kits on npm"
     source "releases/README.md"
   relationships
@@ -336,7 +338,8 @@
     answers "Which files move to the 3.6.0 pins?"
   work
     title "Move the pins and cohort to 3.6.0"
-    status open
+    status closed
+    ended "2026-11-08"
     milestone @milestone cli-3-6-0-sources
     owner "InventArch maintainers"
     action "Apply the bump. Add supersedes @decision public-cli-3-5-0 to public-cli-3-6-0, set public-cli-3-5-0 to superseded, update both rows in docs/decisions.md, and update AGENTS.md and the .github/dependabot.yml comment. Then run python tools/selection.py --write, python tools/validate.py and node tools/check-language.mjs, and keep their output."
@@ -348,11 +351,12 @@
 
 @task cli-3-6-0-handoff-guard
   meaning
-    says "Set IA_NO_HANDOFF=1 on every spawn of a resolved CLI (public-cli-3-6-0-handoff A): runIa, ia.mjs, the ia-authoring kit's scratch.mjs, the closure runtime, method-check and the gate tools. Add a test that a chosen CLI runs while the repository has a different one installed."
+    says "Set IA_NO_HANDOFF=1 on every spawn of a resolved CLI (public-cli-3-6-0-handoff A): runIa, ia.mjs, the ia-authoring kit's scratch.mjs, method-check and the gate tools. Add a test that a chosen CLI runs while the repository has a different one installed."
     answers "How does the plugin stop CLI 3.6.0's hand-off from running another version?"
   work
     title "Guard the chosen CLI against hand-off"
-    status open
+    status closed
+    ended "2026-11-08"
     milestone @milestone cli-3-6-0-sources
     owner "InventArch maintainers"
     expected-artifact "plugins/ia/scripts/lib/cli.mjs"
@@ -390,11 +394,12 @@
 
 @task cli-3-6-0-default-workspace
   meaning
-    says "When no consumer workspace is named, resolveConsumerSubject takes IA's repository default only when it is one of the admitted workspaces that root the distribution, and refuses (unambiguous) otherwise (public-cli-3-6-0-default-workspace C). The test keeps its refusal for the plural-roots scenario and adds a case where the entry-point workspace is a root."
+    says "When no consumer workspace is named, resolveConsumerSubject takes IA's repository default only when it is one of the admitted workspaces that root a distribution this repository authors, and refuses (unambiguous) otherwise; a repository that authors none takes the default (public-cli-3-6-0-default-workspace C). The test keeps its refusal for the plural-roots scenario and adds a case where the entry-point workspace is a root."
     answers "What does the closure path select when no consumer workspace is named under IA 3.6.0?"
   work
     title "Closure default workspace under 3.6.0"
-    status open
+    status closed
+    ended "2026-11-08"
     milestone @milestone cli-3-6-0-sources
     owner "InventArch maintainers"
     expected-artifact "plugins/ia/scripts/lib/closure-native.mjs, tests/closure-native.test.mjs"
@@ -408,7 +413,8 @@
     answers "What changes in the kits' own sources for 3.6.0?"
   work
     title "Change the kits' toolchain to 3.6.0"
-    status open
+    status closed
+    ended "2026-11-08"
     milestone @milestone cli-3-6-0-sources
     owner "InventArch maintainers"
     expected-artifact "kits/ia-authoring, kits/ia-kb"
@@ -423,7 +429,8 @@
     answers "What do release N+1's notes say?"
   work
     title "Release notes for 3.6.0"
-    status open
+    status closed
+    ended "2026-11-08"
     milestone @milestone cli-3-6-0-sources
     owner "InventArch maintainers"
     expected-artifact "releases/pending/*.json"
@@ -437,10 +444,11 @@
     answers "How are the kits re-cut on 3.6.0?"
   work
     title "Re-cut the kits on 3.6.0"
-    status open
+    status closed
+    ended "2026-11-08"
     milestone @milestone cli-3-6-0-released
     owner "InventArch maintainers"
-    action "After the stamp, python tools/consistency.py and node tools/kit.mjs package --check pass. node --test with IA_CORE_TEST_CLI at 3.6.0 passes too, except for the cohort cases that need Node 22.22.x when another Node runs them."
+    action "Done: each kit's source.commit names the sources commit 900da4e8, and all three kits were packed with @inventarch/cli 3.6.0: ia-method 0.7.3 (archive dc9efbf35b56eaf2c14e59eaf680ad479dd518777057a51bc63c0fabc243e7fa, 85 records), ia-kb 0.9.4 (archive 52f0f188c0102a4f3ae392ab1c48c89234d01170126507b2caf23c764b95d398, 70 records) and ia-authoring 0.1.4 (archive 9b3d110f098f604426fc6bee3aa470e909d7b2019b5a2bb3b191e935265933f6, 106 records). The bundle, index, selection and package were written, and @inventarch/public-kits is 1.0.4. After the stamp, python tools/consistency.py and node tools/kit.mjs package --check pass. node --test with IA_CORE_TEST_CLI at 3.6.0 passes too, except for the cohort cases that need Node 22.22.x when another Node runs them."
     expected-artifact "kits/*/releases/<version>.json, kits/index.json, packages/public-kits/package.json"
     source "kits/README.md"
   relationships
@@ -453,7 +461,8 @@
     answers "Do the hosts accept the 3.6.0 plugin?"
   work
     title "Host gates for 3.6.0"
-    status open
+    status closed
+    ended "2026-11-08"
     milestone @milestone cli-3-6-0-released
     owner "InventArch maintainers"
     expected-artifact "the Codex smoke report"
