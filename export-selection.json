@@ -65,7 +65,7 @@
     },
     {
       "path": "plugins/ia/config/kits/ia-authoring/.ia/release.json",
-      "sha256": "39dd9434117dd4463b2ae017e6491d9b3ad52f68d49260bea67cd1f6dc914b0e"
+      "sha256": "34dfcf9b8be5ccd9b9f5ece802dc93c43a02305d4f1b8dc84960db4ed1ce2d33"
     },
     {
       "path": "plugins/ia/config/kits/ia-authoring/.ia/src/systems/ia-authoring/records/capabilities.ia",
@@ -212,8 +212,12 @@
       "sha256": "1d2203af10fd4cc8ce041198a665c8737a6f909d511900db4937cdbf8ce7e994"
     },
     {
+      "path": "plugins/ia/config/kits/ia-authoring/releases/0.1.4.json",
+      "sha256": "ad24e27ada25f49433ec3642de62e115071f2f07edf7c04b79bb39acfdafd641"
+    },
+    {
       "path": "plugins/ia/config/kits/ia-authoring/releases.json",
-      "sha256": "2c43ea228323a9ed059d347e97cffb419713c89e53091ca5377a02f115da7093"
+      "sha256": "07c21b4bef439ebca0872d121302ae69c60e6225129f4ef2ca24b3da887a4648"
     },
     {
       "path": "plugins/ia/config/kits/ia-authoring/scripts/eval-triggers.mjs",
@@ -237,7 +241,7 @@
     },
     {
       "path": "plugins/ia/config/kits/ia-kb/.ia/release.json",
-      "sha256": "a08036553533fa86aa75e9e00fd65ff5aa82f42e87a5fa633efd7449323294c8"
+      "sha256": "85828803bb3395b404fde30b32d30c08b1f43eac2e8c92c3745823dc761351c6"
     },
     {
       "path": "plugins/ia/config/kits/ia-kb/.ia/src/systems/ia-kb/records/capabilities.ia",
@@ -368,8 +372,12 @@
       "sha256": "a51777d9f08cd11f4cb3b5d1a931b0a460a6526ca1f58ab2f56d6a7e52ddca3e"
     },
     {
+      "path": "plugins/ia/config/kits/ia-kb/releases/0.9.4.json",
+      "sha256": "d13c442a111ffbaddd1deb6ba18e6006e5a28d910fc88e80e12929a8f7c344e2"
+    },
+    {
       "path": "plugins/ia/config/kits/ia-kb/releases.json",
-      "sha256": "bbcc3f5dc4a69f8be36fd7c6564d86aa0c6692ff5573fe5148ae561bb593281a"
+      "sha256": "1a578ba38b6ce10646d329d1b8215ff1e7dba42cacbbe32455981e2c377433d1"
     },
     {
       "path": "plugins/ia/config/kits/ia-kb/scripts/check-decisions.mjs",
@@ -385,7 +393,7 @@
     },
     {
       "path": "plugins/ia/config/kits/ia-method/.ia/release.json",
-      "sha256": "2ff063dd4867706aea524596c8c7b8cd4c81be64993e6196b761624aaeb22ed8"
+      "sha256": "0adf0c22efb456e427538dd4cfdd7bdb985f7c9e632ba8304597f287ca3e5eda"
     },
     {
       "path": "plugins/ia/config/kits/ia-method/.ia/src/systems/ia-method/records/capability.ia",
@@ -524,8 +532,12 @@
       "sha256": "1377cc0a7cfba507040f61b2cab4e1dc454996134c8a82590eb44c282b2567b7"
     },
     {
+      "path": "plugins/ia/config/kits/ia-method/releases/0.7.3.json",
+      "sha256": "c3d9f40c56a4e20c48e677511ef201071feecbb774c1a29085469f93e29538b4"
+    },
+    {
       "path": "plugins/ia/config/kits/ia-method/releases.json",
-      "sha256": "ce2ab37c4837b125f61c208a7947e7d21bca294f0c2faa60ca57b09cba907f56"
+      "sha256": "6cd81c1ed54d8f82b9a8566db1dd07fe1390ee08402248fc99c6de00af04ad29"
     },
     {
       "path": "plugins/ia/config/method-qualification-ia-kb.json",
@@ -533,7 +545,7 @@
     },
     {
       "path": "plugins/ia/config/public-kits.json",
-      "sha256": "36518283a34a0ea2171d41b9fb156b1740d4007134ff53cad380224c65d68625"
+      "sha256": "8e954eb2036b835eb55a30acaf1f86b7ee69f205f8ddcc2045aab9df8317f9ba"
     },
     {
       "path": "plugins/ia/config/qualified-executors.json",

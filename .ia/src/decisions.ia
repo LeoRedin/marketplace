@@ -622,7 +622,7 @@
     options ["A patch for all three (0.7.3, 0.9.4, 0.1.4)", "B by content: minor where records change meaning, patch otherwise", "C minor for all three"]
     decider "Maintainers"
     choice "A patch for all three (0.7.3, 0.9.4, 0.1.4)"
-    rationale "A re-cut that only follows the CLI is a patch, as it was at 3.5.0. The install-guidance changes bring the kits into line with IA 3.6.0's rule and add no capability, and the release notes name them. The level was chosen, not the numbers: a release of a kit that lands first moves the patch with it. A kit whose archive is unchanged is not re-cut: in release N ia-method stays at 0.7.2, because only its README changed, which is outside its archive."
+    rationale "A re-cut that only follows the CLI is a patch, as it was at 3.5.0. The install-guidance changes bring the kits into line with IA 3.6.0's rule and add no capability, and the release notes name them. The level was chosen, not the numbers: a release of a kit that lands first moves the patch with it. A kit whose archive is unchanged is not re-cut: in release N ia-method stays at 0.7.2, because only its README changed, which is outside its archive. At 3.6.0 the pinned CLI changes, so all three kits are re-cut on it (consistency requires each latest release to be packed with the pin); ia-method is 0.7.3."
 
 @decision public-cli-3-6-0-handoff
   meaning

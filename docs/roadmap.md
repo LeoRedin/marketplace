@@ -50,6 +50,6 @@ Release N migrates users onto installed kits on the 3.5.x pins; release N+1 move
 
 | Task | Standing | Record |
 |---|---|---|
-| Re-cut the kits on 3.6.0. | open | `cli-3-6-0-kit-stamp` |
+| Re-cut the kits on 3.6.0. | closed | `cli-3-6-0-kit-stamp` |
 | Host gates for 3.6.0. | open | `cli-3-6-0-host-gates` |
 | Release N+1 and publish the kits. | open | `cli-3-6-0-release-and-publish` |

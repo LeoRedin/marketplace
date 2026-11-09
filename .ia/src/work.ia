@@ -444,10 +444,11 @@
     answers "How are the kits re-cut on 3.6.0?"
   work
     title "Re-cut the kits on 3.6.0"
-    status open
+    status closed
+    ended "2026-11-08"
     milestone @milestone cli-3-6-0-released
     owner "InventArch maintainers"
-    action "After the stamp, python tools/consistency.py and node tools/kit.mjs package --check pass. node --test with IA_CORE_TEST_CLI at 3.6.0 passes too, except for the cohort cases that need Node 22.22.x when another Node runs them."
+    action "Done: each kit's source.commit names the sources commit 900da4e8, and all three kits were packed with @inventarch/cli 3.6.0: ia-method 0.7.3 (archive dc9efbf35b56eaf2c14e59eaf680ad479dd518777057a51bc63c0fabc243e7fa, 85 records), ia-kb 0.9.4 (archive 52f0f188c0102a4f3ae392ab1c48c89234d01170126507b2caf23c764b95d398, 70 records) and ia-authoring 0.1.4 (archive 9b3d110f098f604426fc6bee3aa470e909d7b2019b5a2bb3b191e935265933f6, 106 records). The bundle, index, selection and package were written, and @inventarch/public-kits is 1.0.4. After the stamp, python tools/consistency.py and node tools/kit.mjs package --check pass. node --test with IA_CORE_TEST_CLI at 3.6.0 passes too, except for the cohort cases that need Node 22.22.x when another Node runs them."
     expected-artifact "kits/*/releases/<version>.json, kits/index.json, packages/public-kits/package.json"
     source "kits/README.md"
   relationships
