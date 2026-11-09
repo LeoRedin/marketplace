@@ -461,7 +461,8 @@
     answers "Do the hosts accept the 3.6.0 plugin?"
   work
     title "Host gates for 3.6.0"
-    status open
+    status closed
+    ended "2026-11-08"
     milestone @milestone cli-3-6-0-released
     owner "InventArch maintainers"
     expected-artifact "the Codex smoke report"
