@@ -170,7 +170,8 @@
     answers "When can users install their kits before any door enforces it?"
   work
     title "Release N: the migration on 3.5.x"
-    status open
+    status closed
+    ended "2026-11-08"
     plan @plan cli-3-6-0-migration
     exit "Release N is tagged ia-v<version> by the operator's release pull request, and @inventarch/public-kits is published at its claimed version. A test repository that binds the kits and installs them by the documented package route returns packets from both door 3.5.x and door 3.6.0. kit.mjs bind and resolve.mjs refuse IA-CORE-KIT-NOT-INSTALLED for a bound kit that is not installed. The catalogue's own lanes resolve after its contributor setup. The host gates pass."
     source "docs/roadmap.md"
@@ -183,7 +184,8 @@
     answers "When are the 3.6.0 sources on main?"
   work
     title "Release N+1: 3.6.0 sources merged"
-    status open
+    status closed
+    ended "2026-11-09"
     plan @plan cli-3-6-0-migration
     exit "The sources pull request is merged into main with a merge commit. Every CI gate passes except the consistency refusal for the kits' packing CLI, which only the stamp commit clears and which the pull request names."
     source "docs/roadmap.md"
@@ -387,7 +389,7 @@
   work
     title "Guard bind.mjs against an uninstalled kit"
     status proposed
-    milestone @milestone cli-3-6-0-release-n
+    milestone @milestone marketplace-published
     owner "Unassigned"
     start "2026-11-08"
     source "docs/roadmap.md"
@@ -476,9 +478,11 @@
     answers "How is the 3.6.0 plugin released and the public kits published?"
   work
     title "Release N+1 and publish the kits"
-    status open
+    status closed
+    ended "2026-11-09"
     milestone @milestone cli-3-6-0-released
     owner "Operator"
+    action "Done on 2026-11-09: the sources pull request #34 merged with a merge commit (48d4e07); publish-public-kits.yml published @inventarch/public-kits@1.0.4 (npm view lists it); the release pull request #35 merged at e1af262 and release.yml tagged ia-v1.5.0. The release pull request was opened by hand from release/next with the body tools/release.mjs version --pr-body writes, because the repository no longer lets GitHub Actions create pull requests."
     expected-artifact "tag ia-v<version>; @inventarch/public-kits on npm"
     source "releases/README.md"
   relationships
