@@ -641,7 +641,7 @@
     },
     {
       "path": "plugins/ia/scripts/lib/cli.mjs",
-      "sha256": "0bcbf060ac8b933599cc08c1e140201d9ed84ac26f1932aba6b0c8ddb38343aa"
+      "sha256": "36dd152b0259730693e49c03d73d18a913e4cd14e0d7f4ebe7d0ce7ece52d043"
     },
     {
       "path": "plugins/ia/scripts/lib/closure-executors.mjs",

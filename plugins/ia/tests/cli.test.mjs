@@ -62,6 +62,20 @@ test('an install that is not @inventarch/cli, or has no entry, is refused, never
   assert.equal(resolveCli(dir, { env: { IA_CLI_PATH: join(flat, 'main.js') } }).version, undefined);
 });
 
+test('an install with main dist/main.js and bin.ia dist/bin.js (3.6.0) runs main, not the hand-off launcher', t => {
+  const dir = tree(t);
+  mkdirSync(join(dir, '.git'));
+  const pkg = join(dir, 'node_modules', '@inventarch', 'cli');
+  mkdirSync(join(pkg, 'dist'), { recursive: true });
+  writeFileSync(join(pkg, 'package.json'), JSON.stringify({ name: '@inventarch/cli', version: PINNED, main: './dist/main.js', bin: { ia: './dist/bin.js' } }));
+  writeFileSync(join(pkg, 'dist', 'main.js'), '');
+  writeFileSync(join(pkg, 'dist', 'bin.js'), '');
+  const local = resolveCli(dir, { env: {} });
+  assert.equal(local.argv[0], process.execPath);
+  assert.equal(local.argv[1], join(pkg, 'dist', 'main.js'));
+  assert.equal(local.version, PINNED);
+});
+
 test('the repository install is found from a subfolder, and nothing above .git is searched', t => {
   const outer = tree(t);
   installCli(outer, '9.9.9');
