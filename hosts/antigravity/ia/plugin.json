@@ -1,0 +1,17 @@
+{
+  "name": "ia",
+  "displayName": "InventArch",
+  "version": "1.7.0",
+  "description": "InventArch's one public plugin: the Work, Knowledge and Delivery lanes resolve the bound method kit as a packet, with ia-method, ia-kb and ia-authoring as defaults; Delivery also routes UX, UI, brand, typography, token and accessibility work to the hosted design service when an account is connected.",
+  "author": {
+    "name": "InventArch"
+  },
+  "homepage": "https://github.com/inventarch/marketplace",
+  "repository": "https://github.com/inventarch/marketplace",
+  "logo": "assets/logo.svg",
+  "suggestedPrompts": [
+    "Start an InventArch session and check what is next in this workspace",
+    "Run ia:doctor to inspect this repository and its bound kits",
+    "Resolve the bound Delivery method before making a change"
+  ]
+}

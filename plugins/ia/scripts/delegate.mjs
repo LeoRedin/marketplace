@@ -7,14 +7,15 @@
 // delegate never delegates again. The delegate gets the IA door as its MCP
 // server and the packet inline in its prompt, on stdin (no command-line length
 // limit), with IA_DELEGATION_DEPTH one higher and a timeout.
-//   node scripts/delegate.mjs --to <claude|codex> --packet <file> --brief <file> [--root <repo>] [--timeout <seconds>] [--bin <path>] [--run]
+//   node scripts/delegate.mjs --to <claude|codex|gemini> --packet <file> --brief <file> [--root <repo>] [--timeout <seconds>] [--bin <path>] [--run]
 // --packet is the JSON ia_method returned or resolve.mjs printed; --brief is the
 // step to hand over, as the person stated it. Prints one JSON value: the
 // command (argv, cwd, environment change, timeout) and, with --run, its exit
 // status and output tails. Exit 0 on success, 1 on a refusal, 2 on bad usage.
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, realpathSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { delimiter, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { iaHome } from './lib/home.mjs';
 import { parseArgs, printJson, refuse, UsageError } from './lib/workspace.mjs';
@@ -52,7 +53,7 @@ export function prompt(brief, packet) {
   return `${brief.trim()}\n\nYou are a delegate, one level deep: do not delegate this step again. Follow only this packet, from the InventArch method its key resolves to; the IA door (MCP server ia) answers ia_method with the same packet if you need it again. Report what you changed, what you ran with exit codes, and what the packet's checks still need; acceptance is the person's.\n\nThe packet:\n\`\`\`json\n${JSON.stringify(packet, null, 2)}\n\`\`\`\n`;
 }
 
-// The command for one host: { argv, input }. The prompt goes to stdin.
+// The command for one host: argv. The prompt goes to stdin.
 export function command(to, { bin, plugin = PLUGIN } = {}) {
   const door = doorServer(plugin);
   if (to === 'claude') return [bin ?? 'claude', '-p', '--mcp-config', JSON.stringify({ mcpServers: { ia: door } })];
@@ -64,12 +65,32 @@ export function command(to, { bin, plugin = PLUGIN } = {}) {
       '-c', `mcp_servers.ia.env={IA_KITS_DIR=${toml(door.env.IA_KITS_DIR)}}`,
       '-'];
   }
-  throw new UsageError('--to is claude or codex');
+  if (to === 'gemini') return [bin ?? 'gemini', '-p', 'Follow the delegate brief and InventArch packet on stdin.'];
+  throw new UsageError('--to is claude, codex or gemini');
+}
+
+// On Windows, npm installs `gemini` as a `.cmd` shim next to `node_modules/@google/gemini-cli/dist/index.js`.
+// Resolving that JS entrypoint lets `spawnSync` run without a shell (`shell: false`).
+export function resolveGeminiSpawn(argv, env = process.env, platform = process.platform) {
+  if (platform !== 'win32') return argv;
+  const first = argv[0];
+  if (first === process.execPath) return argv;
+  const candidates = [];
+  if (/\.(?:cmd|bat)$/i.test(first)) candidates.push(dirname(resolve(first)));
+  else if (first === 'gemini') {
+    const pathKey = Object.keys(env).find(k => k.toUpperCase() === 'PATH');
+    for (const dir of String(pathKey ? env[pathKey] : '').split(delimiter).filter(Boolean)) candidates.push(dir);
+  }
+  for (const dir of candidates) {
+    const script = join(dir, 'node_modules', '@google', 'gemini-cli', 'dist', 'index.js');
+    if (existsSync(script)) return [process.execPath, script, ...argv.slice(1)];
+  }
+  return argv;
 }
 
 export function plan(argv, env = process.env) {
   const { options } = parseArgs(argv, SPEC, { positionals: 0 });
-  if (!options.to || !options.packet || !options.brief) throw new UsageError('delegate.mjs needs --to <claude|codex>, --packet <file> and --brief <file>');
+  if (!options.to || !options.packet || !options.brief) throw new UsageError('delegate.mjs needs --to <claude|codex|gemini>, --packet <file> and --brief <file>');
   const timeout = options.timeout === undefined ? DEFAULT_TIMEOUT : Number(options.timeout);
   if (!Number.isInteger(timeout) || timeout < 1 || timeout > MAX_TIMEOUT) throw new UsageError(`--timeout is a whole number of seconds from 1 to ${MAX_TIMEOUT}`);
   const depth = gate(env);
@@ -86,25 +107,40 @@ export function plan(argv, env = process.env) {
   const brief = read(options.brief, 'brief');
   if (!brief.trim()) throw new UsageError('--brief is empty');
   const cwd = resolve(options.root ?? '.');
-  return { to: options.to, argv: argvFor, cwd, env: { IA_DELEGATION_DEPTH: String(depth + 1) }, timeoutSeconds: timeout, input: prompt(brief, packet), run: Boolean(options.run) };
+  const mcpSettings = options.to === 'gemini' ? { mcpServers: { ia: doorServer() } } : null;
+  const childEnv = { IA_DELEGATION_DEPTH: String(depth + 1), ...(mcpSettings ? { GEMINI_CLI_SYSTEM_SETTINGS_PATH: '<ephemeral settings.json>' } : {}) };
+  return { to: options.to, argv: argvFor, cwd, env: childEnv, ...(mcpSettings ? { mcpSettings } : {}), timeoutSeconds: timeout, input: prompt(brief, packet), run: Boolean(options.run) };
 }
 
 export function delegate(argv, env = process.env) {
   const p = plan(argv, env);
-  const shown = { to: p.to, argv: p.argv, cwd: p.cwd, env: p.env, timeoutSeconds: p.timeoutSeconds, promptBytes: Buffer.byteLength(p.input), packetDigest: null };
+  const shown = { to: p.to, argv: p.argv, cwd: p.cwd, env: p.env, ...(p.mcpSettings ? { mcpSettings: p.mcpSettings } : {}), timeoutSeconds: p.timeoutSeconds, promptBytes: Buffer.byteLength(p.input), packetDigest: null };
   try { shown.packetDigest = JSON.parse(p.input.slice(p.input.indexOf('```json\n') + 8, p.input.lastIndexOf('```'))).digest ?? null; } catch { /* a packet without a digest */ }
   if (!p.run) return { ...shown, ran: false, next: 'show the person this command; run it with --run only on their word' };
-  const child = spawnSync(p.argv[0], p.argv.slice(1), { cwd: p.cwd, input: p.input, encoding: 'utf8', timeout: p.timeoutSeconds * 1000, maxBuffer: 64 * 1024 * 1024, windowsHide: true, env: { ...env, ...p.env } });
-  const tail = text => (text ?? '').length > TAIL ? `[${text.length - TAIL} characters cut] ${text.slice(-TAIL)}` : (text ?? '');
-  const timedOut = child.error?.code === 'ETIMEDOUT';
-  return { ...shown, ran: true, status: child.status, timedOut, error: child.error && !timedOut ? child.error.message : null, stdout: tail(child.stdout), stderr: tail(child.stderr) };
+  let tempDir = null;
+  try {
+    const runEnv = { ...env, ...p.env };
+    if (p.mcpSettings) {
+      tempDir = mkdtempSync(join(tmpdir(), 'ia-delegate-gemini-'));
+      const settingsPath = join(tempDir, 'settings.json');
+      writeFileSync(settingsPath, JSON.stringify(p.mcpSettings, null, 2) + '\n', 'utf8');
+      runEnv.GEMINI_CLI_SYSTEM_SETTINGS_PATH = settingsPath;
+    }
+    const spawnArgv = p.to === 'gemini' ? resolveGeminiSpawn(p.argv, runEnv) : p.argv;
+    const child = spawnSync(spawnArgv[0], spawnArgv.slice(1), { cwd: p.cwd, input: p.input, encoding: 'utf8', timeout: p.timeoutSeconds * 1000, maxBuffer: 64 * 1024 * 1024, windowsHide: true, env: runEnv });
+    const tail = text => (text ?? '').length > TAIL ? `[${text.length - TAIL} characters cut] ${text.slice(-TAIL)}` : (text ?? '');
+    const timedOut = child.error?.code === 'ETIMEDOUT';
+    return { ...shown, ran: true, status: child.status, timedOut, error: child.error && !timedOut ? child.error.message : null, stdout: tail(child.stdout), stderr: tail(child.stderr) };
+  } finally {
+    if (tempDir) try { rmSync(tempDir, { recursive: true, force: true }); } catch { /* ignore cleanup failure */ }
+  }
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === realpathSync(process.argv[1])) {
   try {
     printJson(delegate(process.argv.slice(2)));
   } catch (error) {
-    if (error.code === 'IA-CORE-USAGE') { process.stderr.write(`${error.message}\nusage: delegate.mjs --to <claude|codex> --packet <file> --brief <file> [--root <repo>] [--timeout <seconds>] [--bin <path>] [--run]\n`); process.exit(2); }
+    if (error.code === 'IA-CORE-USAGE') { process.stderr.write(`${error.message}\nusage: delegate.mjs --to <claude|codex|gemini> --packet <file> --brief <file> [--root <repo>] [--timeout <seconds>] [--bin <path>] [--run]\n`); process.exit(2); }
     process.exit(refuse(error));
   }
 }

@@ -1,0 +1,130 @@
+#! ia 1.0
+
+@playbook host-lower
+  meaning
+    says "How a plugin is lowered into IA records: read its file tree and manifests, dry-run ia init --from, resolve every unresolved entry by fixing the plugin or stopping, apply, and keep the lowering map. Lowering never drops a construct."
+    answers "What does an agent do to lower a plugin?"
+  subject
+    subject-word capability
+  cognition
+    orient
+      primary Attention
+      Attention means "Read the plugin's file tree and its manifests; name the hosts it ships for."
+      Inference means "List the files and frontmatter keys the lowering map must give a disposition."
+      Decision means "Decide whether the plugin is in slice 1: hooks, MCP or LSP configuration, commands, agents with tools outside the effect table, non-UTF-8 files, CRLF, a byte-order mark and quote, backslash or control characters refuse."
+      Learning means "Read earlier lowering maps in the kit before repeating their decisions."
+    plan
+      primary Inference
+      Attention means "Restate what the lowering must keep: every file, every key, every byte of bodies, prompts and assets."
+      Inference means "Run ia init <kit> --from <plugin> without --apply; read every unresolved entry; fix the plugin or stop, never drop a construct."
+      Decision means "Order the fixes: one cause per unresolved entry, the smallest change to the plugin that clears it."
+      Learning means "Say in the plan which dispositions you expect to be retired or derived, and why."
+    act
+      primary Decision
+      Attention means "Watch the refusal: an unresolved entry means the plugin holds something the lowering cannot yet carry."
+      Inference means "Stay with the dry run until it lists no unresolved entry; do not apply around a refusal."
+      Decision means "Apply with --apply --yes; run ia validate on the new workspace."
+      Learning means "Keep a failed apply on the record and rerun after the fix."
+    learn
+      primary Learning
+      Attention means "Verify the new workspace admits and holds every file the plan listed."
+      Inference means "Have the independent reviewer check each retired or derived disposition and its reason."
+      Decision means "Record the outcome and hand the workspace to host-project."
+      Learning means "Keep assets/lowering-map.json and MIGRATION.md with the kit; report each retired or derived disposition."
+
+@playbook host-project
+  meaning
+    says "How a lowered workspace is rendered back into a plugin: ia project --product plugin into an absent or empty directory, then --check --compare against the original, then the plugin's own tests."
+    answers "What does an agent do to project and prove a plugin?"
+  subject
+    subject-word capability
+  cognition
+    orient
+      primary Attention
+      Attention means "Read the lowered workspace and the original plugin it came from."
+      Inference means "Name the output directory: it must be absent or empty."
+      Decision means "Choose the host to project for and the product section it needs."
+      Learning means "Read earlier round-trip results for this workspace."
+    plan
+      primary Inference
+      Attention means "Restate the fidelity bar: content-exact against the original and a fixed point when lowered again."
+      Inference means "Plan the render: ia project <host> --product plugin --out <directory>, then --check --compare."
+      Decision means "List every expected difference and the DIFF_RULES entry that names it."
+      Learning means "State what would make the round trip fail before it runs."
+    act
+      primary Decision
+      Attention means "Watch the render: a refusal names the file or rule that blocks it."
+      Inference means "Render, then run --check --compare, then the plugin's own tests."
+      Decision means "Fix the records, never the generated output, when a difference has no rule."
+      Learning means "Keep failed renders on the record."
+    learn
+      primary Learning
+      Attention means "Run the fixed-point check and report it verbatim."
+      Inference means "Have the independent reviewer check every regenerated difference against a rule."
+      Decision means "Record the result and whether the plugin may retire."
+      Learning means "Keep the comparison report with the kit; name each difference and its rule."
+
+@playbook host-evaluate
+  meaning
+    says "How a skill's triggering is measured: draft the cases, have a reviewer freeze them, capture, write the config with its cap, run dev mode, then gate mode, and record the results as observations. The rules are the host-trigger-* conventions; the config shape is the kit asset assets/trigger-config.md."
+    answers "What does an agent do to evaluate triggering?"
+  subject
+    subject-word capability
+  cognition
+    orient
+      primary Attention
+      Attention means "Read the skill's description and its nearest neighbour skills."
+      Inference means "List the model-invocable skills; only they need trigger evaluation."
+      Decision means "Decide the requirement each skill's cases implement."
+      Learning means "Read earlier evaluation observations for the skill."
+    plan
+      primary Inference
+      Attention means "Restate the budget: ten should-trigger and ten should-not prompts per skill, near misses included."
+      Inference means "Draft the cases from the description and its neighbours, then have a reviewer freeze them before any scored run."
+      Decision means "Capture the records with ia capture and write the config with its session cap."
+      Learning means "State the arms, the model and the mode before any session starts."
+    act
+      primary Decision
+      Attention means "Watch the cap: the runner refuses a plan over the cap before it writes anything, then writes its manifest before the first session."
+      Inference means "Run dev mode first, one run per case on the cheaper model, then gate mode, three runs per case on the target model."
+      Decision means "Never repeat failed cases selectively; any unlisted, incomplete or error session makes the run incomplete, written as complete false in results.json with exit 1, and it is reported as incomplete."
+      Learning means "Run the original and the regenerated plugin side by side on the same cases; the arm ids are fixed as original and then regenerated, and the sessions interleave the arms."
+    learn
+      primary Learning
+      Attention means "Read results.json and the counts per arm with their Wilson intervals; exit 3 means the regenerated arm is worse beyond noise, that is the Newcombe 95% interval of the difference lies entirely below zero, and a run in which no session triggered the skill is refused as possibly blind."
+      Inference means "Have a reviewer who did not draft the cases read the verdicts."
+      Decision means "Record per-case verdicts as observations with their counts and uncertainty."
+      Learning means "Keep the raw stream logs with the run and propose description fixes to the skill's owner."
+
+@playbook host-qualify
+  meaning
+    says "How a plugin is qualified on its hosts: an isolated install, claude plugin validate --strict, claude plugin details, and the Codex smoke, each observation recorded as evidence."
+    answers "What does an agent do to qualify a plugin on its hosts?"
+  subject
+    subject-word capability
+  cognition
+    orient
+      primary Attention
+      Attention means "Read the plugin's manifests and the hosts it names."
+      Inference means "List the components it ships and the listing cost each host will see."
+      Decision means "Decide which host features the plugin relies on."
+      Learning means "Read earlier qualification observations for these hosts."
+    plan
+      primary Inference
+      Attention means "Restate what qualification must show: it installs, it validates and its listing fits."
+      Inference means "Plan the isolated install in a scratch configuration, never the user's logged-in one."
+      Decision means "Order the checks: install, claude plugin validate --strict, claude plugin details, then the Codex smoke."
+      Learning means "State which result would fail the plugin for each host."
+    act
+      primary Decision
+      Attention means "Watch each command's exit code; a failed install ends the run for that host."
+      Inference means "Install in isolation, run claude plugin validate --strict and claude plugin details, then the Codex smoke."
+      Decision means "Report every command, exit code and output verbatim."
+      Learning means "Keep failed qualifications on the record."
+    learn
+      primary Learning
+      Attention means "Compare the component inventory and listing cost with the original plugin."
+      Inference means "Have the independent reviewer read the observations against the plugin."
+      Decision means "Record each observation as evidence for a host-feature row."
+      Learning means "Name what remains unqualified and on which host."
+

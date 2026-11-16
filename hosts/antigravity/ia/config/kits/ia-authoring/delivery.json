@@ -1,0 +1,13 @@
+{
+  "format": 1,
+  "whole": [
+    "authoring-deliver",
+    "authoring-workspace-authoring",
+    "authoring-probing-the-ia-toolchain",
+    "host-lower",
+    "host-project",
+    "host-evaluate",
+    "host-qualify",
+    "catalogue-author"
+  ]
+}

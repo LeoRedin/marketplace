@@ -52,14 +52,21 @@ test('the config file turns it on; the preview names the command, the door, the 
   assert.equal(door.command, 'node');
   assert.match(door.args[0], /\/scripts\/door\.mjs$/);
   assert.equal(claude.json.timeoutSeconds, 60);
+  const gemini = run('delegate.mjs', args('gemini', ['--timeout', '120']), env);
+  assert.equal(gemini.status, 0, gemini.stdout + gemini.stderr);
+  assert.deepEqual(gemini.json.argv.slice(0, 2), ['gemini', '-p']);
+  assert.equal(gemini.json.mcpSettings.mcpServers.ia.command, 'node');
+  assert.match(gemini.json.mcpSettings.mcpServers.ia.args[0], /\/scripts\/door\.mjs$/);
+  assert.equal(gemini.json.env.IA_DELEGATION_DEPTH, '1');
+  assert.equal(gemini.json.timeoutSeconds, 120);
   assert.equal(run('delegate.mjs', args('claude', ['--timeout', '99999']), env).status, 2);
-  assert.equal(run('delegate.mjs', args('gemini'), env).status, 2);
+  assert.equal(run('delegate.mjs', args('cursor'), env).status, 2);
 });
 
 test('with --run the delegate gets the packet inline on stdin and the depth one higher, inside its timeout', t => {
   const { dir, env, args } = setup(t, { delegation: true });
   const stub = join(dir, 'stub.mjs');
-  writeFileSync(stub, `let input = ''; process.stdin.on('data', d => { input += d; }).on('end', () => { process.stdout.write(JSON.stringify({ depth: process.env.IA_DELEGATION_DEPTH, packet: input.includes('"digest": "${'f'.repeat(64)}"'), brief: input.startsWith('Write the milestone'), args: process.argv.slice(2) })); });\n`);
+  writeFileSync(stub, `import { readFileSync } from 'node:fs'; let input = ''; process.stdin.on('data', d => { input += d; }).on('end', () => { const settings = process.env.GEMINI_CLI_SYSTEM_SETTINGS_PATH ? JSON.parse(readFileSync(process.env.GEMINI_CLI_SYSTEM_SETTINGS_PATH, 'utf8')) : null; process.stdout.write(JSON.stringify({ depth: process.env.IA_DELEGATION_DEPTH, packet: input.includes('"digest": "${'f'.repeat(64)}"'), brief: input.startsWith('Write the milestone'), args: process.argv.slice(2), settings })); });\n`);
   // --bin names a Node script, which stands in for the other model's CLI.
   const ran = run('delegate.mjs', args('claude', ['--bin', stub, '--run']), env);
   assert.equal(ran.status, 0, ran.stdout + ran.stderr);
@@ -69,6 +76,12 @@ test('with --run the delegate gets the packet inline on stdin and the depth one 
   const seen = JSON.parse(ran.json.stdout);
   assert.deepEqual({ depth: seen.depth, packet: seen.packet, brief: seen.brief }, { depth: '1', packet: true, brief: true });
   assert.deepEqual(seen.args.slice(0, 2), ['-p', '--mcp-config']);
+  const ranGemini = run('delegate.mjs', args('gemini', ['--bin', stub, '--run']), env);
+  assert.equal(ranGemini.status, 0, ranGemini.stdout + ranGemini.stderr);
+  const seenGemini = JSON.parse(ranGemini.json.stdout);
+  assert.deepEqual({ depth: seenGemini.depth, packet: seenGemini.packet, brief: seenGemini.brief }, { depth: '1', packet: true, brief: true });
+  assert.equal(seenGemini.args[0], '-p');
+  assert.equal(seenGemini.settings?.mcpServers?.ia?.command, 'node');
   assert.deepEqual(command('codex', { bin: 'x', plugin: '/p' }).slice(-2), ['mcp_servers.ia.env={IA_KITS_DIR="/p/config/kits"}', '-']);
   assert.deepEqual(doorServer('/p'), { command: 'node', args: ['/p/scripts/door.mjs'], env: { IA_KITS_DIR: '/p/config/kits' } });
 });

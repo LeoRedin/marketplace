@@ -8,9 +8,26 @@
 // exits 1 when it is beyond the ceiling and 2 when it is unknown, so it can
 // gate starting work. Exit 2 also on bad usage or when IA refuses or fails;
 // 0 otherwise.
-import { resolve } from 'node:path';
+import { readdirSync } from 'node:fs';
+import { join, relative, resolve, sep } from 'node:path';
 import { ceilingReport, describe, nodeFromInspect } from './lib/ceiling.mjs';
 import { resolveCli, runIa } from './lib/cli.mjs';
+
+function authoredIaFiles(dir) {
+  const out = [];
+  const walk = current => {
+    let entries;
+    try { entries = readdirSync(current, { withFileTypes: true }); } catch { return; }
+    for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+      if (out.length >= 40) return;
+      const full = join(current, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.isFile() && entry.name.endsWith('.ia')) out.push(relative(dir, full).split(sep).join('/'));
+    }
+  };
+  walk(join(dir, '.ia', 'src'));
+  return out;
+}
 
 const args = process.argv.slice(2);
 const OPTIONS = new Set(['--root', '--plan', '--task']);
@@ -69,6 +86,15 @@ try {
     const next = runIa(root, ['next', ...(plan ? ['--seat', plan] : [])], { cli });
     if (!next.json?.ok) fail(`ia next refused: ${next.json?.message ?? next.stderr.trim()}${next.json?.next ? ` (next: ${next.json.next})` : ''}`);
     taskIds = next.json.view.tasks.map(t => t.identity);
+    for (const rel of authoredIaFiles(root)) {
+      try {
+        const ran = runIa(root, ['inspect', '--path', rel, '--edges', 'both'], { cli, timeoutMs: READ_TIMEOUT_MS });
+        if (ran.code === 0 && Array.isArray(ran.json?.records)) {
+          const directed = ran.json.directed ?? [];
+          for (const record of ran.json.records) if (record?.identity) graph[record.identity] = nodeFromInspect(record, directed);
+        }
+      } catch { /* fall back to per-identity inspect */ }
+    }
   }
   for (const id of taskIds) loadTask(id);
   if (only && graph[only] && graph[only].word !== 'task') fail(`${only} is not a @task`);

@@ -1,0 +1,8 @@
+#! ia 1.0
+
+@distribution ia-method-distribution
+  meaning
+    says "The release root of the IA methodology kit: its ia-method system."
+    answers "Which records does this release ship?"
+  distribution
+    records [@system ia-method]

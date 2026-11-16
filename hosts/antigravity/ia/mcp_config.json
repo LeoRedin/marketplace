@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "ia": {
+      "command": "node",
+      "args": [
+        "--input-type=module",
+        "-e",
+        "import { pathToFileURL } from 'node:url'; import { resolve } from 'node:path'; const m = await import(pathToFileURL(resolve(process.env.PLUGIN_ROOT || '.', 'scripts/door.mjs')).href); m.main();"
+      ]
+    },
+    "inventarch": {
+      "url": "https://api.inventarch.dev/mcp"
+    }
+  }
+}

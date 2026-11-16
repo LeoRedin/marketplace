@@ -1,0 +1,22 @@
+#! ia 1.0
+
+@system ia-kb
+  provider "local"
+  version "0.2.0"
+  describes "The IA KB kit: where organisation and repository knowledge lives, where a user's workspaces are saved, and how documents stay bound to their anchors, current and checked. It is the KB lane, the Knowledge entry point's default: knowledge and workspace placement, anchor and body binding, document maintenance, migration, checks, retrieval and review. One entry capability, kb-knowledge, is a whole procedure over the four phases and includes one capability per stage (place content, bind a document, maintain a document, check, migrate) and the retrieval and review capabilities of the librarian and reviewer briefs; a playbook per stage carries the stage's procedure; conventions carry the placement table, the workspace location, the anchor and body rules with the locator manifest, the lifecycle, the role briefs, the host adaptation, IA reads and evidence reporting; laws carry the blocking rules; the librarian, reviewer, curator and gate-runner agents run under reader, checker and worker profiles on this system's mandates; declared checks cover native admission, the decision lifecycle and the locator checker, over the kit's worked example and over a task's own manifest; a contract's cases are evaluated by the kit's own tests; and the references, the split-body example, the locator checker and the decision checker are kit assets. It installs reusable expertise, not an organisation's corpus or access grants. The ia plugin delivers it through ia position; IA evaluates only the coverage of its contract and the declaration of its checks. This system mints no words and grants no authority."
+  steward @agent ia-kb-steward
+  requires
+    - agent-system
+    - agent-composition-system
+    - workspace-system
+    - governance-system
+    - compliance-system
+    - work-system
+    - learning-system
+
+@agent ia-kb-steward
+  meaning
+    says "Owns the records of the IA KB kit and reviews every change to them."
+    answers "Who owns the IA KB kit?"
+  governance
+    applies [principle, law, convention, playbook, contract, check, case, capability, agent, agent-profile, mandate, distribution]
