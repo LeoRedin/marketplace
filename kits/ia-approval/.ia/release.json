@@ -37,9 +37,9 @@
   "license": "Apache-2.0",
   "description": "The public base approval kit (approval-system): the approver, approval-rule, docket and approval words with their schemas and authoring guides, intake piece recognition and seal rules, and the offline Ed25519 + RFC 8785 JCS check-seal verifier.",
   "source": {
-    "repository": null,
-    "commit": null,
+    "repository": "https://github.com/inventarch/marketplace.git",
+    "commit": "5e0af7e5e9344c96e304322d7dfdbf2401416dcd",
     "recipe": "ustar-v1",
-    "epoch": 0
+    "epoch": 1794990895
   }
 }

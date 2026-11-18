@@ -1,0 +1,17 @@
+#! ia 1.0
+
+@schema area
+  lowers to definition
+  sections
+    must have meaning
+    must have area
+    may have relationships
+    closed
+  fields
+    must have meaning.says as text
+    may have meaning.answers as text
+    must have area.packages as list of ref to package
+    must have area.purpose as text "Functional boundary purpose across layers."
+    may have area.repository as ref to repository
+  edges
+    may require area one-or-more

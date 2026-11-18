@@ -1,0 +1,45 @@
+{
+  "formatVersion": 1,
+  "id": "inventarch/ia-approval-kit",
+  "version": "0.1.0",
+  "distribution": "workspace-system/definition/distribution/ia-approval-distribution",
+  "engine": "^0.1.1",
+  "language": [
+    "1.0"
+  ],
+  "dependencies": [
+    {
+      "id": "inventarch/language",
+      "range": "^3.0.0",
+      "systems": [
+        "agent-system",
+        "compliance-system",
+        "governance-system",
+        "work-system",
+        "workspace-system"
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "path": "assets/approval-vocabulary.md",
+      "role": "documentation"
+    },
+    {
+      "path": "checks.json",
+      "role": "asset"
+    },
+    {
+      "path": "scripts/check-seal.mjs",
+      "role": "asset"
+    }
+  ],
+  "license": "Apache-2.0",
+  "description": "The public base approval kit (approval-system): the approver, approval-rule, docket and approval words with their schemas and authoring guides, intake piece recognition and seal rules, and the offline Ed25519 + RFC 8785 JCS check-seal verifier.",
+  "source": {
+    "repository": "https://github.com/inventarch/marketplace.git",
+    "commit": "5e0af7e5e9344c96e304322d7dfdbf2401416dcd",
+    "recipe": "ustar-v1",
+    "epoch": 1794990895
+  }
+}

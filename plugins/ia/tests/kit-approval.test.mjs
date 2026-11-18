@@ -488,8 +488,8 @@ test('REQ-APPROVAL-03 success: valid Ed25519 JCS seals and multi-signer quorum p
 
   assert.equal(passes(report), true, JSON.stringify(report.findings));
   assert.deepEqual(report.records, [
-    { identity: dec.identity, change: 'added', verdict: 'ratified' },
     { identity: spec.identity, change: 'added', verdict: 'ratified' },
+    { identity: dec.identity, change: 'added', verdict: 'ratified' },
   ]);
   assert.equal(report.needsPersonMerge, true);
 });
@@ -740,6 +740,7 @@ test('REQ-APPROVAL-04 failure: tampered digests, changed dependsOn, unapproved r
     facts: defaultFacts(),
   });
   assert.ok(repDepStale.findings.some(f => f.name === 'stale'));
+  assert.equal(repDepStale.records[0]?.verdict, 'stale');
   assert.ok(repDepStale.findings.some(f => f.name === 'unratified' && f.detail.includes(extraRule.identity)), 'unapproved extraRule reported');
 
   // Case C: stale corpus revision under current-revision rule, and unpinned line endings
@@ -751,7 +752,8 @@ test('REQ-APPROVAL-04 failure: tampered digests, changed dependsOn, unapproved r
     now: new Date('2026-11-18T01:00:00Z'),
     facts: defaultFacts(),
   });
-  assert.equal(repStaleRev.records[0]?.verdict, 'stale');
+  assert.equal(passes(repStaleRev), false);
+  assert.ok(repStaleRev.findings.some(f => f.name === 'stale' && f.cause?.includes('organisation revision changed')));
 
   const repUnpinnedLf = checkSeal({
     target: makeView('0'.repeat(64), [...baseRecords(), approver, ruleCurrent, depDecision]),

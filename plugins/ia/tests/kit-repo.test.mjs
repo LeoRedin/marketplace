@@ -701,17 +701,21 @@ test('REQ-REPO-03 failure: splicing out any of the three area consent rows refus
 ${probe.snippet}`,
     );
 
-    spawnSync(process.execPath, [CLI, 'restore', '--apply', '--yes', '--root', ws, '--json'], {
+    const restore = spawnSync(process.execPath, [CLI, 'restore', '--apply', '--yes', '--root', ws, '--json'], {
       env: { ...process.env, IA_HOME: home, IA_NO_HANDOFF: '1' },
       encoding: 'utf8',
       windowsHide: true,
     });
-    const validate = spawnSync(process.execPath, [CLI, 'validate', '--root', ws, '--json'], {
-      env: { ...process.env, IA_HOME: home, IA_NO_HANDOFF: '1' },
-      encoding: 'utf8',
-      windowsHide: true,
-    });
-    assert.match(validate.stdout + validate.stderr, /IA-LANG-EDGE-UNCONSENTED/, `removing "${probe.row}" must refuse with IA-LANG-EDGE-UNCONSENTED`);
+    const validate =
+      restore.status === 0
+        ? spawnSync(process.execPath, [CLI, 'validate', '--root', ws, '--json'], {
+            env: { ...process.env, IA_HOME: home, IA_NO_HANDOFF: '1' },
+            encoding: 'utf8',
+            windowsHide: true,
+          })
+        : { stdout: '', stderr: '' };
+    const combined = `${restore.stdout}${restore.stderr}${validate.stdout}${validate.stderr}`;
+    assert.match(combined, /IA-LANG-EDGE-UNCONSENTED/, `removing "${probe.row}" must refuse with IA-LANG-EDGE-UNCONSENTED`);
   }
 });
 

@@ -2,6 +2,26 @@
   "format": 1,
   "kits": [
     {
+      "id": "inventarch/ia-approval-kit",
+      "folder": "kits/ia-approval",
+      "releases": "kits/ia-approval/releases.json",
+      "latest": {
+        "version": "0.1.0",
+        "archive": "3568650f5238d580add75f09952c00aed570d4514c8f6ce12f9d4d00154ed2d1",
+        "cli": "@inventarch/cli 3.8.0",
+        "language": "inventarch/language ^3.0.0",
+        "file": "kits/ia-approval/releases/0.1.0.json",
+        "source": {
+          "repository": "https://github.com/inventarch/marketplace.git",
+          "commit": "5e0af7e5e9344c96e304322d7dfdbf2401416dcd"
+        }
+      },
+      "versions": [
+        "0.1.0"
+      ],
+      "offers": []
+    },
+    {
       "id": "inventarch/ia-authoring-kit",
       "folder": "kits/ia-authoring",
       "releases": "kits/ia-authoring/releases.json",
@@ -143,6 +163,26 @@
         "work.voice",
         "work.workspace"
       ]
+    },
+    {
+      "id": "inventarch/ia-repo-kit",
+      "folder": "kits/ia-repo",
+      "releases": "kits/ia-repo/releases.json",
+      "latest": {
+        "version": "0.1.0",
+        "archive": "ad5ac8beae1b677553a1916d197425fba9a16b47ea078b0c6e18a5d0c3b0d4e2",
+        "cli": "@inventarch/cli 3.8.0",
+        "language": "inventarch/language ^3.0.0",
+        "file": "kits/ia-repo/releases/0.1.0.json",
+        "source": {
+          "repository": "https://github.com/inventarch/marketplace.git",
+          "commit": "5e0af7e5e9344c96e304322d7dfdbf2401416dcd"
+        }
+      },
+      "versions": [
+        "0.1.0"
+      ],
+      "offers": []
     }
   ]
 }
