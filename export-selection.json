@@ -37,7 +37,7 @@
     },
     {
       "path": "plugins/ia/README.md",
-      "sha256": "d4dc5ec98fe756445dca476c242e59fba66a3c4f21e60dbc6889bac9410ad5d6"
+      "sha256": "4f39774e441cb1b7829678daeae34418b388c010fb23fbd1ec7ac01a6f1f797b"
     },
     {
       "path": "plugins/ia/agents/checker.md",
@@ -604,6 +604,10 @@
       "sha256": "66f38969699df996313f95bb0b273dfd53ee76db641b7a3295432d13f12765e6"
     },
     {
+      "path": "plugins/ia/scripts/agy-hook.mjs",
+      "sha256": "d27fdfe2c4006e7e829935bc11b50cba2c1f07ef5e5fb0e69350c3ffe8c7400e"
+    },
+    {
       "path": "plugins/ia/scripts/bind.mjs",
       "sha256": "4681ccd60c6cc9b174310958daf97525059dafe42b4c500ae3d20e7aa07223df"
     },
@@ -613,7 +617,7 @@
     },
     {
       "path": "plugins/ia/scripts/ceiling.mjs",
-      "sha256": "f711d8dc3859823fc0036c2e0235a11411b8caa8fc3fd2ec4f0bb223336219a2"
+      "sha256": "1a124e073977697548f26ec3ce8199d0cdc6d914c27b99ab5d1fbe339b7b14a7"
     },
     {
       "path": "plugins/ia/scripts/check.mjs",
@@ -621,7 +625,7 @@
     },
     {
       "path": "plugins/ia/scripts/delegate.mjs",
-      "sha256": "ce9e4dd1ac93e55c74da156e23ae3eea1ff304485f5941b6619ea1924a1328db"
+      "sha256": "709386c8c5c0cc8dc900bb5f93caefe97e8fed3062d4f999854511e548eda086"
     },
     {
       "path": "plugins/ia/scripts/design.mjs",
@@ -629,11 +633,15 @@
     },
     {
       "path": "plugins/ia/scripts/door.mjs",
-      "sha256": "75a3a57c48adc9e3c7f6bc879b3806d946e22b0caf989d40d31ee902b54eb6fb"
+      "sha256": "e078601dbd8f071605ec23ee17ec6ba557d25a4287017761633e8e125dc93da5"
     },
     {
       "path": "plugins/ia/scripts/exit-evidence.mjs",
-      "sha256": "2b4d7cd7b57abe17b0de10becf2d5b0eb1bea41378c55e9c8ee7b7a35dfcfb64"
+      "sha256": "4b241307dc4c47b846e7e3b7a34728bea49d04551b39ae24a317febf48eb317f"
+    },
+    {
+      "path": "plugins/ia/scripts/gemini-hook.mjs",
+      "sha256": "e5e8c6a26e803682fa3db0a29863e643c842e1dfff7f3424d4fe1badb0c03259"
     },
     {
       "path": "plugins/ia/scripts/handlers.mjs",
@@ -661,7 +669,7 @@
     },
     {
       "path": "plugins/ia/scripts/lib/ceiling.mjs",
-      "sha256": "0099019ee23f3f8b1cfc59415ff5e2a0bf730fe453b4b32946d2a1036a4c033a"
+      "sha256": "373852fdf1da8a839584876ebdc32bcf62d5165c77accf8fcfa32bf72a4396a8"
     },
     {
       "path": "plugins/ia/scripts/lib/check-arguments.mjs",
@@ -706,6 +714,10 @@
     {
       "path": "plugins/ia/scripts/lib/home.mjs",
       "sha256": "7df019fcfbc26c3e61d2ef99787a09c78d8a241b110f2335e4d68b278bc35b87"
+    },
+    {
+      "path": "plugins/ia/scripts/lib/host-hook.mjs",
+      "sha256": "b585e7b00234c33a2970fa95c8c4c65ee1943552a38e4b938dbdc4f4d325d7c8"
     },
     {
       "path": "plugins/ia/scripts/lib/hygiene.mjs",
@@ -789,7 +801,7 @@
     },
     {
       "path": "plugins/ia/scripts/method-advise.mjs",
-      "sha256": "dac8f35f75c4bc23bea70ac9c9ebd75c48bafcba8861d8c687c41ea1c5d7b94c"
+      "sha256": "2bd829bb0fdadeff7deddfa53e968e307996a47f18ae915be605aab4561cc4f5"
     },
     {
       "path": "plugins/ia/scripts/method-gate.mjs",
@@ -809,7 +821,7 @@
     },
     {
       "path": "plugins/ia/skills/delegate/SKILL.md",
-      "sha256": "5be16d79df36cd89ed8c06962d4902654dabb8c1a54a677b345b22ce56b3f037"
+      "sha256": "a6ac9e28d9e8a8fc31a143b0b687fa4aead1a1036e2e65db609dee181cb01836"
     },
     {
       "path": "plugins/ia/skills/delivery/SKILL.md",

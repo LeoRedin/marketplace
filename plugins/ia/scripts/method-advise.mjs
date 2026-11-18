@@ -282,7 +282,7 @@ function writeCache(env, workspace, cache, now) {
 }
 
 const versionOf = path => { try { return JSON.parse(readFileSync(path, 'utf8')).version ?? null; } catch { return null; } };
-const PLUGIN_VERSION = versionOf(join(PLUGIN, '.claude-plugin', 'plugin.json'));
+const PLUGIN_VERSION = versionOf(join(PLUGIN, '.claude-plugin', 'plugin.json')) ?? versionOf(join(PLUGIN, 'plugin.json')) ?? versionOf(join(PLUGIN, 'gemini-extension.json'));
 const KIT_VERSION = versionOf(join(PLUGIN, 'config', 'kits', 'ia-method', '.ia', 'release.json'));
 
 function valid(entry, key, now) {

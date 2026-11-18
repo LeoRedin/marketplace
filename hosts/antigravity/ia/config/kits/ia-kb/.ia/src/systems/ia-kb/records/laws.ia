@@ -1,0 +1,56 @@
+#! ia 1.0
+
+@law kb-disclosure-boundary
+  meaning
+    says "work.source is a locator, not a fetch command, body digest, freshness proof or disclosure grant. Reading the anchor must not implicitly disclose the body: a document reader needs separately authorised resource access with matching scope, source revision, digest and finite budget, and a current source locator is not permission to read its body. A body locator, workspace membership, plugin role or mandate declaration grants no permission. A workspace composition and an audience label are not an ACL, and audience labels cannot protect a repository readable by a wider audience. Installing this kit grants no company access. Never expand audience or silently copy private knowledge into a public plugin, and do not publish or move private material incidentally."
+    answers "What does a locator, an anchor or a role grant, and what may never cross to a wider audience?"
+  governance
+    severity blocking
+    requires "Disclose a document body only through separately authorised access, treat no locator, membership, role, mandate or audience label as a grant, and never publish, move, widen or copy private knowledge into a public plugin incidentally."
+  subject
+    subject-word spec
+    subject-kind definition
+
+@law kb-one-canonical-writer
+  meaning
+    says "One system has one canonical source writer. Several KB roles may propose work, but assign one writer per overlapping change, and coordinate overlapping edits before writing. Reviewer and librarian briefs do not grant write authority: the librarian writes nothing on any host, through the shell either, and the reviewer routes its fixes to kb-curator. The curator does not write adopted definitions, and routes other-owner or restricted-body work to its authorised reader or writer. Installed or adopted definition changes go to their source owner: never patch an installed language archive or mint a shadow local word to bypass the owner."
+    answers "Who may write each source, and where do changes to adopted definitions go?"
+  governance
+    severity blocking
+    requires "Write a system's source only as its one assigned writer, keep readers read-only, and send every change to an adopted definition to its source owner instead of patching an archive or minting a shadow word."
+  subject
+    subject-word spec
+    subject-kind definition
+
+@law kb-reviewer-independence
+  meaning
+    says "Acceptance and substantial reconciliation are reviewed by someone other than their author. The reviewer never accepts its own authored work and never infers approval from a draft status. The curator hands acceptance and substantial reconciliation to an independent reviewer, returning the exact candidate and its source and evidence changes, and does not accept its own product decisions incidentally. Ordinary revisions do not automatically accept or supersede a document; acceptance, withdrawal or supersession require project-policy decision evidence and the accountable decision the project's policy names. Preserve independent author, critic and verifier roles when the workflow requires them."
+    answers "Who may review and accept a KB change?"
+  governance
+    severity blocking
+    requires "Have every acceptance and substantial reconciliation reviewed by a role that did not author it, and accept, withdraw or supersede a document only on the accountable decision the project's policy requires."
+  subject
+    subject-word spec
+    subject-kind definition
+
+@law kb-not-evaluated-is-not-pass
+  meaning
+    says "Inspect findings, not exit status alone: zero errors and not-evaluated is admission without a full compliance pass. A missing tool means the check is unavailable, never passed; missing implementations, commands, capabilities, access or evaluator evidence are unavailable, never passing evidence. A metadata-only locator result cannot establish byte freshness. Do not substitute the locator checker for native admission or the kit corpus evaluator. Missing archives or toolchain compatibility evidence are concrete blockers for installation, not grounds to invent a successful release."
+    answers "When may a KB check be reported as passed?"
+  governance
+    severity blocking
+    requires "Report a check as passed only when it ran and its findings pass; report not-evaluated, unavailable and metadata-only results as exactly that."
+  subject
+    subject-word spec
+    subject-kind definition
+
+@law kb-exact-pins
+  meaning
+    says "Exact pins are reviewed version and archive changes. Do not silently replace a pin with latest or a semver range; resolve any required exact-pinning change through the project's descriptor conventions, and install the exact reviewed artifact. Retain installed pins. A pending source build labelled with an earlier version is not a released artifact, and version labels do not prove compatibility. Never run the ia on the PATH: use the repository's pinned CLI, or exactly its version through npx -y -p @inventarch/cli@<version> -- ia <command>; never npx --no ia, which can run a global 1.x."
+    answers "Which toolchain and kit versions may a KB stage use or install?"
+  governance
+    severity blocking
+    requires "Install and run only exact, reviewed versions: never replace a pin with latest or a range, never run the ia on the PATH, and retain installed pins."
+  subject
+    subject-word spec
+    subject-kind definition

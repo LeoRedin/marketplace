@@ -1,0 +1,61 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${extensionPath}/scripts/gemini-hook.mjs\" session",
+            "timeout": 60000
+          }
+        ]
+      }
+    ],
+    "BeforeAgent": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${extensionPath}/scripts/gemini-hook.mjs\" prompt",
+            "timeout": 30000
+          }
+        ]
+      }
+    ],
+    "BeforeTool": [
+      {
+        "matcher": "^(write_file|replace|edit_file|run_shell_command|shell|code_execution)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${extensionPath}/scripts/gemini-hook.mjs\" pre",
+            "timeout": 30000
+          }
+        ]
+      }
+    ],
+    "AfterTool": [
+      {
+        "matcher": "^(write_file|replace|edit_file|run_shell_command|shell|code_execution|ask_user|ask_question)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${extensionPath}/scripts/gemini-hook.mjs\" post",
+            "timeout": 60000
+          }
+        ]
+      }
+    ],
+    "AfterAgent": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${extensionPath}/scripts/gemini-hook.mjs\" stop",
+            "timeout": 30000
+          }
+        ]
+      }
+    ]
+  }
+}

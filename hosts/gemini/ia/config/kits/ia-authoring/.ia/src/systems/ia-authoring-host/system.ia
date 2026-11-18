@@ -1,0 +1,20 @@
+#! ia 1.0
+
+@system ia-authoring-host
+  provider "local"
+  version "0.1.0"
+  describes "The host-authoring part of the IA authoring kit: how skills, agents, hooks and plugins become IA-owned artifacts. Four activities (lower, project, evaluate, qualify), each a capability with its playbook, the role briefs that run them, the checks the core's check runner may run, the trigger-evaluation protocol as conventions, and its runner and config reference as kit assets. This system mints no words and grants no authority."
+  steward @agent host-authoring-steward
+  requires
+    - agent-system
+    - agent-composition-system
+    - workspace-system
+    - governance-system
+    - compliance-system
+
+@agent host-authoring-steward
+  meaning
+    says "Owns the records of the IA authoring kit's host-authoring part and reviews every change to them."
+    answers "Who owns the host-authoring part of the IA authoring kit?"
+  governance
+    applies [convention, playbook, contract, check, case, capability, agent]

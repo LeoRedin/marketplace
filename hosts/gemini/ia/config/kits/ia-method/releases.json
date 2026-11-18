@@ -1,0 +1,152 @@
+{
+  "format": 2,
+  "kit": "inventarch/ia-method-kit",
+  "latest": "0.9.1",
+  "releases": [
+    {
+      "version": "0.1.0",
+      "archive": "c343a97926f2edf2a7ee02a5c865585fa961201f61b491ff4d1b669489d12b87",
+      "manifest": "05b8e9f2bce1b298069d946622f41f7c3b4d9188ab67c3459b463ed5558ac81c",
+      "sources": "d97a1a2b704d2fd6cab5dc2dae64df86081b18bcb1b01cd6b2621d3d5e48257f",
+      "language": "inventarch/language ^1.2.0",
+      "cli": "@inventarch/cli 2.0.0",
+      "file": "releases/0.1.0.json"
+    },
+    {
+      "version": "0.2.0",
+      "archive": "2f0c68a28b86e69a35722cc51841bc7d0cc6c28ba7fde8c9a1955c77621dd7de",
+      "manifest": "63b9096a705da2778eb4c92f00629419712e2b9f0bd9d19b928c25995c29f2ea",
+      "sources": "e5bcba424b0a260572701bf7328fe9f56615df666a09c6d77148148ad74cc504",
+      "language": "inventarch/language ^3.1.1",
+      "cli": "@inventarch/cli 3.1.1",
+      "file": "releases/0.2.0.json"
+    },
+    {
+      "version": "0.3.0",
+      "archive": "8f2d8dcdcf978f988a7166d64e8a5c69d6eb3d001b7db94c479fb95f58ee5c9f",
+      "manifest": "9cb2eb609af1811782112687b52cf32f2c34820c668b20912df590824befe28d",
+      "sources": "ca048f9d84b4ebaf94b3130b82be2f680216065d095fe3c000c7dc1eebdda670",
+      "language": "inventarch/language ^3.1.2",
+      "cli": "@inventarch/cli 3.2.2",
+      "file": "releases/0.3.0.json"
+    },
+    {
+      "version": "0.4.0",
+      "archive": "47c17e36fbbf4abcb46ffa3b38820620e76ad82e8c03917945a1e2eb883c1885",
+      "manifest": "ba1653172cfa2adc8b4729c8fefe0f0271599736d856bab99ebb43f1429bad59",
+      "sources": "4e742715d93045325d39a100519a52b4cf859ed762da8193e1841cc830d82864",
+      "language": "inventarch/language ^3.2.0",
+      "cli": "@inventarch/cli 3.3.0",
+      "file": "releases/0.4.0.json"
+    },
+    {
+      "version": "0.5.0",
+      "archive": "e65327e842df343d677fda2f9962e4a2cd6f5bc1db6ad552ca1facc8fabb3266",
+      "manifest": "d8c600e41a129dc954fa7f73681bb9ab4299fbacaac31a3b97ace43037069b0f",
+      "sources": "861f7874d076defd38a8cdd3667cead8d809bc94b8d2524c06445da0a149b74d",
+      "language": "inventarch/language ^3.2.0",
+      "cli": "@inventarch/cli 3.3.0",
+      "file": "releases/0.5.0.json"
+    },
+    {
+      "version": "0.6.0",
+      "archive": "7b31d524fdcf245661da85790c2e6676f7e34de85e916ce6b54efc15a8603244",
+      "manifest": "61826027278e3d3751a92785934b1f084bb373c46e30838a657321d6a7f41887",
+      "sources": "ed374266b8257864207eb94fddced3d878a532c4ce22d721d612c9df27b47ea4",
+      "language": "inventarch/language ^3.2.0",
+      "cli": "@inventarch/cli 3.4.0",
+      "file": "releases/0.6.0.json"
+    },
+    {
+      "version": "0.7.0",
+      "archive": "54dcfe7801c322502bed7039471b8500c46ffd4efce53be3f6bdac09f45c9109",
+      "manifest": "56b6f5fbaaec2b76c8993bd749bf222a5c537bc0ee7ebbc7d2d432f2ea9267bc",
+      "sources": "6ee42b8ef290cac2932d72e3a02fb60ecf50e947afdd3ad65948a9177e51c0fa",
+      "language": "inventarch/language ^3.2.0",
+      "cli": "@inventarch/cli 3.4.1",
+      "file": "releases/0.7.0.json",
+      "source": {
+        "repository": "https://github.com/inventarch/marketplace.git",
+        "commit": "b3f25d39b72abd2350aece52082fba0cd706aad2"
+      }
+    },
+    {
+      "version": "0.7.1",
+      "archive": "caa4dfc33243c5f91b66247bdf44e4a9ffd52e6d934f7d6d0a03fe4a65807440",
+      "manifest": "ba8c56415ee191584a6a36d80259590d1b250c6ddd11bd2be66a97928907cad7",
+      "sources": "58f69f234401c4cae33575fdccb777b273e8c0dbfe1db83a19cfccfa9c87d7c6",
+      "language": "inventarch/language ^3.2.0",
+      "cli": "@inventarch/cli 3.5.0",
+      "file": "releases/0.7.1.json",
+      "source": {
+        "repository": "https://github.com/inventarch/marketplace.git",
+        "commit": "54c6f1b84381e5218571fbf6a9b28c7afa634489"
+      }
+    },
+    {
+      "version": "0.7.2",
+      "archive": "712079783edd292ef610d3ee4ed3d5db140818dc0ddfb921afa756c1da81c53f",
+      "manifest": "2e016e0deeade93bd8f34247ed53cfdd738d287c563efbf4d12da3ac3505adb9",
+      "sources": "c89ead4dc8c711adbd4f805e84d70089213c0262a92e1c2b27e0db8bfc21bb88",
+      "language": "inventarch/language ^3.2.0",
+      "cli": "@inventarch/cli 3.5.0",
+      "file": "releases/0.7.2.json",
+      "source": {
+        "repository": "https://github.com/inventarch/marketplace.git",
+        "commit": "4e011f535f8ccd346bc91e78b5bdc4182377db3b"
+      }
+    },
+    {
+      "version": "0.7.3",
+      "archive": "dc9efbf35b56eaf2c14e59eaf680ad479dd518777057a51bc63c0fabc243e7fa",
+      "manifest": "9dd941f55b795799af1b6af782c70627fe9750bc029fb21f8d6f6824ce0aeeba",
+      "sources": "aec20861ed4028ce609543053d1a753a4cb15daa8a2a9338404046d6f687e98c",
+      "language": "inventarch/language ^3.2.0",
+      "cli": "@inventarch/cli 3.6.0",
+      "file": "releases/0.7.3.json",
+      "source": {
+        "repository": "https://github.com/inventarch/marketplace.git",
+        "commit": "900da4e819766e7c93705888eb51491f1b49c1fd"
+      }
+    },
+    {
+      "version": "0.8.0",
+      "archive": "e6c69e6f8aae1d66105b3b6b8d42f8056670d757d696ec2c21b9bfa3c4a561a4",
+      "manifest": "5f05809fe747b4b1388dbc2bf6ea0544ace943a6dd95af9a4a32c068ece12311",
+      "sources": "5ae82f3a225bb32f84b6f30e6c96e41643a105a42fbf875c2f3ef4e0b5f9a914",
+      "language": "inventarch/language ^3.2.0",
+      "cli": "@inventarch/cli 3.6.0",
+      "file": "releases/0.8.0.json",
+      "source": {
+        "repository": "https://github.com/inventarch/marketplace.git",
+        "commit": "46fb19c0b1384cbdee8d690839a93c15d0a483b8"
+      }
+    },
+    {
+      "version": "0.9.0",
+      "archive": "e63c1bec90bdf6bdfe2f93f170daf9f6e6812d59ed240849d8e2c0a94a747d87",
+      "manifest": "ae735092cc2724c4f4ca3c23799389f9df91fba968d1c166ddb61cfaebc2003f",
+      "sources": "6d1b4091d15a51893790ab3a81c4dbf82698beecd7f4b45ffd4e5449860851b1",
+      "language": "inventarch/language ^3.2.0",
+      "cli": "@inventarch/cli 3.6.0",
+      "file": "releases/0.9.0.json",
+      "source": {
+        "repository": "https://github.com/inventarch/marketplace.git",
+        "commit": "c8b971bc8242794c48652b4e79d6e650d6331ee9"
+      }
+    },
+    {
+      "version": "0.9.1",
+      "archive": "bd635bb4779f648849a8382d314872ebcd777173c5d206ae4b2b1f0c86b61c71",
+      "manifest": "33decfed3c335dfd81ec3866796b57d1cdecff5214079e93c1781e3523fc935d",
+      "sources": "96dfe0edcfd06540035f7be2cf361ce3bd15655239d3fbed15c46913c62f9678",
+      "language": "inventarch/language ^3.0.0",
+      "cli": "@inventarch/cli 3.8.0",
+      "file": "releases/0.9.1.json",
+      "source": {
+        "repository": "https://github.com/inventarch/marketplace.git",
+        "commit": "4c52bc51856e40f93a77ebef80f112ccfb2c6c60"
+      }
+    }
+  ]
+}

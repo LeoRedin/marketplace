@@ -1,0 +1,55 @@
+{
+  "formatVersion": 1,
+  "id": "inventarch/ia-method-kit",
+  "version": "0.9.1",
+  "distribution": "workspace-system/definition/distribution/ia-method-distribution",
+  "engine": "^0.1.1",
+  "language": [
+    "1.0"
+  ],
+  "dependencies": [
+    {
+      "id": "inventarch/language",
+      "range": "^3.0.0",
+      "systems": [
+        "agent-composition-system",
+        "agent-system",
+        "authoring-system",
+        "compliance-system",
+        "governance-system",
+        "hook-authoring-system",
+        "learning-system",
+        "session-system",
+        "template-system",
+        "work-system",
+        "workspace-system"
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "path": "bindings.json",
+      "role": "asset"
+    },
+    {
+      "path": "delivery.json",
+      "role": "asset"
+    },
+    {
+      "path": "handlers.json",
+      "role": "asset"
+    },
+    {
+      "path": "onwrite.json",
+      "role": "asset"
+    }
+  ],
+  "license": "Apache-2.0",
+  "description": "The IA methodology kit: principles, a law, conventions, a contract with cases, the operating loop and the provisional-foundation ceiling, and one method capability with a four-phase playbook for every public IA record word, plus one over the vocabulary taxonomy, for thinking and operating by the IA methodology (ia-method).",
+  "source": {
+    "repository": "https://github.com/inventarch/marketplace.git",
+    "commit": "4c52bc51856e40f93a77ebef80f112ccfb2c6c60",
+    "recipe": "ustar-v1",
+    "epoch": 1794570053
+  }
+}

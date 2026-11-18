@@ -15,6 +15,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildHostPlugins } from './build-host-plugins.mjs';
 
 export const NOTE_FORMAT = 'inventarch-marketplace.release-note.v1';
 export const CHANGESET_FORMAT = 'inventarch-marketplace.changeset.v1';
@@ -176,6 +177,7 @@ export function apply(root, result) {
   }
   const consumed = new Set(result.releases.flatMap(r => r.notes.map(n => n.file)));
   for (const file of consumed) rmSync(join(root, file));
+  if (existsSync(join(root, 'hosts'))) buildHostPlugins(root, { write: true });
 }
 
 export function prBody(result) {

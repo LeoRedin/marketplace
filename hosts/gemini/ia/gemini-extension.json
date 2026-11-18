@@ -1,0 +1,24 @@
+{
+  "name": "ia",
+  "version": "1.7.0",
+  "description": "InventArch's one public plugin: the Work, Knowledge and Delivery lanes resolve the bound method kit as a packet, with ia-method, ia-kb and ia-authoring as defaults; Delivery also routes UX, UI, brand, typography, token and accessibility work to the hosted design service when an account is connected.",
+  "contextFileName": "GEMINI.md",
+  "mcpServers": {
+    "ia": {
+      "command": "node",
+      "args": [
+        "${extensionPath}/scripts/door.mjs"
+      ],
+      "env": {
+        "IA_KITS_DIR": "${extensionPath}/config/kits"
+      }
+    },
+    "inventarch": {
+      "httpUrl": "https://api.inventarch.dev/mcp",
+      "oauth": {
+        "enabled": true,
+        "clientId": "gemini-cli"
+      }
+    }
+  }
+}

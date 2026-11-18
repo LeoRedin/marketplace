@@ -58,14 +58,14 @@ export const exitRow = (task, observation, overrides) => row(task, observation, 
 //   slow:      commands or identities whose answer takes 15 s, so a time limit cuts them off
 // The gate runs the plugin's own scripts, so only the exit-evidence real-CLI
 // cases pin the CLI's real output shape for both.
-export function workCli(t, { plans, records, directed = {}, failing = [], ambiguous = [], slow = [], refused = [], validateStatus }) {
+export function workCli(t, { plans, records, directed = {}, byPath = {}, failing = [], ambiguous = [], slow = [], refused = [], validateStatus }) {
   const dir = realpathSync.native(mkdtempSync(join(tmpdir(), 'ia-core-workcli-')));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
-  writeFileSync(join(dir, 'fixture.json'), JSON.stringify({ plans, records, directed, failing, ambiguous, slow, refused, validateStatus }));
+  writeFileSync(join(dir, 'fixture.json'), JSON.stringify({ plans, records, directed, byPath, failing, ambiguous, slow, refused, validateStatus }));
   writeFileSync(join(dir, 'calls.log'), '');
   const main = join(dir, 'main.mjs');
   writeFileSync(main, `import { appendFileSync, readFileSync } from 'node:fs';
-const { plans, records, directed, failing, ambiguous, slow, refused, validateStatus } = JSON.parse(readFileSync(new URL('./fixture.json', import.meta.url), 'utf8'));
+const { plans, records, directed, byPath, failing, ambiguous, slow, refused, validateStatus } = JSON.parse(readFileSync(new URL('./fixture.json', import.meta.url), 'utf8'));
 const argv = process.argv.slice(2);
 appendFileSync(new URL('./calls.log', import.meta.url), JSON.stringify(argv) + '\\n');
 const [command, identity] = argv;
@@ -82,8 +82,18 @@ if (command === 'validate') {
   const ids = plans ? (seat ? plans[seat] : Object.values(plans).flat()) : Object.values(records).filter(r => r.discriminator === 'task').map(r => r.identity);
   out({ version: 1, ok: true, view: { tasks: (ids ?? []).map(id => ({ identity: id })) } });
 } else if (command === 'inspect') {
-  if (failing.includes(identity)) { out({ ok: false, code: 'IA-DB-SOURCE-UNAVAILABLE' }); process.exit(3); }
   const both = flag('--edges') === 'both';
+  const pathArg = flag('--path');
+  if (pathArg) {
+    const ids = byPath[pathArg] ?? [];
+    out({
+      version: 1,
+      records: ids.map(id => records[id]).filter(Boolean),
+      directed: both ? ids.flatMap(id => directed[id] ?? []) : [],
+    });
+    process.exit(0);
+  }
+  if (failing.includes(identity)) { out({ ok: false, code: 'IA-DB-SOURCE-UNAVAILABLE' }); process.exit(3); }
   out({ version: 1, records: records[identity] ? [records[identity]] : [], directed: both ? (directed[identity] ?? []) : [] });
 } else process.exit(2);
 `);

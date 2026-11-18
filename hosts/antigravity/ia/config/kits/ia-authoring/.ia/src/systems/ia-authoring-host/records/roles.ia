@@ -1,0 +1,36 @@
+#! ia 1.0
+
+@agent host-lowering-scribe
+  meaning
+    says "The lowering scribe, a worker: runs lowering with ia init --from, reviews each disposition in the lowering map, and never marks a construct retired without a reason."
+    answers "Who runs a lowering and reviews its map?"
+  governance
+    applies []
+
+@agent host-round-trip-checker
+  meaning
+    says "The round-trip checker, a checker: runs the host-fixed-point check only and reports its command, exit code and output verbatim."
+    answers "Who runs the round-trip check?"
+  governance
+    applies []
+
+@agent host-trigger-evaluator
+  meaning
+    says "The trigger evaluator, a checker: drafts the cases from a skill's description and its neighbours, and runs the eval runner inside its run manifest and session cap."
+    answers "Who drafts and runs the trigger evaluation?"
+  governance
+    applies []
+
+@agent host-qualifier
+  meaning
+    says "The host qualifier, a checker: runs the isolated install, claude plugin validate --strict, claude plugin details and the Codex smoke; its observations are the evidence for host-feature rows."
+    answers "Who qualifies a plugin on its hosts?"
+  governance
+    applies []
+
+@agent host-independent-reviewer
+  meaning
+    says "The independent reviewer, a reader: never the author; checks every retired reason and every regenerated difference. Never reviews work it authored."
+    answers "Who independently reviews a lowering, a projection or an evaluation?"
+  governance
+    applies []

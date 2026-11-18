@@ -104,10 +104,14 @@ export function describe(entry) {
   return `${name}: beyond the ceiling (layer ${entry.layer}, through ${entry.via.map(shortName).join(' -> ')}) waiting on ${on}: do not start until ratified${unread}`;
 }
 
-// Reduces one `ia inspect <identity> --json` record to the graph node above.
-export function nodeFromInspect(record) {
+// Reduces one `ia inspect <identity> --json` record (or a `--path ... --edges both`
+// record paired with its `directed` rows) to the graph node above.
+export function nodeFromInspect(record, directed = []) {
   const field = (section, key) => record.sections?.find(s => s.name === section)?.fields?.find(f => f.key === key)?.value;
-  const edges = record.edges ?? [];
+  const edges = record.edges?.length
+    ? record.edges
+    : directed.filter(r => r?.identity === record.identity && r.depth === 1 && r.predicate && r.counterpart)
+        .map(r => ({ predicate: r.predicate, direction: r.direction, target: r.counterpart }));
   const targets = (predicate, direction) => edges.filter(e => e.direction === direction && e.predicate === predicate && e.target).map(e => e.target);
   return {
     word: record.discriminator,

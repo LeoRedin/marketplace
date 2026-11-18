@@ -1,0 +1,26 @@
+#! ia 1.0
+
+@system ia-method
+  provider "local"
+  version "0.2.0"
+  describes "The IA methodology kit: how an agent thinks and operates in an IA workspace. Principles for an honest account of work (the intended capability as the unit, levels of knowledge, claims within their evidence, named unknowns, accountable lineage), the operating loop through ia position, the capture before delivery, the handoff packet, reconciliation on change, the ceiling on work that rests on a provisional foundation, one method capability and four-phase playbook for every public record word (read and apply only for the governance words), and one over the vocabulary's taxonomy. The ia plugin delivers it through the IA CLI; IA evaluates only the coverage of its contract. This system mints no words and grants no authority."
+  steward @agent ia-method-steward
+  requires
+    - agent-system
+    - agent-composition-system
+    - authoring-system
+    - workspace-system
+    - governance-system
+    - compliance-system
+    - hook-authoring-system
+    - work-system
+    - learning-system
+    - session-system
+    - template-system
+
+@agent ia-method-steward
+  meaning
+    says "Owns the records of the IA methodology kit and reviews every change to them."
+    answers "Who owns the IA methodology kit's records?"
+  governance
+    applies [principle, law, convention, playbook, contract, check, case, capability, agent, distribution]

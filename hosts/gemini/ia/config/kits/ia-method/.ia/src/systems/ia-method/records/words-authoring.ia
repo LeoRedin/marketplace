@@ -1,0 +1,83 @@
+#! ia 1.0
+
+@capability operation-method
+  meaning
+    says "Work with operation records under the IA methodology: the operation-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking an operation. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for an operation?"
+  composition
+    playbooks [@playbook operation-method]
+  execution
+    effects [read, local-write]
+
+@playbook operation-method
+  meaning
+    says "How an agent works with operation records, each a declared operation bound to an implementation, input, output and effect contract that the host installs: orient through ia position --word operation and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with operation records?"
+  subject
+    subject-word operation
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word operation at the seat the work concerns, read the operation records it points at with ia read, and run ia vocabulary operation --schema for the sections and fields an operation carries."
+      Inference means "Read the operation's implementation, inputs, outputs and effects."
+      Decision means "operation is a word of authoring-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/authoring-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these operation records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the operation must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "State the inputs, outputs and effects the operation needs, and the implementation the host installs for it."
+      Decision means "Extend an existing operation through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the operation will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the operation; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Author the operation's contract; installing its implementation stays with the host."
+      Decision means "Change operation records only through ia preview operation <name> <field>=<value>..., then ia author with the same form and the digest preview returned, then ia validate; use --set or --relate the same way for one field or relationship."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Check that the declared effects match what the implementation does when it runs."
+      Decision means "Reconcile the records that cite or depend on the operation, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."
+
+@capability authoring-guide-method
+  meaning
+    says "Work with authoring-guide records under the IA methodology: the authoring-guide-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking an authoring-guide. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for an authoring-guide?"
+  composition
+    playbooks [@playbook authoring-guide-method]
+  execution
+    effects [read, local-write]
+
+@playbook authoring-guide-method
+  meaning
+    says "How an agent works with authoring-guide records, each a vocabulary owner and schema associated with an authoring reference and usage guidance: orient through ia position --word authoring-guide and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with authoring-guide records?"
+  subject
+    subject-word authoring-guide
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word authoring-guide at the seat the work concerns, read the authoring-guide records it points at with ia read, and run ia vocabulary authoring-guide --schema for the sections and fields an authoring-guide carries."
+      Inference means "Read the guide for the word: its owner, schema and reference."
+      Decision means "authoring-guide is a word of authoring-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/authoring-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these authoring-guide records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the authoring-guide must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Decide what guidance authors of the word need, citing its schema rather than copying it."
+      Decision means "Extend an existing authoring-guide through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the authoring-guide will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the authoring-guide; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Author the guide with its owner, schema and reference."
+      Decision means "Change authoring-guide records only through ia preview authoring-guide <name> <field>=<value>..., then ia author with the same form and the digest preview returned, then ia validate; use --set or --relate the same way for one field or relationship."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Check that the guide still matches the schema ia vocabulary <word> --schema shows."
+      Decision means "Reconcile the records that cite or depend on the authoring-guide, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."
