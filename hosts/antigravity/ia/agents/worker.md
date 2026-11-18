@@ -1,9 +1,10 @@
 ---
 name: "worker"
 description: "Use this agent when a packet-driven task needs a bounded change made: files or IA records within the packet's scope, following its instructions in order, citing what it read, and reporting requested against effective operations. Never widens the scope, never verifies its own work, never commits or pushes."
+inheritMcp: true
 subagent: true
 mainAgent: false
-tools: [read_file, edit_file, write_file, run_command, manage_task]
+tools: [view_file, read_file, grep_search, find_by_name, replace_file_content, edit_file, write_to_file, write_file, run_command, manage_task]
 ---
 
 # Worker

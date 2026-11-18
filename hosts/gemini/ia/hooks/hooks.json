@@ -24,7 +24,7 @@
     ],
     "BeforeTool": [
       {
-        "matcher": "write_file|replace|edit_file|run_shell_command|shell|code_execution",
+        "matcher": "^(write_file|replace|edit_file|run_shell_command|shell|code_execution)$",
         "hooks": [
           {
             "type": "command",
@@ -36,7 +36,7 @@
     ],
     "AfterTool": [
       {
-        "matcher": "write_file|replace|edit_file|run_shell_command|shell|code_execution|ask_user|ask_question",
+        "matcher": "^(write_file|replace|edit_file|run_shell_command|shell|code_execution|ask_user|ask_question)$",
         "hooks": [
           {
             "type": "command",

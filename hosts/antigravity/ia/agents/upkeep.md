@@ -1,9 +1,10 @@
 ---
 name: "upkeep"
 description: "Use this agent when scripts/upkeep.mjs stale reports something: it brings the derived outputs a kit declares (a Mermaid map, a spec in another voice, a page) and the records that cite changed files back in step with their sources, as a proposed patch in a scratch worktree, never in the caller's tree. Silent and not started when nothing is stale."
+inheritMcp: true
 subagent: true
 mainAgent: false
-tools: [read_file, edit_file, write_file, run_command, manage_task]
+tools: [view_file, read_file, grep_search, find_by_name, replace_file_content, edit_file, write_to_file, write_file, run_command, manage_task]
 ---
 
 # Upkeep

@@ -57,6 +57,9 @@ test('Antigravity bundle obeys plugin.json, mcp_config.json, flat/grouped hooks.
     assert.ok(Array.isArray(hooks[grouped]) && hooks[grouped].length === 1, `${grouped} must be grouped`);
     assert.equal(typeof hooks[grouped][0].matcher, 'string');
     assert.ok(Array.isArray(hooks[grouped][0].hooks) && hooks[grouped][0].hooks.length === 1);
+    for (const tool of ['write_to_file', 'replace_file_content', 'multi_replace_file_content', 'write_file', 'edit_file', 'run_command']) {
+      assert.ok(hooks[grouped][0].matcher.split('|').includes(tool), `${grouped} matcher missing ${tool}`);
+    }
   }
 
   const rulesText = readFileSync(join(ROOT, 'hosts/antigravity/ia/rules/AGENTS.md'), 'utf8');
@@ -70,9 +73,17 @@ test('Antigravity bundle obeys plugin.json, mcp_config.json, flat/grouped hooks.
 
   for (const agentFile of readdirSync(join(ROOT, 'hosts/antigravity/ia/agents'))) {
     const text = readFileSync(join(ROOT, 'hosts/antigravity/ia/agents', agentFile), 'utf8');
-    assert.match(text, /^---\n[\s\S]*?\nsubagent: true\nmainAgent: false\ntools: \[[^\]]+\]\n---\n/);
+    assert.match(text, /^---\n[\s\S]*?\ninheritMcp: true\nsubagent: true\nmainAgent: false\ntools: \[[^\]]+\]\n---\n/);
     assert.doesNotMatch(text, /^model:/m);
     assert.doesNotMatch(text, /^maxTurns:/m);
+  }
+  const workerText = readFileSync(join(ROOT, 'hosts/antigravity/ia/agents/worker.md'), 'utf8');
+  for (const tool of ['view_file', 'read_file', 'write_to_file', 'write_file', 'replace_file_content', 'edit_file', 'run_command']) {
+    assert.match(workerText, new RegExp(`\\b${tool}\\b`));
+  }
+  const readerText = readFileSync(join(ROOT, 'hosts/antigravity/ia/agents/reader.md'), 'utf8');
+  for (const tool of ['view_file', 'grep_search', 'find_by_name', 'read_file']) {
+    assert.match(readerText, new RegExp(`\\b${tool}\\b`));
   }
 });
 
@@ -95,6 +106,17 @@ test('Gemini CLI bundle obeys gemini-extension.json, millisecond hooks/hooks.jso
     assert.equal(inner.type, 'command');
     assert.ok(inner.timeout >= 1000, `${event} timeout must be in milliseconds`);
     assert.match(inner.command, /\$\{extensionPath\}\/scripts\/gemini-hook\.mjs/);
+  }
+  for (const toolEvent of ['BeforeTool', 'AfterTool']) {
+    const matcher = hooks[toolEvent][0].matcher;
+    assert.match(matcher, /^\^\([^)]+\)\$$/, `${toolEvent} matcher must be anchored`);
+    const re = new RegExp(matcher);
+    for (const allowed of ['write_file', 'replace', 'run_shell_command']) {
+      assert.ok(re.test(allowed), `${toolEvent} matcher should match ${allowed}`);
+    }
+    for (const foreign of ['mcp_custom_replace_text', 'powershell_docs', 'write_file_extra']) {
+      assert.ok(!re.test(foreign), `${toolEvent} matcher must not substring-match ${foreign}`);
+    }
   }
 
   for (const skill of readdirSync(join(ROOT, 'hosts/gemini/ia/skills'))) {

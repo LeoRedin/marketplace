@@ -14,12 +14,12 @@ const lf = text => String(text).replace(/\r\n/g, '\n');
 const jsonText = value => `${JSON.stringify(value, null, 2)}\n`;
 
 const AGY_TOOL_MAP = {
-  Read: ['read_file'],
-  Grep: ['read_file'],
-  Glob: ['read_file'],
-  Edit: ['edit_file'],
-  MultiEdit: ['edit_file'],
-  Write: ['write_file'],
+  Read: ['view_file', 'read_file'],
+  Grep: ['grep_search', 'read_file'],
+  Glob: ['find_by_name', 'read_file'],
+  Edit: ['replace_file_content', 'edit_file'],
+  MultiEdit: ['multi_replace_file_content', 'replace_file_content', 'edit_file'],
+  Write: ['write_to_file', 'write_file'],
   Bash: ['run_command', 'manage_task'],
   PowerShell: ['run_command', 'manage_task'],
   WebSearch: ['search_web'],
@@ -111,11 +111,13 @@ function transformSkill(sourceText, host) {
 function transformAgent(sourceText, host) {
   const { fields, body } = parseFrontmatter(sourceText);
   const tools = mapTools(fields.tools, host === 'antigravity' ? AGY_TOOL_MAP : GEMINI_TOOL_MAP);
+  const hasMcp = /\bmcp__/.test(String(fields.tools ?? ''));
   const quote = s => JSON.stringify(String(s));
   const lines = ['---'];
   lines.push(`name: ${quote(fields.name)}`);
   lines.push(`description: ${quote(fields.description)}`);
   if (host === 'antigravity') {
+    if (hasMcp) lines.push('inheritMcp: true');
     lines.push('subagent: true');
     lines.push('mainAgent: false');
   }
@@ -143,10 +145,10 @@ Resolve \`../../\` relative to the loaded \`SKILL.md\` file's containing directo
 - **Bundled MCP servers (\`mcp_config.json\`):**
   - \`ia\`: launches \`scripts/door.mjs\` over stdio with \`IA_KITS_DIR\` pointed at the bundled \`config/kits\`.
   - \`inventarch\`: connects over Streamable HTTP to \`https://api.inventarch.dev/mcp\` using PKCE loopback OAuth Dynamic Client Registration.
-- **Lifecycle hooks (\`hooks.json\`):** \`scripts/agy-hook.mjs\` runs \`SessionStart\`, \`PreInvocation\`, \`PreToolUse\` (fail-closed in \`.ia/governance.json\` workspaces), \`PostToolUse\` (buffered into \`PLUGIN_DATA\`), \`PostInvocation\` (flushing buffered post-tool and \`.ia\` advisory context), and \`Stop\` (guarded by \`continuationActive\`).
-- **Tool mapping:** map \`Read\`/\`Grep\`/\`Glob\` to \`read_file\`, \`Edit\`/\`MultiEdit\` to \`edit_file\`, \`Write\` to \`write_file\`, \`Bash\`/\`PowerShell\` to \`run_command\`, and \`AskUserQuestion\` to \`ask_question\` (or plain-text clarification for yes/no questions).
+- **Lifecycle hooks (\`hooks.json\`):** \`scripts/agy-hook.mjs\` runs \`SessionStart\`, \`PreInvocation\`, \`PreToolUse\` (fail-closed in \`.ia/governance.json\` workspaces), \`PostToolUse\` (buffered into \`PLUGIN_DATA\`), \`PostInvocation\` (flushing buffered post-tool and \`.ia\` advisory context), and \`Stop\` (guarded by \`continuationActive\`, \`executionNum\`, and a one-continuation-per-turn cap).
+- **Tool mapping:** map \`Read\`/\`Grep\`/\`Glob\` to \`view_file\`/\`grep_search\`/\`find_by_name\` (or \`read_file\` in Antigravity 2.0 / \`agy\`), \`Edit\`/\`MultiEdit\` to \`replace_file_content\`/\`multi_replace_file_content\` (or \`edit_file\`), \`Write\` to \`write_to_file\` (or \`write_file\`), \`Bash\`/\`PowerShell\` to \`run_command\`, and \`AskUserQuestion\` to \`ask_question\` (or plain-text clarification for yes/no questions).
 - **Subagents (\`agents/*.md\`):** \`reader\`, \`checker\`, \`worker\` and \`upkeep\` ship with native Antigravity subagent frontmatter (\`subagent: true\`, \`mainAgent: false\`). Never report a check as verified without \`scripts/check.mjs\` output.
-- **CLI hygiene:** scripts resolve \`@inventarch/cli@3.8.0\` via \`IA_CLI_PATH\`, the repository install, or \`npx\`, never a bare \`ia\` on \`PATH\` and never a shell.
+- **CLI hygiene:** scripts resolve \`@inventarch/cli@3.8.0\` via \`IA_CLI_PATH\`, the repository install, or \`npx\`, never a bare \`ia\` on \`PATH\` and never a shell (\`ia.mjs init\` and \`ia.mjs doctor\` keep \`--host claude\` on \`@inventarch/cli@3.8.0\`).
 `);
 }
 
@@ -168,6 +170,7 @@ Resolve \`../../\` relative to a loaded \`SKILL.md\` file's containing directory
 - **Lifecycle hooks (\`hooks/hooks.json\`):** \`scripts/gemini-hook.mjs\` wires \`SessionStart\`, \`BeforeAgent\`, \`BeforeTool\` (fail-closed in \`.ia/governance.json\` workspaces), \`AfterTool\` (running kit post handlers and \`onwrite.json\` checks), and \`AfterAgent\`, emitting strictly one JSON object on stdout.
 - **Tool mapping:** map \`Read\`/\`Grep\`/\`Glob\` to \`read_file\`/\`grep_search\`/\`glob\`, \`Edit\` to \`replace\`, \`Write\` to \`write_file\`, and \`Bash\` to \`run_shell_command\`.
 - **Agents (\`agents/*.md\`):** \`reader\`, \`checker\`, \`worker\` and \`upkeep\` define bounded role briefs and tool allowlists. Never report a check as verified without \`scripts/check.mjs\` output.
+- **CLI hygiene:** scripts resolve \`@inventarch/cli@3.8.0\` via \`IA_CLI_PATH\`, the repository install, or \`npx\`, never a bare \`ia\` on \`PATH\` and never a shell (\`ia.mjs init\` and \`ia.mjs doctor\` keep \`--host claude\` on \`@inventarch/cli@3.8.0\`).
 `);
 }
 
@@ -237,7 +240,7 @@ function antigravityHooks() {
       ],
       PreToolUse: [
         {
-          matcher: 'write_file|edit_file|run_command',
+          matcher: 'write_to_file|replace_file_content|multi_replace_file_content|write_file|edit_file|run_command',
           hooks: [
             {
               type: 'command',
@@ -249,7 +252,7 @@ function antigravityHooks() {
       ],
       PostToolUse: [
         {
-          matcher: 'write_file|edit_file|run_command|ask_question',
+          matcher: 'write_to_file|replace_file_content|multi_replace_file_content|write_file|edit_file|run_command|ask_question',
           hooks: [
             {
               type: 'command',
@@ -329,7 +332,7 @@ function geminiHooks() {
       ],
       BeforeTool: [
         {
-          matcher: 'write_file|replace|edit_file|run_shell_command|shell|code_execution',
+          matcher: '^(write_file|replace|edit_file|run_shell_command|shell|code_execution)$',
           hooks: [
             {
               type: 'command',
@@ -341,7 +344,7 @@ function geminiHooks() {
       ],
       AfterTool: [
         {
-          matcher: 'write_file|replace|edit_file|run_shell_command|shell|code_execution|ask_user|ask_question',
+          matcher: '^(write_file|replace|edit_file|run_shell_command|shell|code_execution|ask_user|ask_question)$',
           hooks: [
             {
               type: 'command',

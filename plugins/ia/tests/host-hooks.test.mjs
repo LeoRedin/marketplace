@@ -63,11 +63,66 @@ test('normalizeHookInput maps Antigravity and Gemini CLI tool names and payloads
   assert.equal(agyCmd.normalized.tool_name, 'Bash');
   assert.equal(agyCmd.normalized.tool_input.command, 'npm test');
 
+  const agyIdeWrite = normalizeHookInput('pre', JSON.stringify({
+    conversationId: 'conv-ide',
+    workspacePaths: ['/repo/ide'],
+    toolCall: { name: 'write_to_file', args: { TargetFile: '/repo/ide/a.ia', CodeContent: '#! ia 1.0\n' } },
+  }));
+  assert.equal(agyIdeWrite.normalized.tool_name, 'Write');
+  assert.equal(agyIdeWrite.normalized.tool_input.file_path, '/repo/ide/a.ia');
+  assert.equal(agyIdeWrite.normalized.tool_input.content, '#! ia 1.0\n');
+
+  const agyIdeReplace = normalizeHookInput('pre', JSON.stringify({
+    conversationId: 'conv-ide',
+    workspacePaths: ['/repo/ide'],
+    toolCall: {
+      name: 'replace_file_content',
+      args: { TargetFile: '/repo/ide/b.ia', TargetContent: 'before', ReplacementContent: 'after' },
+    },
+  }));
+  assert.equal(agyIdeReplace.normalized.tool_name, 'Edit');
+  assert.equal(agyIdeReplace.normalized.tool_input.file_path, '/repo/ide/b.ia');
+  assert.equal(agyIdeReplace.normalized.tool_input.old_string, 'before');
+  assert.equal(agyIdeReplace.normalized.tool_input.new_string, 'after');
+
+  const agyIdeMulti = normalizeHookInput('post', JSON.stringify({
+    conversationId: 'conv-ide',
+    workspacePaths: ['/repo/ide'],
+    toolCall: {
+      name: 'multi_replace_file_content',
+      args: {
+        TargetFile: '/repo/ide/c.ia',
+        ReplacementChunks: [{ TargetContent: 'x', ReplacementContent: 'y' }],
+      },
+    },
+  }));
+  assert.equal(agyIdeMulti.normalized.tool_name, 'MultiEdit');
+  assert.equal(agyIdeMulti.normalized.tool_input.file_path, '/repo/ide/c.ia');
+  assert.deepEqual(agyIdeMulti.normalized.tool_input.edits, [{ old_string: 'x', new_string: 'y' }]);
+
+  const agyIdeView = normalizeHookInput('pre', JSON.stringify({
+    toolCall: { name: 'view_file', args: { AbsolutePath: '/repo/ide/readme.md' } },
+  }));
+  assert.equal(agyIdeView.normalized.tool_name, 'Read');
+  assert.equal(agyIdeView.normalized.tool_input.file_path, '/repo/ide/readme.md');
+
   const agyStop = normalizeHookInput('stop', JSON.stringify({
     conversationId: 'conv-123',
     continuationActive: true,
   }));
   assert.equal(agyStop.normalized.stop_hook_active, true);
+
+  const agyStopExec = normalizeHookInput('stop', JSON.stringify({
+    conversationId: 'conv-123',
+    executionNum: 2,
+  }));
+  assert.equal(agyStopExec.normalized.stop_hook_active, true);
+
+  const agyStopTerminal = normalizeHookInput('stop', JSON.stringify({
+    conversationId: 'conv-123',
+    terminationReason: 'MAX_INVOCATIONS',
+  }));
+  assert.equal(agyStopTerminal.normalized.stop_hook_active, true);
 
   const geminiReplace = normalizeHookInput('pre', JSON.stringify({
     session_id: 'gem-1',
@@ -130,8 +185,8 @@ test('Antigravity hook adapter handles session, post buffering -> post-invocatio
   handlerKit(kitsDir, 'suite', {
     session: [{ run: 'scripts/echo.mjs', events: ['startup'] }],
     tool: [
-      { run: 'scripts/echo.mjs', phase: 'pre', match: 'Write|Edit' },
-      { run: 'scripts/echo.mjs', phase: 'post', match: 'Write|Edit' },
+      { run: 'scripts/echo.mjs', phase: 'pre', match: 'Write|Edit|MultiEdit' },
+      { run: 'scripts/echo.mjs', phase: 'post', match: 'Write|Edit|MultiEdit' },
     ],
     stop: [{ run: 'scripts/echo.mjs' }],
   });
@@ -147,7 +202,7 @@ test('Antigravity hook adapter handles session, post buffering -> post-invocatio
   const postOut = await runAgyHook('post', JSON.stringify({
     conversationId: 'c1',
     workspacePaths: [repo],
-    toolCall: { name: 'write_file', args: { Path: join(repo, 'note.md'), Content: '# hi\n' } },
+    toolCall: { name: 'write_to_file', args: { TargetFile: join(repo, 'note.md'), CodeContent: '# hi\n' } },
   }), { env });
   assert.deepEqual(postOut, {});
 
@@ -156,16 +211,23 @@ test('Antigravity hook adapter handles session, post buffering -> post-invocatio
   assert.match(flushed.injectSteps[0].systemMessage.systemMessage, /inventarch\/suite-kit: saw PostToolUse:Write/);
   assert.deepEqual(await runAgyHook('post-invocation', JSON.stringify({ conversationId: 'c1' }), { env }), {});
 
-  // Governed PreToolUse blocks with { decision: "deny", reason }.
+  // Governed PreToolUse blocks with { decision: "deny", reason } across documented Antigravity edit tools and edit_file.
   writeFileSync(join(repo, '.ia', 'governance.json'), '{}\n');
   const blockEnv = { ...env, IA_TEST_HANDLER_ANSWER: JSON.stringify({ decision: 'block', reason: 'missing mandate' }) };
-  const preBlocked = await runAgyHook('pre', JSON.stringify({
-    conversationId: 'c1',
-    workspacePaths: [repo],
-    toolCall: { name: 'edit_file', args: { Path: join(repo, 'a.js'), Target: '1', Replacement: '2' } },
-  }), { env: blockEnv });
-  assert.equal(preBlocked.decision, 'deny');
-  assert.match(preBlocked.reason, /inventarch\/suite-kit: missing mandate/);
+  for (const toolCall of [
+    { name: 'write_to_file', args: { TargetFile: join(repo, 'a.js'), CodeContent: 'const x = 1;\n' } },
+    { name: 'replace_file_content', args: { TargetFile: join(repo, 'a.js'), TargetContent: '1', ReplacementContent: '2' } },
+    { name: 'multi_replace_file_content', args: { TargetFile: join(repo, 'a.js'), ReplacementChunks: [{ TargetContent: '1', ReplacementContent: '2' }] } },
+    { name: 'edit_file', args: { Path: join(repo, 'a.js'), Target: '1', Replacement: '2' } },
+  ]) {
+    const preBlocked = await runAgyHook('pre', JSON.stringify({
+      conversationId: 'c1',
+      workspacePaths: [repo],
+      toolCall,
+    }), { env: blockEnv });
+    assert.equal(preBlocked.decision, 'deny', `expected deny for ${toolCall.name}`);
+    assert.match(preBlocked.reason, /inventarch\/suite-kit: missing mandate/);
+  }
 
   // Stop requests continuation once, and allows when continuationActive is true.
   const stopContinue = await runAgyHook('stop', JSON.stringify({
@@ -182,6 +244,39 @@ test('Antigravity hook adapter handles session, post buffering -> post-invocatio
     continuationActive: true,
   }), { env });
   assert.deepEqual(stopDone, { decision: 'allow' });
+
+  // When Antigravity IDE sends Stop payloads without continuationActive, the
+  // per-turn cap in PLUGIN_DATA allows at most one continuation on the same turn
+  // (even across intermediate PreInvocation calls) and resets for a new user turn.
+  const ideStop1 = await runAgyHook('stop', JSON.stringify({
+    conversationId: 'c-ide-stop',
+    workspacePaths: [repo],
+    lastUserInput: 'finish the task',
+    terminationReason: 'MODEL_FINAL_ANSWER',
+  }), { env });
+  assert.equal(ideStop1.decision, 'continue');
+
+  await runAgyHook('prompt', JSON.stringify({
+    conversationId: 'c-ide-stop',
+    workspacePaths: [repo],
+    lastUserInput: 'finish the task',
+  }), { env });
+
+  const ideStop2 = await runAgyHook('stop', JSON.stringify({
+    conversationId: 'c-ide-stop',
+    workspacePaths: [repo],
+    lastUserInput: 'finish the task',
+    terminationReason: 'MODEL_FINAL_ANSWER',
+  }), { env });
+  assert.deepEqual(ideStop2, { decision: 'allow' });
+
+  const ideStopNextTurn = await runAgyHook('stop', JSON.stringify({
+    conversationId: 'c-ide-stop',
+    workspacePaths: [repo],
+    lastUserInput: 'start another task',
+    terminationReason: 'MODEL_FINAL_ANSWER',
+  }), { env });
+  assert.equal(ideStopNextTurn.decision, 'continue');
 });
 
 test('Gemini CLI hook adapter emits strictly one JSON line on stdout across lifecycle events', t => {

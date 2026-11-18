@@ -17,7 +17,7 @@ Cross-model delegation is **off by default**. The person turns it on with `"dele
    node "${CLAUDE_PLUGIN_ROOT}/scripts/delegate.mjs" --to <codex|claude|gemini> --packet <packet file> --brief <brief file> [--root <repository>] [--timeout <seconds>]
    ```
 
-   It prints the command it would run: `codex exec`, `claude -p` or `gemini -p`, given the IA door as its MCP server (`--mcp-config` for `claude -p`, `-c mcp_servers.ia.*` for `codex exec`, `GEMINI_CLI_SYSTEM_SETTINGS_PATH` for `gemini -p`), the brief and the packet inline on stdin, `IA_DELEGATION_DEPTH` one higher, and a timeout (default 900 seconds, at most 3,600). Show the person that command, the packet's `digest` and the timeout.
+   It prints the command it would run: `codex exec`, `claude -p` or `gemini --approval-mode plan -p`, given the IA door as its MCP server (`--mcp-config` for `claude -p`, `-c mcp_servers.ia.*` for `codex exec`, `GEMINI_CLI_SYSTEM_SETTINGS_PATH` for `gemini`), the brief and the packet inline on stdin, `IA_DELEGATION_DEPTH` one higher, and a timeout (default 900 seconds, at most 3,600). Show the person that command, the packet's `digest` and the timeout.
 3. **Run only on their word.** Add `--run`. The result carries the exit status, whether it timed out, and the tails of its output.
 4. **Report and check.** The delegate's result is proposed. Report what it says it changed and ran, then verify through this plugin's `checker` (`scripts/check.mjs`) before anyone calls it done.
 

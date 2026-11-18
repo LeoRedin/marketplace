@@ -54,7 +54,7 @@ test('the config file turns it on; the preview names the command, the door, the 
   assert.equal(claude.json.timeoutSeconds, 60);
   const gemini = run('delegate.mjs', args('gemini', ['--timeout', '120']), env);
   assert.equal(gemini.status, 0, gemini.stdout + gemini.stderr);
-  assert.deepEqual(gemini.json.argv.slice(0, 2), ['gemini', '-p']);
+  assert.deepEqual(gemini.json.argv.slice(0, 4), ['gemini', '--approval-mode', 'plan', '-p']);
   assert.equal(gemini.json.mcpSettings.mcpServers.ia.command, 'node');
   assert.match(gemini.json.mcpSettings.mcpServers.ia.args[0], /\/scripts\/door\.mjs$/);
   assert.equal(gemini.json.env.IA_DELEGATION_DEPTH, '1');
@@ -80,7 +80,7 @@ test('with --run the delegate gets the packet inline on stdin and the depth one 
   assert.equal(ranGemini.status, 0, ranGemini.stdout + ranGemini.stderr);
   const seenGemini = JSON.parse(ranGemini.json.stdout);
   assert.deepEqual({ depth: seenGemini.depth, packet: seenGemini.packet, brief: seenGemini.brief }, { depth: '1', packet: true, brief: true });
-  assert.equal(seenGemini.args[0], '-p');
+  assert.deepEqual(seenGemini.args.slice(0, 3), ['--approval-mode', 'plan', '-p']);
   assert.equal(seenGemini.settings?.mcpServers?.ia?.command, 'node');
   assert.deepEqual(command('codex', { bin: 'x', plugin: '/p' }).slice(-2), ['mcp_servers.ia.env={IA_KITS_DIR="/p/config/kits"}', '-']);
   assert.deepEqual(doorServer('/p'), { command: 'node', args: ['/p/scripts/door.mjs'], env: { IA_KITS_DIR: '/p/config/kits' } });

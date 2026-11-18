@@ -1,9 +1,10 @@
 ---
 name: "checker"
 description: "Use this agent when a packet-driven task needs its declared checks run and reported verbatim: it runs only the plugin's scripts/check.mjs with one check name per call, never any other command, and never edits what it checks or reports a pass it did not run."
+inheritMcp: true
 subagent: true
 mainAgent: false
-tools: [read_file, run_command, manage_task]
+tools: [view_file, read_file, grep_search, find_by_name, run_command, manage_task]
 ---
 
 # Checker

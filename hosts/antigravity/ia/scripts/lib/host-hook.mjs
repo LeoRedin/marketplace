@@ -11,7 +11,19 @@ import { iaHome } from './home.mjs';
 
 export const BUFFER_CAP = 12_000;
 export const BUFFER_TTL_MS = 3_600_000;
+export const STOP_CONTINUATION_TTL_MS = 600_000;
 const SAFE_ID = /^[A-Za-z0-9_-]{1,80}$/;
+const TERMINAL_STOP_REASONS = new Set([
+  'ERROR',
+  'error',
+  'USER_CANCELED',
+  'user_canceled',
+  'MAX_INVOCATIONS',
+  'MAX_FORCED_INVOCATIONS',
+  'MAX_TOKEN_BUDGET_EXCEEDED',
+  'max_steps_exceeded',
+  'TERMINAL_CUSTOM_HOOK',
+]);
 
 const EVENT_TO_CANONICAL = {
   session: 'SessionStart',
@@ -26,25 +38,46 @@ const plain = value => typeof value === 'object' && value !== null && !Array.isA
 function mapTool(name, args) {
   const input = plain(args) ? { ...args } : {};
   if (!name || typeof name !== 'string') return { toolName: undefined, toolInput: input };
-  if (name === 'write_file' || name === 'Write') {
-    const filePath = input.file_path ?? input.Path ?? input.path;
-    const content = input.content ?? input.Content;
+  if (name === 'write_to_file' || name === 'write_file' || name === 'Write') {
+    const filePath = input.file_path ?? input.TargetFile ?? input.Path ?? input.AbsolutePath ?? input.path;
+    const content = input.content ?? input.CodeContent ?? input.Content;
     return {
       toolName: 'Write',
       toolInput: { ...input, ...(typeof filePath === 'string' ? { file_path: filePath } : {}), ...(typeof content === 'string' ? { content } : {}) },
     };
   }
-  if (name === 'edit_file' || name === 'replace' || name === 'Edit' || name === 'MultiEdit') {
-    const filePath = input.file_path ?? input.Path ?? input.path;
-    const oldString = input.old_string ?? input.Target;
-    const newString = input.new_string ?? input.Replacement;
+  if (
+    name === 'replace_file_content' ||
+    name === 'multi_replace_file_content' ||
+    name === 'edit_file' ||
+    name === 'replace' ||
+    name === 'Edit' ||
+    name === 'MultiEdit'
+  ) {
+    const filePath = input.file_path ?? input.TargetFile ?? input.Path ?? input.AbsolutePath ?? input.path;
+    const oldString = input.old_string ?? input.TargetContent ?? input.Target;
+    const newString = input.new_string ?? input.ReplacementContent ?? input.Replacement;
+    const isMulti = name === 'MultiEdit' || name === 'multi_replace_file_content';
+    const edits = Array.isArray(input.edits)
+      ? input.edits
+      : Array.isArray(input.ReplacementChunks)
+        ? input.ReplacementChunks.map(chunk =>
+            plain(chunk)
+              ? {
+                  old_string: typeof chunk.TargetContent === 'string' ? chunk.TargetContent : '',
+                  new_string: typeof chunk.ReplacementContent === 'string' ? chunk.ReplacementContent : '',
+                }
+              : chunk,
+          )
+        : undefined;
     return {
-      toolName: name === 'MultiEdit' ? 'MultiEdit' : 'Edit',
+      toolName: isMulti ? 'MultiEdit' : 'Edit',
       toolInput: {
         ...input,
         ...(typeof filePath === 'string' ? { file_path: filePath } : {}),
         ...(typeof oldString === 'string' ? { old_string: oldString } : {}),
         ...(typeof newString === 'string' ? { new_string: newString } : {}),
+        ...(edits ? { edits } : {}),
       },
     };
   }
@@ -59,7 +92,7 @@ function mapTool(name, args) {
     return { toolName: 'AskUserQuestion', toolInput: input };
   }
   if (name === 'read_file' || name === 'view_file' || name === 'Read') {
-    const filePath = input.file_path ?? input.Path ?? input.path;
+    const filePath = input.file_path ?? input.TargetFile ?? input.AbsolutePath ?? input.Path ?? input.path;
     return { toolName: 'Read', toolInput: { ...input, ...(typeof filePath === 'string' ? { file_path: filePath } : {}) } };
   }
   return { toolName: name, toolInput: input };
@@ -79,7 +112,11 @@ export function normalizeHookInput(event, rawText, { cwdFallback = process.cwd()
   const rawToolArgs = plain(rawObj.tool_input) ? rawObj.tool_input : (plain(rawToolCall?.args) ? rawToolCall.args : undefined);
   const { toolName, toolInput } = mapTool(rawToolName, rawToolArgs);
   const source = typeof rawObj.source === 'string' && rawObj.source ? rawObj.source : 'startup';
-  const stopActive = rawObj.continuationActive === true || rawObj.stop_hook_active === true;
+  const stopActive =
+    rawObj.continuationActive === true ||
+    rawObj.stop_hook_active === true ||
+    (typeof rawObj.executionNum === 'number' && rawObj.executionNum > 1) ||
+    (typeof rawObj.terminationReason === 'string' && TERMINAL_STOP_REASONS.has(rawObj.terminationReason));
   const normalized = {
     ...rawObj,
     cwd,
@@ -99,21 +136,76 @@ function bufferDir(env = process.env) {
   try { return join(iaHome(env), 'agy-hook-buffer'); } catch { return null; }
 }
 
-function bufferFile(dir, conversationId) {
+function safeConversationKey(conversationId) {
   const key = typeof conversationId === 'string' && conversationId ? conversationId : 'default';
-  const safe = SAFE_ID.test(key) ? key : createHash('sha256').update(key).digest('hex').slice(0, 32);
-  return join(dir, `pending-${safe}.json`);
+  return SAFE_ID.test(key) ? key : createHash('sha256').update(key).digest('hex').slice(0, 32);
+}
+
+function bufferFile(dir, conversationId) {
+  return join(dir, `pending-${safeConversationKey(conversationId)}.json`);
+}
+
+function stopCapFile(dir, conversationId) {
+  return join(dir, `stop-cap-${safeConversationKey(conversationId)}.json`);
 }
 
 function pruneBufferDir(dir, now) {
   let names;
   try { names = readdirSync(dir); } catch { return; }
   for (const name of names) {
-    if (!name.startsWith('pending-')) continue;
+    const ttl = name.startsWith('stop-cap-') ? STOP_CONTINUATION_TTL_MS : name.startsWith('pending-') ? BUFFER_TTL_MS : 0;
+    if (!ttl) continue;
     const full = join(dir, name);
     try {
-      if (now - statSync(full).mtimeMs > BUFFER_TTL_MS) rmSync(full, { force: true });
+      if (now - statSync(full).mtimeMs > ttl) rmSync(full, { force: true });
     } catch { /* concurrent removal */ }
+  }
+}
+
+export function clearStopContinuation(conversationId, { env = process.env } = {}) {
+  const dir = bufferDir(env);
+  if (!dir || !existsSync(dir)) return;
+  try { rmSync(stopCapFile(dir, conversationId), { force: true }); } catch { /* absent */ }
+}
+
+// Returns true when this conversation already consumed its one Stop continuation
+// on the current turn (and clears the latch so the turn stops cleanly instead of looping).
+export function consumeStopContinuationCap(conversationId, lastUserInput, { env = process.env, now = Date.now() } = {}) {
+  const dir = bufferDir(env);
+  if (!dir || !existsSync(dir)) return false;
+  const file = stopCapFile(dir, conversationId);
+  if (!existsSync(file)) return false;
+  try {
+    const parsed = JSON.parse(readFileSync(file, 'utf8'));
+    rmSync(file, { force: true });
+    if (typeof parsed?.updatedAt !== 'number' || now - parsed.updatedAt > STOP_CONTINUATION_TTL_MS) return false;
+    const turnHash = typeof lastUserInput === 'string' && lastUserInput
+      ? createHash('sha256').update(lastUserInput).digest('hex').slice(0, 16)
+      : null;
+    if (turnHash && parsed.turnHash && parsed.turnHash !== turnHash) return false;
+    return Number(parsed.count) >= 1;
+  } catch {
+    try { rmSync(file, { force: true }); } catch { /* gone */ }
+    return false;
+  }
+}
+
+export function recordStopContinuation(conversationId, lastUserInput, { env = process.env, now = Date.now() } = {}) {
+  const dir = bufferDir(env);
+  if (!dir) return false;
+  try {
+    mkdirSync(dir, { recursive: true });
+    pruneBufferDir(dir, now);
+    const file = stopCapFile(dir, conversationId);
+    const turnHash = typeof lastUserInput === 'string' && lastUserInput
+      ? createHash('sha256').update(lastUserInput).digest('hex').slice(0, 16)
+      : null;
+    const temp = `${file}.${process.pid}.${now}.tmp`;
+    writeFileSync(temp, JSON.stringify({ format: 1, count: 1, turnHash, updatedAt: now }) + '\n', 'utf8');
+    renameSync(temp, file);
+    return true;
+  } catch {
+    return false;
   }
 }
 

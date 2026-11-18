@@ -222,7 +222,7 @@ Only trusted kits run code, through `handlers.json`, `onwrite.json` or `checks.j
 
 ### Delegating to another model
 
-`/ia:delegate` hands one resolved step to `codex exec`, `claude -p` or `gemini -p`, with the IA door and the packet, one level deep and with a timeout. It is off until you set `"delegation": true` in `~/.ia/config.json`, and it runs nothing until you confirm the command it shows.
+`/ia:delegate` hands one resolved step to `codex exec`, `claude -p` or `gemini --approval-mode plan -p`, with the IA door and the packet, one level deep and with a timeout. It is off until you set `"delegation": true` in `~/.ia/config.json`, and it runs nothing until you confirm the command it shows.
 
 ### Where workspaces live
 

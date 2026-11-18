@@ -65,7 +65,7 @@ export function command(to, { bin, plugin = PLUGIN } = {}) {
       '-c', `mcp_servers.ia.env={IA_KITS_DIR=${toml(door.env.IA_KITS_DIR)}}`,
       '-'];
   }
-  if (to === 'gemini') return [bin ?? 'gemini', '-p', 'Follow the delegate brief and InventArch packet on stdin.'];
+  if (to === 'gemini') return [bin ?? 'gemini', '--approval-mode', 'plan', '-p', 'Follow the delegate brief and InventArch packet on stdin.'];
   throw new UsageError('--to is claude, codex or gemini');
 }
 

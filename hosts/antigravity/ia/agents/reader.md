@@ -1,9 +1,10 @@
 ---
 name: "reader"
 description: "Use this agent when a packet-driven task needs read-only evidence gathered from the repository, its IA records or the bound kit: what a file, record or document says, with path:line or identity and digest for every claim, and what the sources do not settle. Never edits, never runs commands, never plans."
+inheritMcp: true
 subagent: true
 mainAgent: false
-tools: [read_file]
+tools: [view_file, read_file, grep_search, find_by_name]
 ---
 
 # Reader

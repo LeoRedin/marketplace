@@ -7,7 +7,7 @@
 // ones that show the shape and the digest are the real ones.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -234,6 +234,42 @@ test('the report reads each task with its edges and each observation without the
   assert.ok(calls.some(c => c[1] === taskId('t-ok') && c.includes('--edges') && c.includes('both')));
   const observation = calls.find(c => c[1] === observationId('o-ok'));
   assert.deepEqual(observation.slice(2, 4), ['--depth', '0']);
+});
+
+test('demand-driven .ia/src indexing inspects only files holding referenced tasks and observations', t => {
+  const tOk = taskId('t-ok');
+  const oOk = observationId('o-ok');
+  const oUnused = observationId('o-unused');
+  const cli = workCli(t, {
+    records: {
+      [tOk]: taskRecord('t-ok', { status: 'closed', digest: CURRENT }),
+      [oOk]: observationRecord('o-ok', { verdict: 'success', subjectRevision: CURRENT }),
+      [oUnused]: observationRecord('o-unused', { verdict: 'success', subjectRevision: CURRENT }),
+    },
+    directed: { [tOk]: [subjectRow(tOk, oOk)] },
+    byPath: {
+      '.ia/src/work.ia': [tOk],
+      '.ia/src/evidence.ia': [oOk],
+      '.ia/src/unused-obs.ia': [oUnused],
+    },
+  });
+  mkdirSync(join(cli.root, '.ia', 'src', 'systems'), { recursive: true });
+  for (let i = 0; i < 50; i++) {
+    writeFileSync(join(cli.root, '.ia', 'src', 'systems', `sys-${String(i).padStart(2, '0')}.ia`), `#! ia 1.0\n\n@system sys-${i}\n`);
+  }
+  writeFileSync(join(cli.root, '.ia', 'src', 'unused-obs.ia'), '#! ia 1.0\n\n@observation o-unused\n');
+  writeFileSync(join(cli.root, '.ia', 'src', 'work.ia'), '#! ia 1.0\n\n@task t-ok\n');
+  writeFileSync(join(cli.root, '.ia', 'src', 'evidence.ia'), '#! ia 1.0\n\n@observation o-ok\n');
+
+  const ran = run(cli, ['--json']);
+  assert.equal(ran.status, 0, ran.stdout + ran.stderr);
+  assert.equal(JSON.parse(ran.stdout).tasks[0].position, 'evidenced');
+
+  const inspectCalls = cli.calls().filter(c => c[0] === 'inspect');
+  assert.deepEqual(inspectCalls, [
+    ['inspect', '--path', '.ia/src/work.ia', '--edges', 'both', '--root', cli.root, '--json'],
+    ['inspect', '--path', '.ia/src/evidence.ia', '--depth', '0', '--root', cli.root, '--json'],
+  ]);
 });
 
 test('the JSON names its format and version, and is advisory', t => {

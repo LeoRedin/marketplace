@@ -16,7 +16,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "write_file|edit_file|run_command",
+        "matcher": "write_to_file|replace_file_content|multi_replace_file_content|write_file|edit_file|run_command",
         "hooks": [
           {
             "type": "command",
@@ -28,7 +28,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "write_file|edit_file|run_command|ask_question",
+        "matcher": "write_to_file|replace_file_content|multi_replace_file_content|write_file|edit_file|run_command|ask_question",
         "hooks": [
           {
             "type": "command",

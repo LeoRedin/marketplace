@@ -16,7 +16,14 @@ import { fileURLToPath } from 'node:url';
 import { payload as bootstrapPayload } from './bootstrap.mjs';
 import { answer as handlersAnswer, BUDGET_MS } from './handlers.mjs';
 import { gate } from './lib/handlers.mjs';
-import { appendPendingContext, drainPendingContext, normalizeHookInput } from './lib/host-hook.mjs';
+import {
+  appendPendingContext,
+  clearStopContinuation,
+  consumeStopContinuationCap,
+  drainPendingContext,
+  normalizeHookInput,
+  recordStopContinuation,
+} from './lib/host-hook.mjs';
 import { killRunning } from './lib/hygiene.mjs';
 import { kitsDir, listKits } from './lib/kit.mjs';
 
@@ -89,13 +96,21 @@ export async function runAgyHook(phase, rawText, { env = process.env, kits } = {
     return {};
   }
   if (phase === 'stop') {
-    if (rawObj.continuationActive === true || normalized.stop_hook_active === true) return { decision: 'allow' };
+    if (rawObj.continuationActive === true || normalized.stop_hook_active === true) {
+      clearStopContinuation(rawObj.conversationId, { env: effectiveEnv });
+      return { decision: 'allow' };
+    }
+    if (consumeStopContinuationCap(rawObj.conversationId, rawObj.lastUserInput, { env: effectiveEnv })) {
+      return { decision: 'allow' };
+    }
     const handlers = await handlersAnswer('stop', normalizedRaw, { env: effectiveEnv, kits: resolvedKits });
     const out = handlers?.hookSpecificOutput;
     if (out?.permissionDecision === 'deny') {
+      recordStopContinuation(rawObj.conversationId, rawObj.lastUserInput, { env: effectiveEnv });
       return { decision: 'continue', reason: out.permissionDecisionReason || 'InventArch stop check requested continuation.' };
     }
     if (typeof out?.additionalContext === 'string' && out.additionalContext.trim()) {
+      recordStopContinuation(rawObj.conversationId, rawObj.lastUserInput, { env: effectiveEnv });
       return { decision: 'continue', reason: out.additionalContext.trim() };
     }
     return { decision: 'allow' };
