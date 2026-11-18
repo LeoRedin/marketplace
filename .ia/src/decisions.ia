@@ -814,5 +814,39 @@
     question "How do new public base systems and the marketplace workspace declare stewardship and bounded mandates?"
     options ["A declare uniform @agent <system>-steward and @mandate <system>-stewardship on each new base system and steward + mandate on inventarch-marketplace", "B declare steward agents without stewardship mandates"]
     decider "Operator"
-    choice "A each new public base system (approval-system, repo-system) declares steward @agent <system>-steward and @mandate <system>-stewardship with moves [Observation, Verification, Synthesis] and covers ['.ia/src/systems/<system>/'] inside system.ia so stewardship travels in the packed archive without referencing the seat workspace, while @workspace inventarch-marketplace declares steward @agent inventarch-marketplace-steward and @mandate inventarch-marketplace-stewardship."
+    choice "A each new public base system (approval-system, repo-system, slack-system, design-base-system, product-base-system) declares steward @agent <system>-steward and @mandate <system>-stewardship with moves [Observation, Verification, Synthesis] and covers ['.ia/src/systems/<system>/'] inside system.ia so stewardship travels in the packed archive without referencing the seat workspace, while @workspace inventarch-marketplace declares steward @agent inventarch-marketplace-steward and @mandate inventarch-marketplace-stewardship."
     rationale "Paired steward and stewardship mandate records make system ownership and non-execution bounds explicit in every packed base kit and in the catalogue's own workspace without rewriting immutable historical releases of earlier kits."
+
+@decision public-base-kits-slack-design-product
+  meaning
+    says "The public catalogue bundles the remaining three Apache-2.0 public base vocabulary kits alongside ia-approval, ia-repo and the three lane defaults, completing the eight-kit @inventarch/public-kits v1 roster: inventarch/ia-slack-base-kit 0.1.0 (slack-system: slack-channel, the five public channel governance rules and offline check-slack-channels), inventarch/ia-design-base-kit 0.1.0 (design-base-system: design-token, level, part, slot, pattern and recipe without colliding with floor @template, plus offline check-design-patterns) and inventarch/ia-product-base-kit 0.1.0 (product-base-system: prd with consented spec/decision/plan/docket/approval traceability and offline check-prds)."
+  work
+    title "Ship ia-slack-base, ia-design-base and ia-product-base as bundled public base kits"
+    status made
+    owner "InventArch maintainers"
+    start "2026-11-18"
+    ended "2026-11-18"
+    source "docs/decisions.md"
+  decision
+    question "Where do the Slack space settings, Atomic Design pattern/recipe and Product Requirement Document base vocabularies and their offline verifiers ship?"
+    options ["A bundle kits/ia-slack-base, kits/ia-design-base and kits/ia-product-base in inventarch/marketplace under Apache-2.0 and @inventarch/public-kits", "B keep Slack channel settings, pattern/recipe and PRD words in private kits"]
+    decider "Operator"
+    choice "A bundle kits/ia-slack-base 0.1.0 (inventarch/ia-slack-base-kit, slack-system), kits/ia-design-base 0.1.0 (inventarch/ia-design-base-kit, design-base-system) and kits/ia-product-base 0.1.0 (inventarch/ia-product-base-kit, product-base-system) in inventarch/marketplace under Apache-2.0, carry all eight public kits in plugins/ia/config/kits and @inventarch/public-kits, and ship their zero-dependency offline verifiers (check-slack-channels, check-design-patterns and check-prds) with zero live credentials and zero private corpus material."
+    rationale "Completing the eight-kit public base roster lets workspace, design and product repositories restore, validate and verify Slack channel rules, atomic UI hierarchies, sealed pattern/recipe lowering contracts and PRD traceability 100% offline in CI without vended archives or hosted credentials, while keeping live bridges and proprietary multi-step methods outside the public base."
+
+@decision public-check-windows-package-managers
+  meaning
+    says "On Windows, plugins/ia/scripts/check.mjs resolves bare npm, npx, pnpm and yarn argv[0] entries to their native .exe binary or Node JS entrypoint under process.execPath while preserving shell: false for every declared check."
+  work
+    title "Resolve Windows npm, npx, pnpm and yarn check shims without a shell"
+    status made
+    owner "InventArch maintainers"
+    start "2026-11-18"
+    ended "2026-11-18"
+    source "docs/decisions.md"
+  decision
+    question "How should scripts/check.mjs execute declared checks whose argv starts with npm, npx, pnpm or yarn on Windows without weakening the no-shell guarantee?"
+    options ["A resolve bare npm, npx, pnpm and yarn on Windows to their .exe or JS entrypoint under process.execPath with shell: false", "B spawn .cmd shims through cmd.exe with shell: true", "C require every kit to hardcode Node and package-manager install paths"]
+    decider "Maintainers"
+    choice "A when process.platform is win32 and argv[0] is npm, npx, pnpm or yarn, resolve a standalone .exe or the underlying .cmd shim's JS entrypoint (or the entrypoint beside process.execPath) and spawn it directly with process.execPath and shell: false; pass every other command and non-Windows platform through unchanged."
+    rationale "Direct execution under process.execPath fixes spawn ENOENT on Windows (issue #32) while keeping cmd.exe completely out of the execution path so environment-variable expansion and batch quote mangling remain impossible."

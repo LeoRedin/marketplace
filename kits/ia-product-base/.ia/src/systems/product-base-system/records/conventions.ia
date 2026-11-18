@@ -1,0 +1,21 @@
+#! ia 1.0
+
+@convention product-prd-decomposition-boundary
+  meaning
+    says "The public @prd word establishes shared structural fields and cross-vocabulary consent so each organisation or higher-layer PRD-to-spec method can decompose requirement clauses into @spec contracts, @decision records and @plan items without hardcoding proprietary review workflows or wiki schemas into the public base. Reference: assets/product-vocabulary.md."
+    answers "How does a @prd decompose into @spec, @decision and @plan records across organisations?"
+  governance
+    severity advisory
+    requires "Decompose @prd requirement clauses into @spec, @decision and @plan records via consented cite, ground and require edges while keeping organisation-specific review ceremonies in workspace conventions or higher-layer kits."
+  subject
+    subject-word prd
+
+@convention product-prd-body-pinning
+  meaning
+    says "When a @prd mirrors or summarizes a Markdown document or external wiki page via governance.source, pin the exact snapshot SHA-256 in governance.body-digest at ratification so downstream @spec authors and reviewers can detect upstream document drift offline. Reference: assets/product-vocabulary.md."
+    answers "How should external or split PRD document bodies be pinned at ratification?"
+  governance
+    severity advisory
+    requires "Record a 64-character lowercase hex SHA-256 in governance.body-digest alongside governance.source when ratifying a @prd backed by a split or external document."
+  subject
+    subject-word prd

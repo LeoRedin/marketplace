@@ -41,9 +41,24 @@ test('every kit profile\'s step budget (limit-steps) fits the maxTurns of the co
 
 test('the plugin carries the three lane defaults and the public base vocabulary kits, each under Apache-2.0 and format 2 releases', () => {
   const kits = listKits();
-  assert.deepEqual(kits.map(k => k.folder), ['ia-approval', 'ia-authoring', 'ia-kb', 'ia-method', 'ia-repo']);
+  assert.deepEqual(kits.map(k => k.folder), [
+    'ia-approval',
+    'ia-authoring',
+    'ia-design-base',
+    'ia-kb',
+    'ia-method',
+    'ia-product-base',
+    'ia-repo',
+    'ia-slack-base',
+  ]);
   const entries = { 'ia-authoring': ['delivery.*', 'authoring-deliver'], 'ia-kb': ['knowledge.*', 'kb-knowledge'], 'ia-method': ['work.*', 'method-operate'] };
-  const baseKits = { 'ia-approval': ['approval-system', 'check-seal'], 'ia-repo': ['repo-system', 'check-layers'] };
+  const baseKits = {
+    'ia-approval': ['approval-system', 'check-seal'],
+    'ia-design-base': ['design-base-system', 'check-design-patterns'],
+    'ia-product-base': ['product-base-system', 'check-prds'],
+    'ia-repo': ['repo-system', 'check-layers'],
+    'ia-slack-base': ['slack-system', 'check-slack-channels'],
+  };
   for (const kit of kits) {
     assert.equal(kit.id, `inventarch/${kit.folder}-kit`, 'kit ids follow inventarch/ia-<name>-kit');
     if (kit.folder in entries) {

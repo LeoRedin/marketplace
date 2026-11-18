@@ -4,7 +4,7 @@
 
 > The **IA marketplace** is the plugin catalogue `inventarch` for Claude Code and Codex. It ships one plugin, **`ia`**, which gives a coding agent three lanes: Work, Knowledge and Delivery. Each lane delivers the method a repository binds as one packet the agent follows, instead of a prompt it improvises.
 >
-> This is the **public catalogue**: the `ia` plugin, the three public method kits it carries as lane defaults, and the public base vocabulary kits (`ia-approval`, `ia-repo`). It is licensed under Apache-2.0 and needs no account. More kits are available with an InventArch account, and they install into your IA home, never into this repository.
+> This is the **public catalogue**: the `ia` plugin, the three public method kits it carries as lane defaults, and the five public base vocabulary kits (`ia-approval`, `ia-repo`, `ia-slack-base`, `ia-design-base`, `ia-product-base`). It is licensed under Apache-2.0 and needs no account. More kits are available with an InventArch account, and they install into your IA home, never into this repository.
 
 ## Why the ia plugin
 
@@ -79,7 +79,7 @@ This plugin carries the rendered plugin's `init` and `doctor` skills (`ia:init`,
 
 ## 🧰 Kits
 
-The core carries five public kits: three lane defaults and two public base vocabulary kits. Their sources are under [`kits/`](kits/README.md), and [`kits/index.json`](kits/index.json) lists each kit's latest release and the binding keys it offers.
+The core carries eight public kits: three lane defaults and five public base vocabulary kits. Their sources are under [`kits/`](kits/README.md), and [`kits/index.json`](kits/index.json) lists each kit's latest release and the binding keys it offers.
 
 | Kit | Role | What it gives you |
 |---|---|---|
@@ -88,12 +88,15 @@ The core carries five public kits: three lane defaults and two public base vocab
 | [`ia-authoring`](kits/ia-authoring/README.md) (`inventarch/ia-authoring-kit`) | Delivery lane default | One authoring process in three parts: records of existing IA words, host plugins (lower, project, evaluate, qualify), and plugin catalogues. It replaces the retired `inventarch/host-authoring-kit` and `inventarch/catalogue-authoring-kit`. |
 | [`ia-approval`](kits/ia-approval/README.md) (`inventarch/ia-approval-kit`) | Public base vocabulary | `approval-system`: `@approver`, `@approval-rule`, `@docket` and `@approval` schemas, authoring guidance, intake recognition and seal rules, and the offline Ed25519 + RFC 8785 JCS `check-seal` verifier. |
 | [`ia-repo`](kits/ia-repo/README.md) (`inventarch/ia-repo-kit`) | Public base vocabulary | `repo-system`: `@repository`, `@layer`, `@package` and `@area` schemas, authoring guidance, public dependency-role grammar, `@spec` citation consent rows, and the offline `check-layers` verifier. |
+| [`ia-slack-base`](kits/ia-slack-base/README.md) (`inventarch/ia-slack-base-kit`) | Public base vocabulary | `slack-system`: `@slack-channel` schema, authoring guidance, the five public Slack channel governance rules, and the offline `check-slack-channels` verifier. |
+| [`ia-design-base`](kits/ia-design-base/README.md) (`inventarch/ia-design-base-kit`) | Public base vocabulary | `design-base-system`: `@design-token`, `@level`, `@part`, `@slot`, `@pattern` and `@recipe` schemas, authoring guidance, atomic composition and semantic-token laws, and the offline `check-design-patterns` verifier. |
+| [`ia-product-base`](kits/ia-product-base/README.md) (`inventarch/ia-product-base-kit`) | Public base vocabulary | `product-base-system`: `@prd` schema, authoring guidance, consented `@spec`/`@decision`/`@plan`/`@docket`/`@approval` relationships, ratification rules, and the offline `check-prds` verifier. |
 
 Each lane's entry capability is a whole procedure: a request with no specific activity gets all four phases, and `--phase` selects one.
 
 More kits (meetings, governed work, organisation-wide knowledge custody, workspace and system design, and others) are available with an InventArch account. They are served by the InventArch API and installed into your IA home, never into this repository.
 
-All five carried kits are also published together as the npm package [`@inventarch/public-kits`](packages/public-kits/README.md), for a door or workspace that has no plugin; [docs/public-kits-package.md](docs/public-kits-package.md) describes it.
+All eight carried kits are also published together as the npm package [`@inventarch/public-kits`](packages/public-kits/README.md), for a door or workspace that has no plugin; [docs/public-kits-package.md](docs/public-kits-package.md) describes it.
 
 ### Kit names
 

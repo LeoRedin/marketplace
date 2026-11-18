@@ -10,6 +10,10 @@
       "into": "plugins/ia/config/kits/ia-authoring"
     },
     {
+      "kit": "ia-design-base",
+      "into": "plugins/ia/config/kits/ia-design-base"
+    },
+    {
       "kit": "ia-kb",
       "into": "plugins/ia/config/kits/ia-kb"
     },
@@ -18,8 +22,16 @@
       "into": "plugins/ia/config/kits/ia-method"
     },
     {
+      "kit": "ia-product-base",
+      "into": "plugins/ia/config/kits/ia-product-base"
+    },
+    {
       "kit": "ia-repo",
       "into": "plugins/ia/config/kits/ia-repo"
+    },
+    {
+      "kit": "ia-slack-base",
+      "into": "plugins/ia/config/kits/ia-slack-base"
     }
   ],
   "unbundled": []

@@ -34,7 +34,16 @@ test('the committed package.json is the bundled kits\' claim: latest release, ar
   for (const key of ['scripts', 'dependencies', 'exports', 'bin', 'main', 'private']) assert.equal(pkg[key], undefined, key);
   assert.deepEqual(pkg.files, ['index.json', 'kits', 'archives', 'NOTICE']);
   assert.equal(pkg.ia.format, 1);
-  assert.deepEqual(pkg.ia.kits.map(k => k.folder), ['ia-approval', 'ia-authoring', 'ia-kb', 'ia-method', 'ia-repo']);
+  assert.deepEqual(pkg.ia.kits.map(k => k.folder), [
+    'ia-approval',
+    'ia-authoring',
+    'ia-design-base',
+    'ia-kb',
+    'ia-method',
+    'ia-product-base',
+    'ia-repo',
+    'ia-slack-base',
+  ]);
   for (const row of pkg.ia.kits) {
     const dir = join(ROOT, 'plugins/ia/config/kits', row.folder);
     const index = readReleases(dir);

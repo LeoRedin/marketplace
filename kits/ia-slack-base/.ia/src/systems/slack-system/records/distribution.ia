@@ -1,0 +1,8 @@
+#! ia 1.0
+
+@distribution ia-slack-base-distribution
+  meaning
+    says "The release root of the public IA Slack base kit: slack-system with the slack-channel word, its canonical schema and authoring guide, the five public channel governance rules, and the offline check-slack-channels verifier."
+    answers "Which records does the IA Slack base kit release ship?"
+  distribution
+    records [@system slack-system]
