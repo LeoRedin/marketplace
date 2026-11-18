@@ -57,6 +57,26 @@
       ]
     },
     {
+      "id": "inventarch/ia-design-base-kit",
+      "folder": "kits/ia-design-base",
+      "releases": "kits/ia-design-base/releases.json",
+      "latest": {
+        "version": "0.1.0",
+        "archive": "7442df74f80c82648127fe6af16d3ddb28e89c689397aa41f382556bedf38c3a",
+        "cli": "@inventarch/cli 3.8.0",
+        "language": "inventarch/language ^3.0.0",
+        "file": "kits/ia-design-base/releases/0.1.0.json",
+        "source": {
+          "repository": "https://github.com/inventarch/marketplace.git",
+          "commit": "f81522f9d91c870fb598489bdf11aac805badb72"
+        }
+      },
+      "versions": [
+        "0.1.0"
+      ],
+      "offers": []
+    },
+    {
       "id": "inventarch/ia-kb-kit",
       "folder": "kits/ia-kb",
       "releases": "kits/ia-kb/releases.json",
@@ -165,6 +185,26 @@
       ]
     },
     {
+      "id": "inventarch/ia-product-base-kit",
+      "folder": "kits/ia-product-base",
+      "releases": "kits/ia-product-base/releases.json",
+      "latest": {
+        "version": "0.1.0",
+        "archive": "05a7df92a78ab853c26976b2e84305aaef2b37be6c6ab7d32368fce4fc8d2688",
+        "cli": "@inventarch/cli 3.8.0",
+        "language": "inventarch/language ^3.0.0",
+        "file": "kits/ia-product-base/releases/0.1.0.json",
+        "source": {
+          "repository": "https://github.com/inventarch/marketplace.git",
+          "commit": "f81522f9d91c870fb598489bdf11aac805badb72"
+        }
+      },
+      "versions": [
+        "0.1.0"
+      ],
+      "offers": []
+    },
+    {
       "id": "inventarch/ia-repo-kit",
       "folder": "kits/ia-repo",
       "releases": "kits/ia-repo/releases.json",
@@ -177,6 +217,26 @@
         "source": {
           "repository": "https://github.com/inventarch/marketplace.git",
           "commit": "5e0af7e5e9344c96e304322d7dfdbf2401416dcd"
+        }
+      },
+      "versions": [
+        "0.1.0"
+      ],
+      "offers": []
+    },
+    {
+      "id": "inventarch/ia-slack-base-kit",
+      "folder": "kits/ia-slack-base",
+      "releases": "kits/ia-slack-base/releases.json",
+      "latest": {
+        "version": "0.1.0",
+        "archive": "df4ff0c37e9dcc3e0aa0914b3be61d8292ce1f2150e1b9976010f2f15140db17",
+        "cli": "@inventarch/cli 3.8.0",
+        "language": "inventarch/language ^3.0.0",
+        "file": "kits/ia-slack-base/releases/0.1.0.json",
+        "source": {
+          "repository": "https://github.com/inventarch/marketplace.git",
+          "commit": "f81522f9d91c870fb598489bdf11aac805badb72"
         }
       },
       "versions": [

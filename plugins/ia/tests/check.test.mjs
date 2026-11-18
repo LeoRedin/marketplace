@@ -9,6 +9,7 @@ import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { envFor, fakeCli, makeKit, makeRepo, recordSources, run, sandbox } from './helpers/fixtures.mjs';
 import { readRetainedCheckStream } from '../scripts/lib/check-output.mjs';
+import { resolveWindowsPackageManager } from '../scripts/lib/cli.mjs';
 
 function world(t) {
   const dir = sandbox(t, 'ia-core-check-');
@@ -241,5 +242,126 @@ test('a check named like a member every object inherits is never run: constructo
     const bad = check([name, '--root', repo], env());
     assert.equal(bad.status, 2, name);
     assert.equal(bad.json.error.code, 'IA-CORE-USAGE', name);
+  }
+});
+
+test('declared checks starting with npm and npx execute cleanly without a shell and retain execution evidence (#32)', t => {
+  const { dir, alpha, env } = world(t);
+  const repo = makeRepo(join(dir, 'repo'));
+  writeFileSync(
+    join(alpha.dir, 'checks.json'),
+    JSON.stringify({
+      format: 1,
+      checks: {
+        'alpha-gate': { argv: ['npm', '--version'], cwd: 'workspace' },
+        'alpha-fail': { argv: ['npx', '--version'], cwd: 'workspace' },
+      },
+    }),
+  );
+  recordSources(alpha.dir);
+
+  for (const [checkName, expectedScript] of [
+    ['alpha-gate', /npm-cli\.js$/i],
+    ['alpha-fail', /npx-cli\.js$/i],
+  ]) {
+    const result = check([checkName, '--root', repo, '--kit', alpha.id], env());
+    assert.equal(result.status, 0, `${checkName}: ${result.stdout}\n${result.stderr}`);
+    assert.equal(result.json.exitCode, 0);
+    assert.equal(result.json.output.complete, true);
+    assert.match(result.json.stdout.trim(), /^\d+\.\d+\.\d+/);
+    if (process.platform === 'win32') {
+      assert.equal(result.json.argv[0], process.execPath);
+      assert.match(result.json.argv[1], expectedScript);
+      assert.equal(result.json.argv[2], '--version');
+    }
+    const retained = readFileSync(result.json.output.stdout.path);
+    assert.equal(retained.toString('utf8'), result.json.stdout);
+    assert.equal(createHash('sha256').update(retained).digest('hex'), result.json.output.stdout.sha256);
+  }
+});
+
+test('Windows package-manager resolution handles npm, npx, pnpm and yarn shims without invoking cmd.exe (#32)', t => {
+  const { dir, alpha, env } = world(t);
+  const binDir = join(dir, 'fake-bin');
+  mkdirSync(join(binDir, 'node_modules', 'pnpm', 'bin'), { recursive: true });
+  mkdirSync(join(binDir, 'node_modules', 'corepack', 'dist'), { recursive: true });
+  mkdirSync(join(binDir, 'custom'), { recursive: true });
+
+  const pnpmEntry = join(binDir, 'node_modules', 'pnpm', 'bin', 'pnpm.cjs');
+  const yarnEntry = join(binDir, 'node_modules', 'corepack', 'dist', 'yarn.js');
+  const customJs = join(binDir, 'custom', 'entry.mjs');
+  writeFileSync(pnpmEntry, 'console.log(JSON.stringify(process.argv.slice(2)));\n');
+  writeFileSync(yarnEntry, 'console.log("yarn-corepack:" + JSON.stringify(process.argv.slice(2)));\n');
+  writeFileSync(customJs, 'console.log("custom");\n');
+  writeFileSync(join(binDir, 'pnpm.cmd'), '@ECHO OFF\r\n"%_prog%" "%dp0%\\node_modules\\pnpm\\bin\\pnpm.cjs" %*\r\n');
+  writeFileSync(join(binDir, 'yarn.cmd'), '@ECHO OFF\r\n"%~dp0\\node.exe" "%~dp0\\node_modules\\corepack\\dist\\yarn.js" %*\r\n');
+  writeFileSync(join(binDir, 'other-tool.cmd'), '@ECHO OFF\r\n"%~dp0\\node.exe" "%~dp0\\custom\\entry.mjs" %*\r\n');
+
+  const fakeExec = join(dir, 'isolated-node', 'node.exe');
+  mkdirSync(dirname(fakeExec), { recursive: true });
+  writeFileSync(fakeExec, '');
+
+  // Unit assertions across platforms (simulated win32 + linux passthrough)
+  const simEnv = { Path: `"${binDir}";${join(dir, 'missing')}` };
+  assert.deepEqual(resolveWindowsPackageManager(['pnpm', 'run', 'lint'], { platform: 'win32', env: simEnv, execPath: fakeExec }), [
+    fakeExec,
+    pnpmEntry,
+    'run',
+    'lint',
+  ]);
+  assert.deepEqual(resolveWindowsPackageManager(['yarn', '--version'], { platform: 'win32', env: simEnv, execPath: fakeExec }), [
+    fakeExec,
+    yarnEntry,
+    '--version',
+  ]);
+  // Arbitrary non-package-manager .cmd files on PATH are NEVER resolved or run through a shell
+  assert.deepEqual(resolveWindowsPackageManager(['other-tool', '--version'], { platform: 'win32', env: simEnv, execPath: fakeExec }), [
+    'other-tool',
+    '--version',
+  ]);
+  // POSIX platforms pass bare package-manager names through untouched
+  assert.deepEqual(resolveWindowsPackageManager(['pnpm', '--version'], { platform: 'linux', env: simEnv, execPath: fakeExec }), [
+    'pnpm',
+    '--version',
+  ]);
+
+  // Standalone .exe takes precedence when present
+  const exeDir = join(dir, 'exe-bin');
+  mkdirSync(exeDir, { recursive: true });
+  const pnpmExe = join(exeDir, 'pnpm.exe');
+  writeFileSync(pnpmExe, '');
+  assert.deepEqual(
+    resolveWindowsPackageManager(['pnpm', '-v'], { platform: 'win32', env: { PATH: `${exeDir};${binDir}` }, execPath: fakeExec }),
+    [pnpmExe, '-v'],
+  );
+
+  // Fallback next to execPath when PATH lacks the shim
+  const homeDir = join(dir, 'node-home');
+  const npmCli = join(homeDir, 'node_modules', 'npm', 'bin', 'npm-cli.js');
+  mkdirSync(dirname(npmCli), { recursive: true });
+  writeFileSync(npmCli, '');
+  assert.deepEqual(
+    resolveWindowsPackageManager(['npm', 'ci'], { platform: 'win32', env: { PATH: '' }, execPath: join(homeDir, 'node.exe') }),
+    [join(homeDir, 'node.exe'), npmCli, 'ci'],
+  );
+
+  // On Windows, verify end-to-end through check.mjs that shell metacharacters and %VAR% are passed literally with zero shell expansion
+  if (process.platform === 'win32') {
+    const repo = makeRepo(join(dir, 'repo'));
+    const literalArg = '%SystemRoot% & echo INJECTED | > should-not-exist';
+    writeFileSync(
+      join(alpha.dir, 'checks.json'),
+      JSON.stringify({
+        format: 1,
+        checks: { 'alpha-gate': { argv: ['pnpm', literalArg], cwd: 'workspace' } },
+      }),
+    );
+    recordSources(alpha.dir);
+    const baseEnv = env();
+    const mergedPath = `${binDir};${baseEnv.PATH ?? baseEnv.Path ?? ''}`;
+    const result = check(['alpha-gate', '--root', repo, '--kit', alpha.id], { ...baseEnv, PATH: mergedPath, Path: mergedPath });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.deepEqual(JSON.parse(result.json.stdout.trim()), [literalArg]);
+    assert.equal(existsSync(join(repo, 'should-not-exist')), false);
   }
 });

@@ -37,7 +37,7 @@
     },
     {
       "path": "plugins/ia/README.md",
-      "sha256": "e5df2c664f258e2a0466d873962df3e4321432edef2f266402818e0c27a6abe4"
+      "sha256": "21725d021fd8ccdfc29f3cfb352261df0097200e08e0340599ca8c12be33a282"
     },
     {
       "path": "plugins/ia/agents/checker.md",
@@ -314,6 +314,90 @@
     {
       "path": "plugins/ia/config/kits/ia-authoring/scripts/probe.mjs",
       "sha256": "7ff99bc948b52b5b2a7464f493430af847abc0eecfdf6b7e0e2f70561da6f928"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/distributions.lock.json",
+      "sha256": "439c69ec6e2b78f8e3ff9bfe80e88fabafab084fd1cd06784cdf911350a2b095"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/release.json",
+      "sha256": "c6a5d2f09aaa1fb89a26dd4468d16de5efba9ff9d45bc23acef6328367fd631e"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/records/authoring-guides.ia",
+      "sha256": "94aa73e061362553ba3682c06a1b8c517b81214a6f1d3bc61632d9e74825ec16"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/records/compliance.ia",
+      "sha256": "8afb7a85f9e495a1f3c425f2ea6212f243f4105c330868e7cf1e9e1b9f6e54c4"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/records/conventions.ia",
+      "sha256": "b8c29672ee8cddbeed09fda161d88de79fc31083a7e7ed5f290cb24bec4bd380"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/records/distribution.ia",
+      "sha256": "3fab0ca5a10733c64ef0e5f23de0a87a50da083c04345e4700d75cbefed5dda3"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/records/laws.ia",
+      "sha256": "4ab822366ed9072ce2187ecd771f945a79d9161363ba0a99dae727aca27cadaf"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/schemas/design-token.schema.ia",
+      "sha256": "a215d81111fa4f29d010afb501ed6596ba0178394bc04248f74ad35e9945bd17"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/schemas/level.schema.ia",
+      "sha256": "7f74858b9ef10a2674e346c2538cd3ba8572787d60d61a5b5a01c41ae79adb49"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/schemas/part.schema.ia",
+      "sha256": "200a7f5c55d00c267bf9271d8c1e17c26facf9eb30ee2a72cdeb7f6c7eb7e920"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/schemas/pattern.schema.ia",
+      "sha256": "c7326d2ccc44e8f0fbe0c8bc4ded2c854dfbb3a3390242412229f949ad78020e"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/schemas/recipe.schema.ia",
+      "sha256": "949acaab0f60d394ef5f5eae79bd95eeae7d4e6687b4d54dd9e0b0aed7ac71fe"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/schemas/slot.schema.ia",
+      "sha256": "95a5456283e64a407bc5b43c8c361890c44d23ed2c7c4195baa146f9c7d33841"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/system.ia",
+      "sha256": "22428c434dfbd0ed6e3e2c53476b60b457f38eeee678b5fcc5eebc58340e3f9a"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/workspace.ia",
+      "sha256": "1a0e71adbef5ee067e2d9c40017949c5799f5133b55cc129495d27a5bdc1a4f6"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/README.md",
+      "sha256": "1adc11762536550cba43cf37bc214775e86e463f271ce6d6e7258e7e0cafdeff"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/assets/design-vocabulary.md",
+      "sha256": "af57c8925a98558e9b2ce3343d1168d84d03a2897a707555970cd8334e49f9d5"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/checks.json",
+      "sha256": "858f34169d0df2f2f6402348132a1c290f584df3118eb4f0b02280e1eb0b8af6"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/releases/0.1.0.json",
+      "sha256": "b219e2cd9de7afcf050aeade79f0971d4d335c921fda2fc9564bbb701beca3bb"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/releases.json",
+      "sha256": "bd5effee4b2062100bdfe2deb7e818e2e5b445c64f5650aefb30243d9da6ce22"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/scripts/check-design-patterns.mjs",
+      "sha256": "2572b29266d82163a48f09fc762ca4a7caac9f8018ebb41e8b60816dccd6efb9"
     },
     {
       "path": "plugins/ia/config/kits/ia-kb/.ia/distributions.lock.json",
@@ -644,6 +728,70 @@
       "sha256": "a97f49666944590abfafe032441818ed2549b5471d4ab1026183333be7fef909"
     },
     {
+      "path": "plugins/ia/config/kits/ia-product-base/.ia/distributions.lock.json",
+      "sha256": "439c69ec6e2b78f8e3ff9bfe80e88fabafab084fd1cd06784cdf911350a2b095"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/.ia/release.json",
+      "sha256": "725e15f8d0d6e00cb43c71c2a80eb9d217a38fcf2224a21fbcfd30c8e1d38dd0"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/.ia/src/systems/product-base-system/records/authoring-guides.ia",
+      "sha256": "4ca970c10c36c6417cb88bc497f30044c41f3dc8d8f36645da1c691d5eeef8e6"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/.ia/src/systems/product-base-system/records/compliance.ia",
+      "sha256": "414a923f8a8cfd99421b5d582a5eb5eec64261441322a335b9d073dc6344f1e4"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/.ia/src/systems/product-base-system/records/conventions.ia",
+      "sha256": "7baa57539ec088b5f7a39a26e4ac3aca261f3fbbf9a4d6d2ff531af91a3e6b98"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/.ia/src/systems/product-base-system/records/distribution.ia",
+      "sha256": "501239f0cdaf8ba0a468dad1213eac243e7078d90972cb04b57731f6e3e997b1"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/.ia/src/systems/product-base-system/records/laws.ia",
+      "sha256": "df28e0a2c4cc6016a877ad7d34a65f6989189fe4d16fae9eaba6f6bef5356d2e"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/.ia/src/systems/product-base-system/schemas/prd.schema.ia",
+      "sha256": "37998c63b032e2928e03a7e4e84ab67d2b0358c5a7d3cc5fcf6354c442db24bb"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/.ia/src/systems/product-base-system/system.ia",
+      "sha256": "bfd0c32e77c4dc1b5f1d19d95ce865c5c6e19132922b14ed36d114b934b44903"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/.ia/src/workspace.ia",
+      "sha256": "ec4a513a417ebba1e1469d6b4501c9349996371d5c4ed9b5eb07e56176cf4cc3"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/README.md",
+      "sha256": "e2186724a8d5bfddf15a92fc8d1f5177be0f5baf70c7dea26e1e87b7db5e5831"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/assets/product-vocabulary.md",
+      "sha256": "e272b5ac206eb183dfc78d3b31725ebe31c854053446f75365b352480985f441"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/checks.json",
+      "sha256": "ba8c541151660d2d908326a84046f5aeac3d396a852c9c76a559efd25c6a706e"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/releases/0.1.0.json",
+      "sha256": "6dc28dca880d665a9bd7288e6636af9a4102d83924e7e719d55c027d842ce46c"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/releases.json",
+      "sha256": "5d8c8308d7d0bf0b42f04ef4bfcac791b3c74f4bc7a097feba7154a7e938cb61"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/scripts/check-prds.mjs",
+      "sha256": "ab8f28f33931877ff9c3cbbe53ece5f617c4ea1addf2a25f45d21e901ea973c2"
+    },
+    {
       "path": "plugins/ia/config/kits/ia-repo/.ia/distributions.lock.json",
       "sha256": "439c69ec6e2b78f8e3ff9bfe80e88fabafab084fd1cd06784cdf911350a2b095"
     },
@@ -720,12 +868,76 @@
       "sha256": "3b37d04937ca157525de5673388dc66326f3e93c1840e3c0fd4b5526558e71bb"
     },
     {
+      "path": "plugins/ia/config/kits/ia-slack-base/.ia/distributions.lock.json",
+      "sha256": "439c69ec6e2b78f8e3ff9bfe80e88fabafab084fd1cd06784cdf911350a2b095"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/.ia/release.json",
+      "sha256": "c6f6517d89b603b02f3f0c7df7cd3566b16e16e5fe5e1a72627447f4ebfe46de"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/.ia/src/systems/slack-system/records/authoring-guides.ia",
+      "sha256": "4f49fa58cfa82c136bdf7c23fdb0db7eb22bfbaa8b0cfd346f841e716aa6b4c5"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/.ia/src/systems/slack-system/records/compliance.ia",
+      "sha256": "970d4a053c3bc7931bf6dff518f1bd0c69625ec20b5d9200d686934c3c01a7d8"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/.ia/src/systems/slack-system/records/conventions.ia",
+      "sha256": "56df4595826088028a2b5af377fff23ba22782fb79465dc124d6eca2f20e6c25"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/.ia/src/systems/slack-system/records/distribution.ia",
+      "sha256": "5b9895cf21df9913d21e4398b05ae735a97fd11ee1b8ed35edaf82ddec2be0df"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/.ia/src/systems/slack-system/records/laws.ia",
+      "sha256": "ce8ffd5d71ce5e96715ac05f0bd94086459f4b0ed96a858dc8725fe66a86b0d7"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/.ia/src/systems/slack-system/schemas/slack-channel.schema.ia",
+      "sha256": "3dbeb7d4525a8ba21398acabab83f8ba08f2e6a31e34025e4d502e49bf5134c0"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/.ia/src/systems/slack-system/system.ia",
+      "sha256": "ceeca67da71cc99172c42d5ed84e253712d52eb134f32cd9558b78c60aed9f17"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/.ia/src/workspace.ia",
+      "sha256": "5c05ab5bbc7c4aa35be0787f16f47b22c2ce335d0aadd75cffbdfaa5f54636a1"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/README.md",
+      "sha256": "02daf401d5dd5cbaa4653b9a39e7b932e06f75a5d342f2f9172a6014928688bb"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/assets/slack-vocabulary.md",
+      "sha256": "9c20702e5ed642b6f9cd9034bda7d20b03e6a61af90f7811cf96a7ac02b41ee2"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/checks.json",
+      "sha256": "cc26d5d5e0923c349480954dcfa14fa5b2c1c220d5fc2e8b5f61d69174deae0b"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/releases/0.1.0.json",
+      "sha256": "7f0d590aa3b258471b559187a6516aa9e91e4f3cd6e1271418b795068881c20e"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/releases.json",
+      "sha256": "799350b0d6222a237c6ae5fadbd7be051f1d5cfe42a7ec6ad05e638dad316b7a"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/scripts/check-slack-channels.mjs",
+      "sha256": "10203aa7206d17d8ad85b9b47906a3ab89ea960bf535ff4f5ed507cda6c2757f"
+    },
+    {
       "path": "plugins/ia/config/method-qualification-ia-kb.json",
       "sha256": "26c34723ae53b366b4f0ac9a8b0967fdebecbc6c3a6acc8ce721ce79af85fb92"
     },
     {
       "path": "plugins/ia/config/public-kits.json",
-      "sha256": "f3ce7e96ab498b4e1c058aaba7761cd6537df3e209d69cde7e03c5fb55be7e83"
+      "sha256": "0b4fdfb8ac8fdfe536d4b517737b0c29c87949863f211048a862e2dcf1363507"
     },
     {
       "path": "plugins/ia/config/qualified-executors.json",
@@ -769,7 +981,7 @@
     },
     {
       "path": "plugins/ia/scripts/check.mjs",
-      "sha256": "58bd985752e663ff94bfe6f7f150b917580d94c31f8327049b05fb92516a594c"
+      "sha256": "605a17ad3ff84dfe3582c31e3ffe0f0640a8906b69f4abd2de6d0e24b2f95c80"
     },
     {
       "path": "plugins/ia/scripts/delegate.mjs",
@@ -825,7 +1037,7 @@
     },
     {
       "path": "plugins/ia/scripts/lib/cli.mjs",
-      "sha256": "2614d77e847aa0ab263940ed33ad48c37ff97494ff68ad5f8eb51442a554de9e"
+      "sha256": "f0928186bcc286d2f614d9f5c73e902639ab1db38b6a8242f0231d2ff251a71b"
     },
     {
       "path": "plugins/ia/scripts/lib/closure-executors.mjs",

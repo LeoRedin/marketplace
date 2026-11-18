@@ -1,0 +1,20 @@
+{
+  "format": 2,
+  "kit": "inventarch/ia-product-base-kit",
+  "latest": "0.1.0",
+  "releases": [
+    {
+      "version": "0.1.0",
+      "archive": "05a7df92a78ab853c26976b2e84305aaef2b37be6c6ab7d32368fce4fc8d2688",
+      "manifest": "946c3fefc5de7a0c19b1ef51fc599ab13acc1e17bd1ddb8f36ef96af5679de74",
+      "sources": "7f7e6f9c188ae7aeed828593035cdf82aba4bf3b0477a021c009eb6e66f9cbad",
+      "language": "inventarch/language ^3.0.0",
+      "cli": "@inventarch/cli 3.8.0",
+      "file": "releases/0.1.0.json",
+      "source": {
+        "repository": "https://github.com/inventarch/marketplace.git",
+        "commit": "f81522f9d91c870fb598489bdf11aac805badb72"
+      }
+    }
+  ]
+}

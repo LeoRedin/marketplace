@@ -1,6 +1,6 @@
 {
   "name": "@inventarch/public-kits",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "The public InventArch method kits as one package: each kit's IA archive and manifest, with its folder, for an IA engine to expand (contract C7b).",
   "license": "Apache-2.0",
   "repository": {
@@ -34,6 +34,14 @@
         "folder": "ia-authoring"
       },
       {
+        "id": "inventarch/ia-design-base-kit",
+        "version": "0.1.0",
+        "archive": "7442df74f80c82648127fe6af16d3ddb28e89c689397aa41f382556bedf38c3a",
+        "manifest": "6d0b02efa36afbaeed73fb26a073e32e11cc2f3fab10c67fbd1b66ef1894f8ab",
+        "sources": "c57c3c203b89da2345c97787c3f58822dc638cd1c6bd5f0ffb814b835ce62fa6",
+        "folder": "ia-design-base"
+      },
+      {
         "id": "inventarch/ia-kb-kit",
         "version": "0.9.5",
         "archive": "a203b451c9e5a19d2327a2d149c0b5fc8ffb94ef887ea3e3c9a962ff93aff7f7",
@@ -50,12 +58,28 @@
         "folder": "ia-method"
       },
       {
+        "id": "inventarch/ia-product-base-kit",
+        "version": "0.1.0",
+        "archive": "05a7df92a78ab853c26976b2e84305aaef2b37be6c6ab7d32368fce4fc8d2688",
+        "manifest": "946c3fefc5de7a0c19b1ef51fc599ab13acc1e17bd1ddb8f36ef96af5679de74",
+        "sources": "7f7e6f9c188ae7aeed828593035cdf82aba4bf3b0477a021c009eb6e66f9cbad",
+        "folder": "ia-product-base"
+      },
+      {
         "id": "inventarch/ia-repo-kit",
         "version": "0.1.0",
         "archive": "ad5ac8beae1b677553a1916d197425fba9a16b47ea078b0c6e18a5d0c3b0d4e2",
         "manifest": "1ef8b06d089dc60c17daf39f0725468df12516b00a45c754a39fe7b0791c0bac",
         "sources": "d4807f1535f28c153a3e5627057d3fdce334cac43a294eab3c3c57223861e58f",
         "folder": "ia-repo"
+      },
+      {
+        "id": "inventarch/ia-slack-base-kit",
+        "version": "0.1.0",
+        "archive": "df4ff0c37e9dcc3e0aa0914b3be61d8292ce1f2150e1b9976010f2f15140db17",
+        "manifest": "5d3ba4fe9d9592e0b30ee8cac474d4421df0a22a91f201975b36e6bb99150219",
+        "sources": "3d0fb02eb460838f1b6466fc4570c710059320a72647f7aa6a2dd2e6702b646c",
+        "folder": "ia-slack-base"
       }
     ]
   }

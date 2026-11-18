@@ -1,0 +1,11 @@
+#! ia 1.0
+
+@convention slack-guide-slack-channel
+  meaning
+    says "Authoring guide for @slack-channel (default file slack-channels.ia; reference assets/slack-vocabulary.md). Select @slack-channel to declare one Slack space (channel, group conversation or direct conversation) bound to an @workspace: its per-message label and optional emoji icon, channel name and optional Slack conversation id, bound workspace ref and home locator, checkpoint approver Slack user id, allowed member Slack user ids, serving app kind (organisation or person), opaque secret reference name, optional model-answering switch, read allow-list (sources and shows), space kind, Slack form, allowed asks (status, decision, space), rate cap and disclosure mode (link-only by default, or content). Avoid @slack-channel for live connection credentials, directory account bindings or ratification seals (@approval). Never place a token in slack.secret, keep person-app spaces strictly direct with a single owner member, and verify offline with check-slack-channels."
+    answers "When and how should an author write a @slack-channel record?"
+  governance
+    severity advisory
+    requires "Author @slack-channel per Slack space with an admitted @workspace reference, an opaque non-token slack.secret name, explicit member and approver Slack user ids, and link-only disclosure by default."
+  subject
+    subject-word slack-channel

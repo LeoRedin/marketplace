@@ -1,0 +1,11 @@
+#! ia 1.0
+
+@convention product-guide-prd
+  meaning
+    says "Authoring guide for @prd (default file prds.ia; reference assets/product-vocabulary.md). Select @prd to record a Product Requirement Document: summary (meaning.says), problem statement (meaning.problem), measurable goals (scope.goals), explicit exclusions (scope.non-goals), requirement clauses (scope.requirements), lifecycle status (draft, in-review, ratified, active, superseded or withdrawn) and optional credential-free source locator and 64-hex body digest. Connect @prd to technical @spec, @decision, @plan, @docket and @approval records through consented cite, ground, require and supersede edges. Avoid @prd for technical implementation contracts (@spec) or individual architectural choices (@decision). Ensure ratified and active PRDs carry non-empty problem, goals, deduplicated requirement clauses and traced @spec or @decision coverage, and verify offline with check-prds."
+    answers "When and how should an author write a @prd record?"
+  governance
+    severity advisory
+    requires "Author @prd with a clear problem statement, goals, non-goals and requirement clauses, keep source locators credential-free, and trace ratified or active PRDs to @spec or @decision records."
+  subject
+    subject-word prd

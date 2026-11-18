@@ -1,0 +1,45 @@
+{
+  "formatVersion": 1,
+  "id": "inventarch/ia-design-base-kit",
+  "version": "0.1.0",
+  "distribution": "workspace-system/definition/distribution/ia-design-base-distribution",
+  "engine": "^0.1.1",
+  "language": [
+    "1.0"
+  ],
+  "dependencies": [
+    {
+      "id": "inventarch/language",
+      "range": "^3.0.0",
+      "systems": [
+        "agent-system",
+        "compliance-system",
+        "governance-system",
+        "work-system",
+        "workspace-system"
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "path": "assets/design-vocabulary.md",
+      "role": "documentation"
+    },
+    {
+      "path": "checks.json",
+      "role": "asset"
+    },
+    {
+      "path": "scripts/check-design-patterns.mjs",
+      "role": "asset"
+    }
+  ],
+  "license": "Apache-2.0",
+  "description": "The public base atomic design and pattern-lowering kit (design-base-system): the design-token, level, part, slot, pattern and recipe words with their canonical schemas and authoring guides, atomic composition and semantic-token laws, and the offline check-design-patterns verifier.",
+  "source": {
+    "repository": "https://github.com/inventarch/marketplace.git",
+    "commit": "f81522f9d91c870fb598489bdf11aac805badb72",
+    "recipe": "ustar-v1",
+    "epoch": 1795014194
+  }
+}

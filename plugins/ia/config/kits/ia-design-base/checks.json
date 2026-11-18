@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "checks": {
+    "design-check-validate": {
+      "argv": [
+        "${IA}",
+        "validate",
+        "--json"
+      ],
+      "cwd": "workspace"
+    },
+    "check-design-patterns": {
+      "argv": [
+        "${NODE}",
+        "${KIT}/scripts/check-design-patterns.mjs",
+        "${IA}"
+      ],
+      "cwd": "workspace"
+    }
+  }
+}

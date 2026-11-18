@@ -1,0 +1,178 @@
+#! ia 1.0
+
+@contract product-base-system
+  version "0.1.0"
+  meaning
+    says "What the public IA product base kit guarantees mechanically: that its sources admit offline under the pinned CLI with uniform steward and stewardship mandate records, that its declared checks match checks.json and its shipped assets match .ia/release.json and releases.json, that @prd consents to relationships with @spec, @decision, @plan, @docket and @approval, that check-prds verifies non-empty problem, goals, unique requirement clauses, traced non-withdrawn @spec/@decision coverage, credential-free source locators, 64-hex body digests, acyclic supersession and optional @approval-rule seal enforcement on ratified and active PRDs, and that both checks run cleanly through scripts/check.mjs. Evaluated by plugins/ia/tests/kit-product-base.test.mjs."
+    answers "What does the IA product base kit guarantee, and how is each guarantee checked?"
+  invariants
+    REQ-PRODUCT-BASE-01 "A scratch copy of the kit's sources restores its pinned language base offline under the pinned CLI and validates with zero errors, shipping uniform @agent product-base-system-steward and @mandate product-base-system-stewardship records, the canonical @schema prd, the authoring guide, and ratification/decomposition rules."
+    REQ-PRODUCT-BASE-02 "Every gate @check in the kit runs COMP-CHECK with one non-empty fixed command in check.scope that equals its checks.json argv, every listed asset in .ia/release.json exists with an allowed role and no shipped file under assets/ or scripts/ is unlisted, and releases.json format 2 matches the descriptor and sourcesDigest."
+    REQ-PRODUCT-BASE-03 "The product-base-system consent rows admit cite, ground, require and supersede relationships connecting @prd with @spec, @decision, @plan, @docket and @approval records."
+    REQ-PRODUCT-BASE-04 "The offline check-prds verifier accepts draft PRDs in progress and ratified/active PRDs carrying non-empty problem, goals, unique requirement clauses and resolved non-withdrawn @spec/@decision coverage, and refuses blank problems, empty ratified/active goals or requirements, duplicate requirement clause ids, untraced or withdrawn-only ratified/active PRDs, credentialed or traversal source locators, malformed or orphaned body digests, supersede cycles, and unsealed ratified/active PRDs when an @approval-rule covers prd."
+    REQ-PRODUCT-BASE-05 "Both product-check-validate and check-prds run cleanly offline through the core's scripts/check.mjs runner over an admitted adopting workspace and exit 3 when PRD completeness or traceability rules are violated."
+  relationships
+    governs @law product-ratified-prd-completeness-and-traceability
+    governs @law product-prd-source-and-supersession-hygiene
+    cites @agent product-base-system-steward
+
+@check product-base-system-coverage
+  meaning
+    says "Checks that every requirement of the product-base-system contract has a success case and a failure case."
+    answers "Is every product-base-system requirement covered by cases?"
+  check
+    runs COMP-COVERAGE
+    scope "The product-base-system requirements and their cases."
+  relationships
+    enforces @contract product-base-system
+
+@check product-check-validate
+  meaning
+    says "Native admission of the workspace under check through the repository's pinned CLI."
+    answers "Does the workspace admit under its pinned CLI?"
+  check
+    runs COMP-CHECK
+    scope "ia validate --json"
+  relationships
+    enforces @contract product-base-system
+
+@check check-prds
+  meaning
+    says "Offline verification of @prd records and their @spec/@decision traceability through scripts/check-prds.mjs using Node built-in modules only, with zero external dependencies and zero network calls."
+    answers "Do the workspace's @prd records satisfy completeness, clause uniqueness, @spec/@decision traceability and source/seal hygiene?"
+  check
+    runs COMP-CHECK
+    scope "node ${KIT}/scripts/check-prds.mjs ia"
+  relationships
+    enforces @contract product-base-system
+
+@case product-base-req-01-success
+  meaning
+    says "A scratch copy of the kit restores its pinned language base offline and admits with zero errors, carrying product-base-system-steward, product-base-system-stewardship, the prd schema, authoring guide and rules."
+    answers "Does the product base kit admit offline with its schema, authoring guide and steward hygiene?"
+  scenario
+    kind success
+    given "A copy of the kit's .ia folder and assets in a scratch directory, and the pinned @inventarch/cli."
+    request "Run ia restore --apply --yes --root <copy>, then ia validate --root <copy> --json."
+    expected "Restore reports installed and validate reports status admitted with zero errors."
+    evaluator "plugins/ia/tests/kit-product-base.test.mjs :: REQ-PRODUCT-BASE-01 success: the kit admits offline with steward hygiene, schema and PRD rules"
+  relationships
+    implements @contract product-base-system#REQ-PRODUCT-BASE-01
+
+@case product-base-req-01-failure
+  meaning
+    says "A copy of the kit with an unknown check evaluator is refused at restore with IA-COMP-CHECK-UNKNOWN."
+    answers "Does the pinned CLI refuse an unknown evaluator in the product base kit?"
+  scenario
+    kind failure
+    given "A scratch copy of the kit whose compliance.ia rewrites product-check-validate to run an unknown evaluator."
+    request "Run ia restore --apply --yes --root <copy>."
+    expected "Restore refuses with IA-DIST-ADMISSION-FAILED carrying IA-COMP-CHECK-UNKNOWN."
+    evaluator "plugins/ia/tests/kit-product-base.test.mjs :: REQ-PRODUCT-BASE-01 failure: an unknown evaluator is refused"
+    code IA-COMP-CHECK-UNKNOWN
+  relationships
+    implements @contract product-base-system#REQ-PRODUCT-BASE-01
+
+@case product-base-req-02-success
+  meaning
+    says "Every gate check matches checks.json, every shipped asset matches .ia/release.json, and releases.json format 2 matches sourcesDigest and the source record triples."
+    answers "Are checks, assets and recorded release metadata consistent?"
+  scenario
+    kind success
+    given "The kit's compliance.ia, checks.json, .ia/release.json, releases.json and shipped files."
+    request "Verify check scopes against checks.json, listed assets against disk, and releases.json against sourcesDigest and record triples."
+    expected "Zero structural, asset or release problems."
+    evaluator "plugins/ia/tests/kit-product-base.test.mjs :: REQ-PRODUCT-BASE-02 success: checks, assets and format 2 release metadata match"
+  relationships
+    implements @contract product-base-system#REQ-PRODUCT-BASE-02
+
+@case product-base-req-02-failure
+  meaning
+    says "An empty check scope, missing or unlisted asset, or drifted release digest fails the structural checks."
+    answers "Are drifted check scopes, assets and releases refused?"
+  scenario
+    kind failure
+    given "Modified copies of the kit with an empty check scope, a missing asset and an edited record without repack."
+    request "Run the structural, asset and release checks over each copy."
+    expected "Each copy reports the exact mismatch and fails."
+    evaluator "plugins/ia/tests/kit-product-base.test.mjs :: REQ-PRODUCT-BASE-02 failure: drifted checks, assets and releases are refused"
+  relationships
+    implements @contract product-base-system#REQ-PRODUCT-BASE-02
+
+@case product-base-req-03-success
+  meaning
+    says "An adopting workspace composing product-base-system and approval-system admits @prd records linked to @spec, @decision, @plan, @docket and @approval records with zero errors."
+    answers "Do consented @prd relationships with @spec, @decision, @plan, @docket and @approval validate cleanly?"
+  scenario
+    kind success
+    given "An adopting workspace composing product-base-system and approval-system with @prd, @spec, @decision, @plan, @docket and @approval records."
+    request "Run ia validate --json on the adopting workspace."
+    expected "Validate reports status admitted with zero errors."
+    evaluator "plugins/ia/tests/kit-product-base.test.mjs :: REQ-PRODUCT-BASE-03 success: consented relationships to spec, decision, plan, docket and approval validate"
+  relationships
+    implements @contract product-base-system#REQ-PRODUCT-BASE-03
+
+@case product-base-req-03-failure
+  meaning
+    says "Splicing out consent rows, authoring multiple supersede targets or setting an unknown governance.status on @prd is refused by the compiler."
+    answers "Are unconsented edges, cardinality violations and invalid status values refused?"
+  scenario
+    kind failure
+    given "Scratch copies omitting ground/cite consent, superseding two PRDs or using an unknown governance.status."
+    request "Run ia validate --json over each copy."
+    expected "Validate refuses with IA-LANG-EDGE-UNCONSENTED, IA-GRAPH-EDGE-UNCONSENTED, IA-COMP-EDGE-CARDINALITY or IA-COMP-FIELD-VALUE."
+    evaluator "plugins/ia/tests/kit-product-base.test.mjs :: REQ-PRODUCT-BASE-03 failure: unconsented edges, cardinality breaches and invalid statuses are refused"
+  relationships
+    implements @contract product-base-system#REQ-PRODUCT-BASE-03
+
+@case product-base-req-04-success
+  meaning
+    says "Draft PRDs in progress and ratified/active PRDs with non-empty problem, goals, unique requirements, traced @spec/@decision coverage and pinned source digests pass check-prds."
+    answers "Do valid draft, ratified and active @prd records pass check-prds?"
+  scenario
+    kind success
+    given "Draft PRDs and ratified/active PRDs traced to @spec and @decision records with valid source locators, 64-hex digests and seals."
+    request "Run checkPrds over the snapshot."
+    expected "Report ok is true with zero findings."
+    evaluator "plugins/ia/tests/kit-product-base.test.mjs :: REQ-PRODUCT-BASE-04 success: compliant draft, ratified and active PRDs pass check-prds"
+  relationships
+    implements @contract product-base-system#REQ-PRODUCT-BASE-04
+
+@case product-base-req-04-failure
+  meaning
+    says "Empty problem, empty ratified/active goals or requirements, duplicate clause ids, untraced or withdrawn-only coverage, credentialed sources, malformed/orphan digests, supersede cycles and unsealed rule-covered PRDs fail check-prds."
+    answers "Does check-prds refuse incomplete, untraced, cyclic or unsealed ratified/active PRDs?"
+  scenario
+    kind failure
+    given "Ratified and active PRDs missing problem/goals/requirements, duplicating clause ids, lacking @spec/@decision trace or tracing only to withdrawn records, carrying credentialed URLs, bad body digests, supersede cycles, and missing seals under a prd @approval-rule."
+    request "Run checkPrds over the snapshot."
+    expected "Report ok is false with every expected finding code present."
+    evaluator "plugins/ia/tests/kit-product-base.test.mjs :: REQ-PRODUCT-BASE-04 failure: check-prds refuses incomplete, untraced, cyclic and unsealed PRDs"
+  relationships
+    implements @contract product-base-system#REQ-PRODUCT-BASE-04
+
+@case product-base-req-05-success
+  meaning
+    says "scripts/check.mjs runs product-check-validate and check-prds to exit 0 over a sound adopting workspace."
+    answers "Do both declared checks pass through scripts/check.mjs on a compliant workspace?"
+  scenario
+    kind success
+    given "An initialized workspace adopting inventarch/ia-product-base-kit with a ratified @prd traced to an admitted @spec and @decision."
+    request "Run scripts/check.mjs product-check-validate and check-prds."
+    expected "Both checks exit 0 with complete retained output."
+    evaluator "plugins/ia/tests/kit-product-base.test.mjs :: REQ-PRODUCT-BASE-05 success: check.mjs runs product-check-validate and check-prds to exit 0"
+  relationships
+    implements @contract product-base-system#REQ-PRODUCT-BASE-05
+
+@case product-base-req-05-failure
+  meaning
+    says "scripts/check.mjs exits 3 when check-prds detects an untraced or incomplete ratified @prd in an admitted workspace."
+    answers "Does scripts/check.mjs exit 3 when check-prds finds violations?"
+  scenario
+    kind failure
+    given "An admitted workspace adopting inventarch/ia-product-base-kit with a ratified @prd that has empty goals/requirements and no @spec or @decision trace."
+    request "Run scripts/check.mjs check-prds."
+    expected "check.mjs exits 3 and reports the violation codes."
+    evaluator "plugins/ia/tests/kit-product-base.test.mjs :: REQ-PRODUCT-BASE-05 failure: check.mjs exits 3 when check-prds detects violations"
+  relationships
+    implements @contract product-base-system#REQ-PRODUCT-BASE-05
