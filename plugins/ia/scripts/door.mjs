@@ -32,7 +32,7 @@ export function doorCommand({ platform = process.platform, version = PINNED, env
   return { command: 'npx', args: tail, options };
 }
 
-function main() {
+export function main() {
   const door = doorCommand();
   if (door.error) {
     process.stderr.write(`ia door: ${door.error}\n`);

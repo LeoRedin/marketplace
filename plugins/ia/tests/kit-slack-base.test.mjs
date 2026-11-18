@@ -498,6 +498,18 @@ test('REQ-SLACK-BASE-04 failure: check-slack-channels refuses tokens, duplicates
         disclosure: 'content',
         shows: ['*'],
       }),
+      synChannel('chan-answers-wildcard', {
+        channel: 'answers-wild',
+        answers: 'on',
+        disclosure: 'link-only',
+        sources: ['*'],
+      }),
+      synChannel('person-omitted-posture', {
+        channel: 'person-defaulted',
+        app: 'person',
+        approver: 'U01234567',
+        members: ['U01234567'],
+      }),
       synChannel('person-shared', {
         channel: 'person-chan',
         app: 'person',
@@ -517,6 +529,7 @@ test('REQ-SLACK-BASE-04 failure: check-slack-channels refuses tokens, duplicates
     'SLACK_APPROVER_FORMAT',
     'SLACK_MEMBER_FORMAT',
     'SLACK_ANSWERS_ALLOWLIST_EMPTY',
+    'SLACK_ANSWERS_WILDCARD',
     'SLACK_RATE_FORMAT',
     'SLACK_CHANNEL_NAME_DUPLICATE',
     'SLACK_CHANNEL_ID_DUPLICATE',
@@ -530,6 +543,10 @@ test('REQ-SLACK-BASE-04 failure: check-slack-channels refuses tokens, duplicates
   ]) {
     assert.ok(codes.has(expected), `expected finding ${expected}, got ${[...codes].join(', ')}`);
   }
+  assert.ok(
+    report.findings.some(f => f.name === 'person-omitted-posture' && f.code === 'SLACK_PERSON_APP_POSTURE'),
+    'person app omitting form and kind must fail SLACK_PERSON_APP_POSTURE',
+  );
 });
 
 test('REQ-SLACK-BASE-05 success: check.mjs runs slack-check-validate and check-slack-channels to exit 0', { skip: SKIP_CLI }, t => {

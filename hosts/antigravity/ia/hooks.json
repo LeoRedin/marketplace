@@ -1,0 +1,56 @@
+{
+  "ia-core": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "node ./scripts/agy-hook.mjs session",
+        "timeout": 60
+      }
+    ],
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "node ./scripts/agy-hook.mjs prompt",
+        "timeout": 30
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "write_to_file|replace_file_content|multi_replace_file_content|write_file|edit_file|run_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ./scripts/agy-hook.mjs pre",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "write_to_file|replace_file_content|multi_replace_file_content|write_file|edit_file|run_command|ask_question",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ./scripts/agy-hook.mjs post",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "PostInvocation": [
+      {
+        "type": "command",
+        "command": "node ./scripts/agy-hook.mjs post-invocation",
+        "timeout": 15
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node ./scripts/agy-hook.mjs stop",
+        "timeout": 30
+      }
+    ]
+  }
+}

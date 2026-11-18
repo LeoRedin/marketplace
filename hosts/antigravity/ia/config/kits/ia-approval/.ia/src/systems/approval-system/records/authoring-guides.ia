@@ -1,0 +1,41 @@
+#! ia 1.0
+
+@convention approval-guide-approver
+  meaning
+    says "Authoring guide for @approver (default file approvers.ia; reference assets/approval-vocabulary.md). Select @approver to register a person's directory account (person.account, never an email address), display label, workspace ratification scope (authority.workspaces, covering those workspaces and their governed-by descendants), optional founding anchor or delayed recovery/Slack notices, and Ed25519 public key entries (<key-id> ed25519 <base64url raw 32 bytes> <active|retired|revoked> <from-commit or ->). Avoid @approver for workflow participants (@agent), move bounds (@mandate) or rule selectors (@approval-rule). Derive every key-id as unpadded base64url(sha256(raw32Bytes)), store only public keys, and remember check-seal reads roster authority from the target branch alone."
+    answers "When and how should an author write an @approver record?"
+  governance
+    severity advisory
+    requires "Author @approver with a directory account id, workspace ratification scope and Ed25519 public keys whose key-id equals base64url(sha256(raw32Bytes))."
+  subject
+    subject-word approver
+
+@convention approval-guide-approval-rule
+  meaning
+    says "Authoring guide for @approval-rule (default file approval-rules.ia; reference assets/approval-vocabulary.md). Select @approval-rule to declare which records demand signed @approval seals (by demand.words, demand.kinds, demand.paths or demand.pieces unrecognised), the distinct-approver quorum (at least 1), allowed entry routes (via desk or slack), minimum key custody (service-held or person-held), staleness mode (unchanged-inputs or current-revision) and merge mode (person or automatic). Avoid @approval-rule for prose governance (@law, @convention) or command evaluators (@check). Specify at least one selector, verify every word in demand.words is minted by a composed system, and keep merge person on any rule covering approver or approval-rule records."
+    answers "When and how should an author write an @approval-rule record?"
+  governance
+    severity advisory
+    requires "Author @approval-rule with an integer quorum of at least 1, at least one record selector, minted words only, and person merge on root authority records."
+  subject
+    subject-word approval-rule
+
+@convention approval-guide-docket
+  meaning
+    says "Authoring guide for @docket (default file dockets.ia; reference assets/approval-vocabulary.md). Select @docket when an intake or producing step hands over records and records per-piece recognition against ratified target-branch pattern records: <record identity> <matched|none|ambiguous> <source kind> <percent-encoded ASCII source reference> <source digest> <pattern record identity or ->. Avoid @docket for check execution receipts (@observation) or cryptographic ratification (@approval). Never list a @docket inside docket.pieces, never claim matched or a pattern when docket.producer is desk, percent-encode spaces and non-ASCII bytes in source references, and note that patterns absent from the target branch count as unrecognised."
+    answers "When and how should an author write a @docket record?"
+  governance
+    severity advisory
+    requires "Author @docket with six-field piece entries, percent-encoded ASCII source references, no docket self-listing, and no matched claim from desk."
+  subject
+    subject-word docket
+
+@convention approval-guide-approval
+  meaning
+    says "Authoring guide for @approval (default file approvals/<record-name>.<12-digest>.<8-keytag>.ia; reference assets/approval-vocabulary.md). Select @approval to store one Ed25519 signature by one approver over the RFC 8785 JCS canonical SealStatement for a record addition/edit (approve) or deletion (delete). Never hand-author or edit seal fields after signing; use @decision for architectural choices and @observation for test verdicts. Bind seal.record-digest to the full compiled graph per-record digest rather than ia read's summary digest, sort depends-on, rules and system-versions lexicographically, write one seal per file so concurrent signers never conflict, and verify offline with check-seal."
+    answers "When and how should an @approval record be produced and stored?"
+  governance
+    severity advisory
+    requires "Produce @approval from the compiled graph digest and sorted SealStatement fields, store one file per signer under .ia/src/approvals/, and verify offline with check-seal."
+  subject
+    subject-word approval

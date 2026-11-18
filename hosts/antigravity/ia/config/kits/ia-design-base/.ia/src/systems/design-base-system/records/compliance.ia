@@ -1,0 +1,179 @@
+#! ia 1.0
+
+@contract design-base-system
+  version "0.1.0"
+  meaning
+    says "What the public IA design base kit guarantees mechanically: that its sources admit offline under the pinned CLI with uniform steward and stewardship mandate records and zero collision with floor @template, that its declared checks match checks.json and its shipped assets match .ia/release.json and releases.json, that @design-token, @level, @part, @slot, @pattern and @recipe consent to atomic composition and cross-system citations, that check-design-patterns verifies atomic hierarchy order (atom -> molecule -> organism -> page-template -> page), slot ownership, unambiguous Figma component-set claims, pattern target/slot/evidence validity, recipe mode/override/token hygiene and sealed active pattern/recipe requirements, and that both checks run cleanly through scripts/check.mjs. Evaluated by plugins/ia/tests/kit-design-base.test.mjs."
+    answers "What does the IA design base kit guarantee, and how is each guarantee checked?"
+  invariants
+    REQ-DESIGN-BASE-01 "A scratch copy of the kit's sources restores its pinned language base offline under the pinned CLI and validates with zero errors, shipping uniform @agent design-base-system-steward and @mandate design-base-system-stewardship records and all six canonical schemas (design-token, level, part, slot, pattern, recipe) and authoring guides without colliding with floor @template."
+    REQ-DESIGN-BASE-02 "Every gate @check in the kit runs COMP-CHECK with one non-empty fixed command in check.scope that equals its checks.json argv, every listed asset in .ia/release.json exists with an allowed role and no shipped file under assets/ or scripts/ is unlisted, and releases.json format 2 matches the descriptor and sourcesDigest."
+    REQ-DESIGN-BASE-03 "The design-base-system consent rows admit atomic composition and token/slot/level edges across @design-token, @level, @part, @slot, @pattern and @recipe, supersession on versioned design records, grounding of @spec/@plan/@task, and cross-system citations to @decision, @docket and @approval."
+    REQ-DESIGN-BASE-04 "The offline check-design-patterns verifier accepts compliant atomic hierarchies (atom -> molecule -> organism -> page-template -> page), valid slot mappings, proposed scratch patterns/recipes and sealed active patterns/recipes, and refuses upward atomic composition, part/pattern/recipe cycles, primitive tokens on parts, raw colours or scale overrides on recipes, define over existing code-exports, duplicate Figma component-set claims, unknown yielded parts or slots, unsafe output paths, and unsealed active patterns or recipes."
+    REQ-DESIGN-BASE-05 "Both design-check-validate and check-design-patterns run cleanly offline through the core's scripts/check.mjs runner over an admitted adopting workspace and exit 3 when atomic composition, override or seal rules are violated."
+  relationships
+    governs @law design-semantic-tokens-only
+    governs @law design-active-patterns-and-recipes-sealed
+    governs @law design-single-claimant-no-order-tiebreak
+    cites @agent design-base-system-steward
+
+@check design-base-system-coverage
+  meaning
+    says "Checks that every requirement of the design-base-system contract has a success case and a failure case."
+    answers "Is every design-base-system requirement covered by cases?"
+  check
+    runs COMP-COVERAGE
+    scope "The design-base-system requirements and their cases."
+  relationships
+    enforces @contract design-base-system
+
+@check design-check-validate
+  meaning
+    says "Native admission of the workspace under check through the repository's pinned CLI."
+    answers "Does the workspace admit under its pinned CLI?"
+  check
+    runs COMP-CHECK
+    scope "ia validate --json"
+  relationships
+    enforces @contract design-base-system
+
+@check check-design-patterns
+  meaning
+    says "Offline verification of @design-token, @level, @part, @slot, @pattern and @recipe records through scripts/check-design-patterns.mjs using Node built-in modules only, with zero external dependencies and zero network calls."
+    answers "Do the workspace's atomic design hierarchy, slot bindings, pattern arrangements, recipe overrides and active seals pass offline verification?"
+  check
+    runs COMP-CHECK
+    scope "node ${KIT}/scripts/check-design-patterns.mjs ia"
+  relationships
+    enforces @contract design-base-system
+
+@case design-base-req-01-success
+  meaning
+    says "A scratch copy of the kit restores its pinned language base offline and admits with zero errors, carrying design-base-system-steward, design-base-system-stewardship and all six schemas and authoring guides without colliding with floor @template."
+    answers "Does the design base kit admit offline with its six schemas, authoring guides and steward hygiene?"
+  scenario
+    kind success
+    given "A copy of the kit's .ia folder and assets in a scratch directory, and the pinned @inventarch/cli."
+    request "Run ia restore --apply --yes --root <copy>, then ia validate --root <copy> --json."
+    expected "Restore reports installed and validate reports status admitted with zero errors."
+    evaluator "plugins/ia/tests/kit-design-base.test.mjs :: REQ-DESIGN-BASE-01 success: the kit admits offline with steward hygiene and six word schemas"
+  relationships
+    implements @contract design-base-system#REQ-DESIGN-BASE-01
+
+@case design-base-req-01-failure
+  meaning
+    says "A copy of the kit with an unknown check evaluator is refused at restore with IA-COMP-CHECK-UNKNOWN."
+    answers "Does the pinned CLI refuse an unknown evaluator in the design base kit?"
+  scenario
+    kind failure
+    given "A scratch copy of the kit whose compliance.ia rewrites design-check-validate to run an unknown evaluator."
+    request "Run ia restore --apply --yes --root <copy>."
+    expected "Restore refuses with IA-DIST-ADMISSION-FAILED carrying IA-COMP-CHECK-UNKNOWN."
+    evaluator "plugins/ia/tests/kit-design-base.test.mjs :: REQ-DESIGN-BASE-01 failure: an unknown evaluator is refused"
+    code IA-COMP-CHECK-UNKNOWN
+  relationships
+    implements @contract design-base-system#REQ-DESIGN-BASE-01
+
+@case design-base-req-02-success
+  meaning
+    says "Every gate check matches checks.json, every shipped asset matches .ia/release.json, and releases.json format 2 matches sourcesDigest and the source record triples."
+    answers "Are checks, assets and recorded release metadata consistent?"
+  scenario
+    kind success
+    given "The kit's compliance.ia, checks.json, .ia/release.json, releases.json and shipped files."
+    request "Verify check scopes against checks.json, listed assets against disk, and releases.json against sourcesDigest and record triples."
+    expected "Zero structural, asset or release problems."
+    evaluator "plugins/ia/tests/kit-design-base.test.mjs :: REQ-DESIGN-BASE-02 success: checks, assets and format 2 release metadata match"
+  relationships
+    implements @contract design-base-system#REQ-DESIGN-BASE-02
+
+@case design-base-req-02-failure
+  meaning
+    says "An empty check scope, missing or unlisted asset, or drifted release digest fails the structural checks."
+    answers "Are drifted check scopes, assets and releases refused?"
+  scenario
+    kind failure
+    given "Modified copies of the kit with an empty check scope, a missing asset and an edited record without repack."
+    request "Run the structural, asset and release checks over each copy."
+    expected "Each copy reports the exact mismatch and fails."
+    evaluator "plugins/ia/tests/kit-design-base.test.mjs :: REQ-DESIGN-BASE-02 failure: drifted checks, assets and releases are refused"
+  relationships
+    implements @contract design-base-system#REQ-DESIGN-BASE-02
+
+@case design-base-req-03-success
+  meaning
+    says "An adopting workspace composing design-base-system alongside template-system and approval-system admits @design-token, @level, @part, @slot, @pattern, @recipe and floor @template records with consented edges and zero errors."
+    answers "Do all six design words coexist with floor @template and validate consented relationships?"
+  scenario
+    kind success
+    given "An adopting workspace composing design-base-system, template-system and approval-system with atomic design records, @template, @decision, @spec and @approval records."
+    request "Run ia validate --json on the adopting workspace."
+    expected "Validate reports status admitted with zero errors."
+    evaluator "plugins/ia/tests/kit-design-base.test.mjs :: REQ-DESIGN-BASE-03 success: six design words coexist with floor @template and validate consented edges"
+  relationships
+    implements @contract design-base-system#REQ-DESIGN-BASE-03
+
+@case design-base-req-03-failure
+  meaning
+    says "Splicing out consent rows or authoring invalid recipe modes or level stages is refused by the compiler."
+    answers "Are unconsented edges and invalid enum values refused?"
+  scenario
+    kind failure
+    given "Scratch copies omitting require part consent or authoring an unknown recipe.mode."
+    request "Run ia validate --json over each copy."
+    expected "Validate refuses with IA-LANG-EDGE-UNCONSENTED, IA-GRAPH-EDGE-UNCONSENTED or IA-COMP-FIELD-VALUE."
+    evaluator "plugins/ia/tests/kit-design-base.test.mjs :: REQ-DESIGN-BASE-03 failure: unconsented edges and invalid enum values are refused"
+  relationships
+    implements @contract design-base-system#REQ-DESIGN-BASE-03
+
+@case design-base-req-04-success
+  meaning
+    says "Compliant atom -> molecule -> organism -> page-template hierarchies, valid slot mappings, use/adapt/compose/define recipes with semantic tokens, proposed scratch records and sealed active patterns/recipes pass check-design-patterns."
+    answers "Do valid atomic compositions, recipes and sealed active patterns pass check-design-patterns?"
+  scenario
+    kind success
+    given "A complete atomic hierarchy with semantic/component tokens, owned slots, valid use/adapt/compose/define recipes, proposed records and sealed active patterns and recipes."
+    request "Run checkDesignPatterns over the snapshot."
+    expected "Report ok is true with zero findings."
+    evaluator "plugins/ia/tests/kit-design-base.test.mjs :: REQ-DESIGN-BASE-04 success: compliant atomic hierarchy, overrides and sealed active recipes pass"
+  relationships
+    implements @contract design-base-system#REQ-DESIGN-BASE-04
+
+@case design-base-req-04-failure
+  meaning
+    says "Upward atomic composition, cycles, primitive tokens on parts, duplicate Figma component sets, unknown pattern parts/slots, bad evidence, define over code-export, raw colours, adapt scale overrides, unsafe output paths and unsealed active patterns/recipes fail check-design-patterns."
+    answers "Does check-design-patterns refuse hierarchy inversions, bad overrides, raw tokens and unsealed active records?"
+  scenario
+    kind failure
+    given "Records violating level rank order, upward part composition, cycles, primitive part tokens, ambiguous Figma names, missing yielded parts/slots, define over code-export, raw palette/hex/bracket classes, adapt spacing overrides, .ia output paths and unsealed active patterns/recipes."
+    request "Run checkDesignPatterns over the snapshot."
+    expected "Report ok is false with every expected finding code present."
+    evaluator "plugins/ia/tests/kit-design-base.test.mjs :: REQ-DESIGN-BASE-04 failure: check-design-patterns refuses upward composition, bad overrides and unsealed active records"
+  relationships
+    implements @contract design-base-system#REQ-DESIGN-BASE-04
+
+@case design-base-req-05-success
+  meaning
+    says "scripts/check.mjs runs design-check-validate and check-design-patterns to exit 0 over a sound adopting workspace."
+    answers "Do both declared checks pass through scripts/check.mjs on a compliant workspace?"
+  scenario
+    kind success
+    given "An initialized workspace adopting inventarch/ia-design-base-kit and inventarch/ia-approval-kit with compliant atomic design records and sealed active pattern/recipe records."
+    request "Run scripts/check.mjs design-check-validate and check-design-patterns."
+    expected "Both checks exit 0 with complete retained output."
+    evaluator "plugins/ia/tests/kit-design-base.test.mjs :: REQ-DESIGN-BASE-05 success: check.mjs runs design-check-validate and check-design-patterns to exit 0"
+  relationships
+    implements @contract design-base-system#REQ-DESIGN-BASE-05
+
+@case design-base-req-05-failure
+  meaning
+    says "scripts/check.mjs exits 3 when check-design-patterns detects upward atomic composition, raw colour overrides or an unsealed active recipe."
+    answers "Does scripts/check.mjs exit 3 when check-design-patterns finds violations?"
+  scenario
+    kind failure
+    given "An admitted workspace adopting inventarch/ia-design-base-kit with an atom composing an organism, a raw hex override and an unsealed active recipe."
+    request "Run scripts/check.mjs check-design-patterns."
+    expected "check.mjs exits 3 and reports the violation codes."
+    evaluator "plugins/ia/tests/kit-design-base.test.mjs :: REQ-DESIGN-BASE-05 failure: check.mjs exits 3 when check-design-patterns detects violations"
+  relationships
+    implements @contract design-base-system#REQ-DESIGN-BASE-05

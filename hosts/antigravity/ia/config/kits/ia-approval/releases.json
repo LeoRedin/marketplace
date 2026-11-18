@@ -1,0 +1,20 @@
+{
+  "format": 2,
+  "kit": "inventarch/ia-approval-kit",
+  "latest": "0.1.0",
+  "releases": [
+    {
+      "version": "0.1.0",
+      "archive": "e5aea59347041fe271d03f261e740e8660c8b56d9a4875550a3c94ae88c532cb",
+      "manifest": "1a39f7b09e600179224f3c782dd472447e36fcc1eff91530a95eef784ea56bc0",
+      "sources": "dc82aeae90d4232e4ed395bdd76a7ec94b2e63f897ee85035c7372d5d4a7d5cd",
+      "language": "inventarch/language ^3.0.0",
+      "cli": "@inventarch/cli 3.8.0",
+      "file": "releases/0.1.0.json",
+      "source": {
+        "repository": "https://github.com/inventarch/marketplace.git",
+        "commit": "d7e0c52128d6285ff61049ee38b8d6772927a39b"
+      }
+    }
+  ]
+}

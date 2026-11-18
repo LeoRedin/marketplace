@@ -10,6 +10,7 @@ import { adopt, findKit, sourcesDigest } from '../scripts/lib/kit.mjs';
 import { kitRecordNames } from '../scripts/lib/records.mjs';
 import { expandFolder } from '../scripts/lib/releases.mjs';
 import { FORMAT, checkPrds, isValidPrdSource } from '../config/kits/ia-product-base/scripts/check-prds.mjs';
+import { APPROVALS_DIR, generateSigningKey, keyEntryText, sealRecord } from '../config/kits/ia-approval/scripts/check-seal.mjs';
 
 const PLUGIN = fileURLToPath(new URL('..', import.meta.url));
 const REPO_ROOT = fileURLToPath(new URL('../../..', import.meta.url));
@@ -172,7 +173,8 @@ function synPrd(name, opts = {}) {
     identity: `product-base-system/definition/prd/${name}`,
     discriminator: 'prd',
     name,
-    digest: opts.digest ?? 'd'.repeat(64),
+    digest: Object.hasOwn(opts, 'digest') ? opts.digest : 'd'.repeat(64),
+    origin: opts.file ? { file: opts.file, line: 3 } : undefined,
     provenance: 'workspace',
     sections: [
       {
@@ -196,30 +198,104 @@ function synPrd(name, opts = {}) {
   };
 }
 
-function synApprovalRule(name, words) {
+function synApprover(name, account, key, workspaces = ['workspace-system/definition/workspace/prd-ws']) {
   return {
-    identity: `approval-system/governance/approval-rule/${name}`,
-    discriminator: 'approval-rule',
-    name,
-    provenance: 'workspace',
-    sections: [{ name: 'demand', fields: [{ key: 'words', value: listVal(words.map(strVal)) }] }],
-    edges: [],
-  };
-}
-
-function synApproval(name, targetIdentity, targetDigest) {
-  return {
-    identity: `approval-system/definition/approval/${name}`,
-    discriminator: 'approval',
+    identity: `approval-system/definition/approver/${name}`,
+    discriminator: 'approver',
     name,
     provenance: 'workspace',
     sections: [
       {
+        name: 'person',
+        fields: [
+          { key: 'account', value: strVal(account) },
+          { key: 'display', value: strVal(name) },
+        ],
+      },
+      {
+        name: 'authority',
+        fields: [{ key: 'workspaces', value: listVal(workspaces.map(strVal)) }],
+      },
+      {
+        name: 'keys',
+        fields: [
+          {
+            key: 'entries',
+            value: listVal([strVal(keyEntryText({ keyId: key.keyId, algorithm: 'ed25519', publicKey: key.rawPublicKey, status: 'active', fromCommit: null }))]),
+          },
+        ],
+      },
+    ],
+    edges: [],
+  };
+}
+
+function synApprovalRule(name, wordsOrOpts, quorum = 1, digest = '7'.repeat(64)) {
+  const opts = Array.isArray(wordsOrOpts) ? { words: wordsOrOpts, quorum, digest } : wordsOrOpts;
+  const fields = [{ key: 'quorum', value: { kind: 'scalar', text: String(opts.quorum ?? 1), value: opts.quorum ?? 1 } }];
+  if (opts.words) fields.push({ key: 'words', value: listVal(opts.words.map(strVal)) });
+  if (opts.paths) fields.push({ key: 'paths', value: listVal(opts.paths.map(strVal)) });
+  if (opts.pieces) fields.push({ key: 'pieces', value: strVal(opts.pieces) });
+  return {
+    identity: `approval-system/governance/approval-rule/${name}`,
+    discriminator: 'approval-rule',
+    name,
+    digest: opts.digest ?? '7'.repeat(64),
+    provenance: 'workspace',
+    sections: [{ name: 'demand', fields }],
+    edges: [],
+  };
+}
+
+function synSignedApproval(targetRecord, targetDigest, key, signerAccount, rules = [], wsId = 'workspace-system/definition/workspace/prd-ws') {
+  const seal = sealRecord({
+    action: 'approve',
+    organisation: wsId,
+    workspace: wsId,
+    record: { identity: targetRecord.identity, name: targetRecord.name },
+    recordDigest: targetDigest,
+    dependsOn: [],
+    rules,
+    revision: '9'.repeat(64),
+    toolchain: { language: '3.2.0', systems: [{ system: 'product-base-system', version: '0.1.0' }] },
+    baseCommit: '1'.repeat(40),
+    signer: { account: signerAccount, display: signerAccount },
+    key,
+    keyKind: 'service-held',
+    via: 'desk',
+    request: `req-${targetRecord.name}`,
+    signedAt: new Date('2026-11-18T00:00:00Z'),
+  });
+  const s = seal.statement;
+  return {
+    identity: `approval-system/definition/approval/${targetRecord.name}-seal`,
+    discriminator: 'approval',
+    name: `${targetRecord.name}-seal`,
+    provenance: 'workspace',
+    origin: { file: seal.path, line: 3 },
+    sections: [
+      {
         name: 'seal',
         fields: [
-          { key: 'action', value: strVal('approve') },
-          { key: 'record', value: strVal(targetIdentity) },
-          { key: 'record-digest', value: strVal(targetDigest) },
+          { key: 'action', value: strVal(s.action) },
+          { key: 'organisation', value: strVal(s.organisation) },
+          { key: 'workspace', value: strVal(s.workspace) },
+          { key: 'record', value: strVal(s.record) },
+          { key: 'record-digest', value: strVal(s.recordDigest) },
+          { key: 'depends-on', value: listVal(s.dependsOn.map(d => strVal(`${d.identity} ${d.digest}`))) },
+          { key: 'rules', value: listVal(s.rules.map(r => strVal(`${r.identity} ${r.digest}`))) },
+          { key: 'revision', value: strVal(s.revision) },
+          { key: 'language-version', value: strVal(s.language) },
+          { key: 'system-versions', value: listVal(s.systems.map(sys => strVal(`${sys.system} ${sys.version}`))) },
+          { key: 'base-commit', value: strVal(s.baseCommit) },
+          { key: 'signer', value: strVal(s.signer) },
+          { key: 'key-id', value: strVal(s.keyId) },
+          { key: 'key-kind', value: strVal(s.keyKind) },
+          { key: 'via', value: strVal(s.via) },
+          { key: 'request', value: strVal(s.request) },
+          { key: 'signed-at', value: strVal(s.signedAt) },
+          { key: 'algorithm', value: strVal('ed25519') },
+          { key: 'signature', value: strVal(seal.signature) },
         ],
       },
     ],
@@ -549,8 +625,25 @@ test('REQ-PRODUCT-BASE-04 success: compliant draft, ratified and active PRDs pas
   assert.equal(isValidPrdSource('https://user:secret@wiki.example.org/pages/123'), false);
   assert.equal(isValidPrdSource('../outside/prd.md'), false);
 
+  const { key: prdKey } = generateSigningKey();
   const ratDigest = '9'.repeat(64);
   const actDigest = '8'.repeat(64);
+  const ruleDigest = '7'.repeat(64);
+  const prdRule = synApprovalRule('prd-seal-rule', ['prd'], 1, ruleDigest);
+  const ruleRef = [{ identity: prdRule.identity, digest: ruleDigest }];
+  const ratPrd = synPrd('ratified-prd', {
+    status: 'ratified',
+    digest: ratDigest,
+    source: 'docs/prd/ratified.md',
+    bodyDigest: 'f'.repeat(64),
+    groundsSpecs: ['billing-spec'],
+  });
+  const actPrd = synPrd('active-prd', {
+    status: 'active',
+    digest: actDigest,
+    requirements: ['BIL-01: Invoice export', 'BIL-02: Tax rounding'],
+  });
+
   const report = checkPrds({
     revision: 'rev-prd-ok',
     records: [
@@ -558,23 +651,12 @@ test('REQ-PRODUCT-BASE-04 success: compliant draft, ratified and active PRDs pas
       synDecision('pricing-dec', 'made', ['active-prd']),
       // Draft PRD needs neither goals/requirements nor @spec trace yet
       synPrd('draft-prd', { status: 'draft', goals: [], nonGoals: [], requirements: [] }),
-      // Ratified PRD traced via outgoing ground -> @spec, with valid source + 64-hex digest + seal
-      synPrd('ratified-prd', {
-        status: 'ratified',
-        digest: ratDigest,
-        source: 'docs/prd/ratified.md',
-        bodyDigest: 'f'.repeat(64),
-        groundsSpecs: ['billing-spec'],
-      }),
-      // Active PRD traced via incoming @decision cite -> @prd + seal
-      synPrd('active-prd', {
-        status: 'active',
-        digest: actDigest,
-        requirements: ['BIL-01: Invoice export', 'BIL-02: Tax rounding'],
-      }),
-      synApprovalRule('prd-seal-rule', ['prd']),
-      synApproval('seal-rat', 'product-base-system/definition/prd/ratified-prd', ratDigest),
-      synApproval('seal-act', 'product-base-system/definition/prd/active-prd', actDigest),
+      ratPrd,
+      actPrd,
+      synApprover('product-lead', 'acct-product', prdKey),
+      prdRule,
+      synSignedApproval(ratPrd, ratDigest, prdKey, 'acct-product', ruleRef),
+      synSignedApproval(actPrd, actDigest, prdKey, 'acct-product', ruleRef),
     ],
   });
 
@@ -726,4 +808,251 @@ test('REQ-PRODUCT-BASE-05 failure: check.mjs exits 3 when check-prds detects vio
   assert.ok(body.findings.some(f => f.code === 'PRD_GOALS_EMPTY'));
   assert.ok(body.findings.some(f => f.code === 'PRD_REQUIREMENTS_EMPTY'));
   assert.ok(body.findings.some(f => f.code === 'PRD_UNTRACED_COVERAGE'));
+});
+
+test('REQ-PRODUCT-BASE-06: check-prds refuses forged/zero-signature approvals, enforces path and docket rules, and verifies real Ed25519 seals via CLI', { skip: SKIP_CLI }, t => {
+  // 1. Unit: demand.paths & demand.pieces === 'unrecognised' rule coverage + fake zero-signature approval + missing digest
+  const pathPrd = synPrd('path-prd', {
+    status: 'ratified',
+    file: '.ia/src/governed/prds.ia',
+    groundsSpecs: ['s1'],
+  });
+  const unrecPrd = synPrd('unrec-prd', {
+    status: 'active',
+    file: '.ia/src/free/prds.ia',
+    groundsSpecs: ['s1'],
+  });
+  const noDigestPrd = synPrd('no-digest-prd', {
+    status: 'ratified',
+    digest: undefined,
+    file: '.ia/src/governed/prds.ia',
+    groundsSpecs: ['s1'],
+  });
+  const fakeApproval = {
+    identity: 'approval-system/definition/approval/fake-prd-seal',
+    discriminator: 'approval',
+    name: 'fake-prd-seal',
+    provenance: 'workspace',
+    sections: [
+      {
+        name: 'seal',
+        fields: [
+          { key: 'action', value: strVal('approve') },
+          { key: 'organisation', value: strVal('workspace-system/definition/workspace/prd-ws') },
+          { key: 'workspace', value: strVal('workspace-system/definition/workspace/prd-ws') },
+          { key: 'record', value: strVal(pathPrd.identity) },
+          { key: 'record-digest', value: strVal(pathPrd.digest) },
+          { key: 'depends-on', value: listVal([]) },
+          { key: 'rules', value: listVal([]) },
+          { key: 'revision', value: strVal('0'.repeat(64)) },
+          { key: 'language-version', value: strVal('3.2.0') },
+          { key: 'system-versions', value: listVal([strVal('product-base-system 0.1.0')]) },
+          { key: 'base-commit', value: strVal('1'.repeat(40)) },
+          { key: 'signer', value: strVal('nobody') },
+          { key: 'key-id', value: strVal('kid-fake') },
+          { key: 'key-kind', value: strVal('service-held') },
+          { key: 'via', value: strVal('desk') },
+          { key: 'request', value: strVal('req-fake') },
+          { key: 'signed-at', value: strVal('2026-11-18T00:00:00Z') },
+          { key: 'algorithm', value: strVal('ed25519') },
+          { key: 'signature', value: strVal('A'.repeat(86)) },
+        ],
+      },
+    ],
+    edges: [],
+  };
+  const docket = {
+    identity: 'approval-system/definition/docket/intake-1',
+    discriminator: 'docket',
+    name: 'intake-1',
+    provenance: 'workspace',
+    sections: [
+      {
+        name: 'docket',
+        fields: [
+          { key: 'producer', value: strVal('desk') },
+          { key: 'pieces', value: listVal([strVal(`${unrecPrd.identity} none wiki https%3A%2F%2Fexample.org%2Fp ${'0'.repeat(64)} -`)]) },
+        ],
+      },
+    ],
+    edges: [],
+  };
+
+  const unitRep = checkPrds({
+    revision: 'rev-sec',
+    records: [
+      synSpec('s1', 'accepted'),
+      pathPrd,
+      unrecPrd,
+      noDigestPrd,
+      docket,
+      synApprovalRule('path-rule', { paths: ['.ia/src/governed/'], quorum: 1 }),
+      synApprovalRule('unrec-rule', { pieces: 'unrecognised', quorum: 1 }),
+      fakeApproval,
+    ],
+  });
+  assert.equal(unitRep.ok, false);
+  for (const target of [pathPrd, unrecPrd, noDigestPrd]) {
+    assert.ok(
+      unitRep.findings.some(f => f.identity === target.identity && f.code === 'PRD_UNSEALED'),
+      `expected PRD_UNSEALED on ${target.name}`,
+    );
+  }
+
+  // 2. Real CLI workspace check: fake zero-signature @approval fails exit 3, real Ed25519 @approval passes exit 0
+  const base = realpathSync.native(mkdtempSync(join(tmpdir(), 'ia-product-seal-live-')));
+  t.after(() => rmSync(base, { recursive: true, force: true }));
+  const ws = join(base, 'ws');
+  const home = join(base, 'home');
+  mkdirSync(home, { recursive: true });
+  const env = { ...process.env, IA_HOME: home, IA_CLI_PATH: CLI, IA_NO_HANDOFF: '1' };
+
+  spawnSync(process.execPath, [CLI, 'init', ws, '--host', 'none', '--apply', '--yes', '--json'], { env, encoding: 'utf8', windowsHide: true });
+  adopt(ws, findKit('ia-product-base'), { cli: { argv: [process.execPath, CLI], version: '3.8.0' }, env });
+  adopt(ws, findKit('ia-approval'), { cli: { argv: [process.execPath, CLI], version: '3.8.0' }, env });
+  const wsFile = join(ws, '.ia', 'src', 'workspace.ia');
+  const wsText = readFileSync(wsFile, 'utf8').replace(/systems \[([^\]]+)\]/, 'systems [$1, @system approval-system, @system product-base-system]');
+  writeFileSync(wsFile, wsText);
+  const wsId = `workspace-system/definition/workspace/${/^@workspace\s+([a-z0-9-]+)/m.exec(wsText)[1]}`;
+
+  writeFileSync(
+    join(ws, '.ia', 'src', 'product.ia'),
+    `#! ia 1.0
+
+@spec checkout-spec
+  meaning
+    says "Checkout specification."
+  work
+    title "Checkout spec"
+    status accepted
+
+@approval-rule prd-ratification
+  meaning
+    says "Ratified PRDs require an Ed25519 seal."
+    answers "Which PRDs require a seal?"
+  demand
+    words [prd]
+    quorum 1
+    merge person
+
+@prd checkout-prd
+  meaning
+    says "Checkout flow requirements."
+    problem "Cart abandonment rises when totals appear late."
+  scope
+    goals ["Show itemized totals upfront"]
+    non-goals ["Subscription billing"]
+    requirements ["CHK-01: Render line-item totals before payment step"]
+  governance
+    status ratified
+    source "docs/prd/checkout.md"
+  relationships
+    grounds @spec checkout-spec
+`,
+  );
+
+  mkdirSync(join(ws, APPROVALS_DIR), { recursive: true });
+  const bogusPath = join(ws, APPROVALS_DIR, 'checkout-prd.aaaaaaaaaaaa.00000000.ia');
+  writeFileSync(
+    bogusPath,
+    `#! ia 1.0
+
+@approval fake-prd-seal
+  meaning
+    says "Forged zero-signature approval."
+    answers "approval-system/governance/approval-rule/prd-ratification"
+  seal
+    action approve
+    organisation "${wsId}"
+    workspace "${wsId}"
+    record "product-base-system/definition/prd/checkout-prd"
+    record-digest "${'a'.repeat(64)}"
+    depends-on []
+    rules []
+    revision "${'b'.repeat(64)}"
+    language-version "3.2.0"
+    system-versions ["product-base-system 0.1.0"]
+    base-commit "${'c'.repeat(40)}"
+    signer "nobody"
+    key-id "fake-key"
+    key-kind service-held
+    via desk
+    request "req-forged"
+    signed-at "2026-11-18T00:00:00Z"
+    algorithm ed25519
+    signature "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+`,
+  );
+
+  const bogusRun = spawnSync(
+    process.execPath,
+    [join(PLUGIN, 'scripts', 'check.mjs'), 'check-prds', '--kit', KIT_ID, '--root', ws, '--cli', CLI],
+    { env, encoding: 'utf8', windowsHide: true },
+  );
+  assert.equal(bogusRun.status, 3, bogusRun.stdout + bogusRun.stderr);
+  assert.ok(JSON.parse(JSON.parse(bogusRun.stdout).stdout).findings.some(f => f.code === 'PRD_UNSEALED'));
+
+  rmSync(bogusPath, { force: true });
+  const { key } = generateSigningKey();
+  writeFileSync(
+    join(ws, '.ia', 'src', 'approvers.ia'),
+    `#! ia 1.0
+
+@approver product-steward
+  meaning
+    says "Product approver."
+    answers "Who ratifies PRDs?"
+  person
+    account "acct-product"
+    display "Product Steward"
+  authority
+    workspaces ["${wsId}"]
+    anchor founding
+  keys
+    entries ["${keyEntryText({ keyId: key.keyId, algorithm: 'ed25519', publicKey: key.rawPublicKey, status: 'active', fromCommit: null })}"]
+`,
+  );
+
+  const inspectRun = spawnSync(process.execPath, [CLI, 'inspect', '--path', '.ia/src/product.ia', '--depth', '0', '--json', '--root', ws], {
+    env,
+    encoding: 'utf8',
+    windowsHide: true,
+  });
+  assert.equal(inspectRun.status, 0, inspectRun.stdout + inspectRun.stderr);
+  const inspected = JSON.parse(inspectRun.stdout);
+  const prdSnap = inspected.records.find(r => r.name === 'checkout-prd');
+  const ruleSnap = inspected.records.find(r => r.name === 'prd-ratification');
+  const realSeal = sealRecord({
+    action: 'approve',
+    organisation: wsId,
+    workspace: wsId,
+    record: { identity: prdSnap.identity, name: prdSnap.name },
+    recordDigest: prdSnap.digest,
+    dependsOn: [],
+    rules: [{ identity: ruleSnap.identity, digest: ruleSnap.digest }],
+    revision: inspected.revision,
+    toolchain: {
+      language: '3.2.0',
+      systems: [
+        { system: 'approval-system', version: '0.1.0' },
+        { system: 'product-base-system', version: '0.1.0' },
+      ],
+    },
+    baseCommit: '1'.repeat(40),
+    signer: { account: 'acct-product', display: 'Product Steward' },
+    key,
+    keyKind: 'service-held',
+    via: 'desk',
+    request: 'req-real-prd',
+    signedAt: new Date('2026-11-18T00:00:00Z'),
+  });
+  writeFileSync(join(ws, realSeal.path), realSeal.source);
+
+  const validRun = spawnSync(
+    process.execPath,
+    [join(PLUGIN, 'scripts', 'check.mjs'), 'check-prds', '--kit', KIT_ID, '--root', ws, '--cli', CLI],
+    { env, encoding: 'utf8', windowsHide: true },
+  );
+  assert.equal(validRun.status, 0, validRun.stdout + validRun.stderr);
+  assert.equal(JSON.parse(validRun.stdout).exitCode, 0);
 });

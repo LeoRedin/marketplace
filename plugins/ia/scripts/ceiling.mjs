@@ -8,9 +8,35 @@
 // exits 1 when it is beyond the ceiling and 2 when it is unknown, so it can
 // gate starting work. Exit 2 also on bad usage or when IA refuses or fails;
 // 0 otherwise.
-import { resolve } from 'node:path';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join, relative, resolve, sep } from 'node:path';
 import { ceilingReport, describe, nodeFromInspect } from './lib/ceiling.mjs';
 import { resolveCli, runIa } from './lib/cli.mjs';
+
+function indexAuthoredWorkFiles(dir) {
+  const byRecord = new Map();
+  const walk = current => {
+    let entries;
+    try { entries = readdirSync(current, { withFileTypes: true }); } catch { return; }
+    for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+      const full = join(current, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.isFile() && entry.name.endsWith('.ia')) {
+        let text;
+        try { text = readFileSync(full, 'utf8'); } catch { continue; }
+        const rel = relative(dir, full).split(sep).join('/');
+        for (const m of text.matchAll(/^@(task|decision|spec)\s+([A-Za-z][A-Za-z0-9-]*)/gm)) {
+          const key = `${m[1]}:${m[2].toLowerCase()}`;
+          const list = byRecord.get(key) ?? [];
+          if (!list.includes(rel) && list.length < 4) list.push(rel);
+          byRecord.set(key, list);
+        }
+      }
+    }
+  };
+  walk(join(dir, '.ia', 'src'));
+  return byRecord;
+}
 
 const args = process.argv.slice(2);
 const OPTIONS = new Set(['--root', '--plan', '--task']);
@@ -41,8 +67,28 @@ try {
   // A record that inspect does not return is null in the graph, so every task
   // that depends on it reports unknown instead of clear.
   const graph = {};
+  const fileIndex = only ? new Map() : indexAuthoredWorkFiles(root);
+  const inspectedFiles = new Set();
+  const loadFile = rel => {
+    if (inspectedFiles.has(rel)) return;
+    inspectedFiles.add(rel);
+    try {
+      const ran = runIa(root, ['inspect', '--path', rel, '--edges', 'both'], { cli, timeoutMs: READ_TIMEOUT_MS });
+      if (ran.code === 0 && Array.isArray(ran.json?.records)) {
+        const directed = ran.json.directed ?? [];
+        for (const record of ran.json.records) if (record?.identity) graph[record.identity] = nodeFromInspect(record, directed);
+      }
+    } catch { /* fall back to per-identity inspect */ }
+  };
   const load = identity => {
     if (identity in graph) return graph[identity];
+    const parts = String(identity).split('/');
+    if (parts.length === 4) {
+      for (const rel of fileIndex.get(`${parts[2]}:${parts[3]}`) ?? []) {
+        loadFile(rel);
+        if (identity in graph) return graph[identity];
+      }
+    }
     const ran = runIa(root, ['inspect', identity], { cli, timeoutMs: READ_TIMEOUT_MS });
     const record = ran.code === 0 ? ran.json?.records?.find(r => r.identity === identity) : undefined;
     graph[identity] = record ? nodeFromInspect(record) : null;

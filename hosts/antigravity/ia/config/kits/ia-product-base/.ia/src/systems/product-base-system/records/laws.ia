@@ -1,0 +1,23 @@
+#! ia 1.0
+
+@law product-ratified-prd-completeness-and-traceability
+  meaning
+    says "Every @prd whose governance.status is ratified or active must carry a non-empty problem statement (meaning.problem), at least one non-empty goal (scope.goals), at least one non-empty requirement clause with unique clause identifiers (scope.requirements), and at least one resolved, non-withdrawn traceability link to or from an admitted @spec or @decision record. When an @approval-rule in the workspace demands seals on prd, a ratified or active @prd must also carry a matching @approval seal."
+    answers "What must a ratified or active @prd record satisfy?"
+  governance
+    severity blocking
+    requires "Require non-empty problem, goals, unique requirement clauses and non-withdrawn @spec or @decision traceability on every ratified or active @prd, plus an @approval seal whenever a workspace @approval-rule covers prd."
+  subject
+    subject-word prd
+    subject-kind definition
+
+@law product-prd-source-and-supersession-hygiene
+  meaning
+    says "A @prd never embeds credentials or path traversal in governance.source, pins governance.body-digest only as a 64-character lowercase hex SHA-256 digest alongside a non-empty governance.source, and forms an acyclic supersede chain."
+    answers "What source-locator, body-digest and supersession invariants hold on @prd records?"
+  governance
+    severity blocking
+    requires "Keep governance.source credential-free and traversal-free, pair 64-hex governance.body-digest values with governance.source, and forbid supersede cycles."
+  subject
+    subject-word prd
+    subject-kind definition

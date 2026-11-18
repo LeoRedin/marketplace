@@ -42,7 +42,21 @@ codex plugin add ia@inventarch
 
 `codex plugin marketplace upgrade` refreshes the Git snapshot. If the plugin's version did not change, Codex keeps its cached copy: run `codex plugin remove` and then `codex plugin add`.
 
-Installing the plugin also gives Claude Code the IA door: the plugin's launcher (`scripts/door.mjs`, run with `node`) starts `npx -y @inventarch/mcp-door@3.8.0`, never through a shell (on Windows it runs npm's `npx-cli.js` with `node`), so the first session in a new environment needs network access to fetch it once.
+Google Antigravity (Antigravity 2.0, Antigravity IDE and `agy`):
+
+```sh
+# Workspace-scoped discovery is pre-wired via .agents/plugins.json -> hosts/antigravity/ia,
+# or copy hosts/antigravity/ia into ~/.gemini/config/plugins/ia for global activation.
+```
+
+Gemini CLI (`@google/gemini-cli`):
+
+```sh
+gemini extensions install https://github.com/inventarch/marketplace --path hosts/gemini/ia
+# or from a local checkout: gemini extensions link ./hosts/gemini/ia
+```
+
+Installing the plugin also gives Claude Code, Google Antigravity and Gemini CLI the IA door: the plugin's launcher (`scripts/door.mjs`, run with `node`) starts `npx -y @inventarch/mcp-door@3.8.0`, never through a shell (on Windows it runs npm's `npx-cli.js` with `node`), so the first session in a new environment needs network access to fetch it once.
 
 ### 2. Set up a repository
 
@@ -213,7 +227,7 @@ Only trusted kits run code, through `handlers.json`, `onwrite.json` or `checks.j
 
 ### Delegating to another model
 
-`/ia:delegate` hands one resolved step to `codex exec` or `claude -p`, with the IA door and the packet, one level deep and with a timeout. It is off until you set `"delegation": true` in `~/.ia/config.json`, and it runs nothing until you confirm the command it shows.
+`/ia:delegate` hands one resolved step to `codex exec`, `claude -p` or `gemini --approval-mode plan -p`, with the IA door and the packet, one level deep and with a timeout. It is off until you set `"delegation": true` in `~/.ia/config.json`, and it runs nothing until you confirm the command it shows.
 
 ### Where workspaces live
 

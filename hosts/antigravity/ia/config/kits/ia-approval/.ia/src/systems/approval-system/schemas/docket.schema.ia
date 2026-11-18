@@ -1,0 +1,15 @@
+#! ia 1.0
+
+@schema docket
+  lowers to definition
+  sections
+    must have meaning
+    must have docket
+    may have relationships
+    closed
+  fields
+    must have meaning.says as text
+    must have meaning.answers as text
+    must have docket.producer as text "The producing tool or host and its version, or desk."
+    may have docket.run as text "The producer's own run or branch identity."
+    must have docket.pieces as list of text "Each '<record identity> <matched|none|ambiguous> <source kind> <source reference> <source digest> <pattern record identity or ->'. Never lists a docket record."

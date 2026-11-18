@@ -14,7 +14,7 @@
 
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash, createPrivateKey, createPublicKey, generateKeyPairSync, sign, verify } from 'node:crypto';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -37,9 +37,12 @@ const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[
 const SPKI_PREFIX = Buffer.from('302a300506032b6570032100', 'hex');
 // Ed25519 group order L (little-endian), RFC 8032 section 5.1.7.
 const GROUP_ORDER_LE = Buffer.from('edd3f55c1a631258d69cf7a2def9de1400000000000000000000000000000010', 'hex');
+// Ed25519 prime field p = 2^255 - 19 and twisted Edwards constant d = -121665/121666 mod p (RFC 8032 section 5.1).
+const ED25519_P = (1n << 255n) - 19n;
 const HEX64 = /^[0-9a-f]{64}$/;
 const COMMIT_RE = /^[0-9a-f]{40}([0-9a-f]{24})?$/;
-const RFC3339_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
+const APPROVAL_FILE_RE = /^([a-z0-9-]+)\.([0-9a-f]{12})\.([0-9a-f]{8})\.ia$/;
+const RFC3339_UTC = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/;
 const PRINTABLE_ASCII = /^[\x21-\x7e]+$/;
 const BAD_ESCAPE = /%(?![0-9A-Fa-f]{2})/;
 const SAFE_REF = /^[A-Za-z0-9_./@~^{}:+-]+$/;
@@ -73,7 +76,7 @@ export const findingLabel = finding => (finding.cause === undefined ? finding.na
 export const passes = report => !report.findings.some(isFailing);
 
 // ---------------------------------------------------------------------------
-// Strict RFC 4648 section 5 unpadded base64url
+// Strict RFC 4648 section 5 unpadded base64url & RFC 3339 UTC timestamp parser
 // ---------------------------------------------------------------------------
 
 export function encodeBase64url(bytes) {
@@ -84,6 +87,27 @@ export function decodeBase64url(text) {
   if (typeof text !== 'string' || !BASE64URL_ALPHABET.test(text) || text.length % 4 === 1) return null;
   const bytes = Buffer.from(text, 'base64url');
   return Buffer.from(bytes).toString('base64url') === text ? new Uint8Array(bytes) : null;
+}
+
+export function parseNowTimestamp(text) {
+  const match = typeof text === 'string' ? RFC3339_UTC.exec(text) : null;
+  if (match === null) {
+    throw new Error(`--now requires a valid RFC 3339 UTC timestamp, got ${JSON.stringify(text)}`);
+  }
+  const [, yStr, mStr, dStr, hhStr, mmStr, ssStr] = match;
+  const parsed = new Date(text);
+  if (
+    Number.isNaN(parsed.getTime()) ||
+    parsed.getUTCFullYear() !== Number(yStr) ||
+    parsed.getUTCMonth() + 1 !== Number(mStr) ||
+    parsed.getUTCDate() !== Number(dStr) ||
+    parsed.getUTCHours() !== Number(hhStr) ||
+    parsed.getUTCMinutes() !== Number(mmStr) ||
+    parsed.getUTCSeconds() !== Number(ssStr)
+  ) {
+    throw new Error(`--now is not a valid UTC calendar timestamp: ${JSON.stringify(text)}`);
+  }
+  return parsed;
 }
 
 // ---------------------------------------------------------------------------
@@ -128,8 +152,79 @@ export function canonicalize(value) {
 }
 
 // ---------------------------------------------------------------------------
-// Ed25519 keys & strict RFC 8032 scalar S < L signature verification
+// Ed25519 keys, RFC 8032 point decompression, small-order & S < L guards
 // ---------------------------------------------------------------------------
+
+function modP(n) {
+  const r = n % ED25519_P;
+  return r < 0n ? r + ED25519_P : r;
+}
+
+function modPowP(base, exp) {
+  let result = 1n;
+  let b = modP(base);
+  let e = exp;
+  while (e > 0n) {
+    if (e & 1n) result = modP(result * b);
+    b = modP(b * b);
+    e >>= 1n;
+  }
+  return result;
+}
+
+const ED25519_D = modP(-121665n * modPowP(121666n, ED25519_P - 2n));
+const ED25519_SQRT_M1 = modPowP(2n, (ED25519_P - 1n) / 4n);
+
+// Strict RFC 8032 section 5.1.3 canonical point decompression on -x^2 + y^2 = 1 + d*x^2*y^2.
+export function decodeEd25519Point(bytes) {
+  if (!(bytes instanceof Uint8Array) || bytes.length !== RAW_PUBLIC_KEY_BYTES) return null;
+  const x0 = ((bytes[31] ?? 0) >>> 7) & 1;
+  let y = 0n;
+  for (let i = 0; i < RAW_PUBLIC_KEY_BYTES; i++) {
+    const byte = i === 31 ? (bytes[i] ?? 0) & 0x7f : (bytes[i] ?? 0);
+    y |= BigInt(byte) << BigInt(8 * i);
+  }
+  if (y >= ED25519_P) return null;
+  const y2 = modP(y * y);
+  const u = modP(y2 - 1n);
+  const v = modP(ED25519_D * y2 + 1n);
+  const x2 = modP(u * modPowP(v, ED25519_P - 2n));
+  if (x2 === 0n) {
+    return x0 === 1 ? null : { X: 0n, Y: y, Z: 1n };
+  }
+  let x = modPowP(x2, (ED25519_P + 3n) / 8n);
+  if (modP(x * x) !== x2) x = modP(x * ED25519_SQRT_M1);
+  if (modP(x * x) !== x2) return null;
+  if (Number(x & 1n) !== x0) x = ED25519_P - x;
+  return { X: x, Y: y, Z: 1n };
+}
+
+function doubleEd25519Point(pt) {
+  const A = modP(pt.X * pt.X);
+  const B = modP(pt.Y * pt.Y);
+  const C = modP(2n * modP(pt.Z * pt.Z));
+  const H = modP(A + B);
+  const sum = modP(pt.X + pt.Y);
+  const E = modP(H - modP(sum * sum));
+  const G = modP(A - B);
+  const F = modP(C + G);
+  return {
+    X: modP(E * F),
+    Y: modP(G * H),
+    Z: modP(F * G),
+  };
+}
+
+// Rejects all 8 cofactor torsion points ([8]P == (0, 1)).
+export function isSmallOrderPoint(pt) {
+  const p8 = doubleEd25519Point(doubleEd25519Point(doubleEd25519Point(pt)));
+  return p8.Z === 0n || (p8.X === 0n && p8.Y === p8.Z);
+}
+
+export function isValidEd25519PublicKeyBytes(bytes) {
+  const pt = decodeEd25519Point(bytes);
+  return pt !== null && !isSmallOrderPoint(pt);
+}
 
 export function keyIdOf(rawPublicKey) {
   return encodeBase64url(createHash('sha256').update(rawPublicKey).digest());
@@ -141,7 +236,7 @@ export function nameSafeKeyTag(keyId) {
 
 export function decodePublicKey(text) {
   const raw = decodeBase64url(text);
-  return raw !== null && raw.length === RAW_PUBLIC_KEY_BYTES ? raw : null;
+  return raw !== null && raw.length === RAW_PUBLIC_KEY_BYTES && isValidEd25519PublicKeyBytes(raw) ? raw : null;
 }
 
 export function publicKeyObject(rawPublicKey) {
@@ -203,7 +298,9 @@ export function signStatement(statement, key) {
 export function verifyStatement(statement, signatureText, rawPublicKey) {
   const signature = decodeBase64url(signatureText);
   if (signature === null || signature.length !== SIGNATURE_BYTES || !scalarIsCanonical(signature)) return false;
-  if (!(rawPublicKey instanceof Uint8Array) || rawPublicKey.length !== RAW_PUBLIC_KEY_BYTES) return false;
+  if (!isValidEd25519PublicKeyBytes(rawPublicKey)) return false;
+  const rPoint = decodeEd25519Point(signature.subarray(0, RAW_PUBLIC_KEY_BYTES));
+  if (rPoint === null || isSmallOrderPoint(rPoint)) return false;
   try {
     return verify(null, encodeStatement(statement), publicKeyObject(rawPublicKey), signature);
   } catch {
@@ -228,7 +325,7 @@ export function parseSystemText(text) {
 }
 
 // ---------------------------------------------------------------------------
-// Corpus helpers & record parsers
+// Corpus helpers, nested workspace hierarchy & record parsers
 // ---------------------------------------------------------------------------
 
 export function textField(record, key) {
@@ -243,6 +340,16 @@ export function listField(record, key) {
 
 export function recordsOfFacet(view, facet) {
   return [...view.records.values()].filter(record => record.facet === facet);
+}
+
+export function floorLanguageVersion(view) {
+  for (const record of recordsOfFacet(view, 'system')) {
+    if (record.system === 'floor') {
+      const version = textField(record, 'version');
+      if (version !== null) return version;
+    }
+  }
+  return null;
 }
 
 export function mintedWords(view) {
@@ -269,19 +376,63 @@ export function systemsTiedTo(view, records) {
   return allSystemVersions(view).filter(entry => used.has(entry.system));
 }
 
+function workspaceBaseOf(sourcePath) {
+  if (typeof sourcePath !== 'string') return '.';
+  if (sourcePath.startsWith('.ia/src/')) return '.';
+  const nestedIdx = sourcePath.indexOf('/.ia/src/');
+  if (nestedIdx > 0) return sourcePath.slice(0, nestedIdx);
+  return '.';
+}
+
+function normalizeDeclaredRoot(rawRoot, wsBase) {
+  if (typeof rawRoot !== 'string') return null;
+  const trimmed = rawRoot.trim().replace(/\/+$/, '') || '.';
+  if (trimmed.startsWith('/') || trimmed.includes('\\') || trimmed.split('/').some(seg => seg === '..')) return null;
+  if (wsBase === '.') return trimmed;
+  if (trimmed === '.') return wsBase;
+  if (trimmed === '.ia/src' || trimmed.startsWith('.ia/src/')) return `${wsBase}/${trimmed}`;
+  if (trimmed === wsBase || trimmed.startsWith(`${wsBase}/`)) return trimmed;
+  return null;
+}
+
 function authoredRoots(view) {
-  return recordsOfFacet(view, 'workspace').flatMap(workspace =>
-    (listField(workspace, 'composition.sources') ?? []).flatMap(entry => {
-      const [rawRoot, placement] = entry.split(' @');
-      const trimmed = rawRoot?.replace(/\/$/, '');
-      const within = trimmed !== undefined && (trimmed === '.' || workspace.sourcePath.startsWith(`${trimmed}/`));
-      return trimmed !== undefined && placement === 'authored' && within ? [{ workspace: workspace.identity, root: trimmed }] : [];
-    }),
-  );
+  return recordsOfFacet(view, 'workspace')
+    .filter(
+      workspace =>
+        (workspace.provenance ?? 'workspace') === 'workspace' &&
+        !workspace.sourcePath.startsWith('.ia/distributions/') &&
+        !workspace.sourcePath.startsWith('.ia/floor/'),
+    )
+    .flatMap(workspace => {
+      const wsBase = workspaceBaseOf(workspace.sourcePath);
+      return (listField(workspace, 'composition.sources') ?? []).flatMap(entry => {
+        const [rawRoot, placement] = entry.split(' @');
+        if (placement !== 'authored') return [];
+        const resolved = normalizeDeclaredRoot(rawRoot, wsBase);
+        if (resolved === null) return [];
+        const withinBase = wsBase === '.' || resolved === wsBase || resolved.startsWith(`${wsBase}/`);
+        return withinBase ? [{ workspace: workspace.identity, root: resolved, base: wsBase }] : [];
+      });
+    });
 }
 
 export function authoredRootPaths(view) {
   return [...new Set(authoredRoots(view).map(entry => entry.root))];
+}
+
+export function approvalsDirOf(workspaceIdentity, view) {
+  if (!view || !workspaceIdentity) return APPROVALS_DIR;
+  const roots = authoredRoots(view)
+    .filter(entry => entry.workspace === workspaceIdentity)
+    .map(entry => entry.root);
+  if (roots.length === 0) return APPROVALS_DIR;
+  const iaSrcRoot = roots
+    .filter(r => r === '.ia/src' || r.endsWith('/.ia/src') || r.startsWith('.ia/src/') || r.includes('/.ia/src/'))
+    .sort((a, b) => b.length - a.length)[0];
+  if (iaSrcRoot !== undefined) return `${iaSrcRoot}/approvals`;
+  if (roots.includes('.')) return APPROVALS_DIR;
+  const longest = [...roots].sort((a, b) => b.length - a.length)[0];
+  return `${longest}/.ia/src/approvals`;
 }
 
 export function workspaceOfPath(view, path) {
@@ -291,13 +442,105 @@ export function workspaceOfPath(view, path) {
   return seated[0]?.workspace ?? null;
 }
 
+function resolveWorkspaceRef(raw, workspaces) {
+  if (!raw) return null;
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim();
+    const byId = workspaces.find(w => w.identity === trimmed);
+    if (byId) return byId.identity;
+    const stripped = trimmed.replace(/^@workspace\s+/, '');
+    const byName = workspaces.find(w => w.name === stripped);
+    return byName?.identity ?? null;
+  }
+  if (typeof raw.target === 'string') {
+    const byTarget = workspaces.find(w => w.identity === raw.target);
+    if (byTarget) return byTarget.identity;
+  }
+  const ref = raw.reference ?? raw;
+  if (ref?.kind === 'identity' && typeof ref.identity === 'string') {
+    return workspaces.find(w => w.identity === ref.identity)?.identity ?? null;
+  }
+  if (ref?.kind === 'ref' && ref.discriminator === 'workspace' && typeof ref.name === 'string') {
+    return workspaces.find(w => w.name === ref.name)?.identity ?? null;
+  }
+  return null;
+}
+
+function workspaceParentsOf(workspaceIdentity, view) {
+  const workspaces = recordsOfFacet(view, 'workspace');
+  const ws = view.records.get(workspaceIdentity);
+  if (!ws || ws.facet !== 'workspace') return [];
+  const parents = new Set();
+
+  const addParent = id => {
+    if (id && id !== workspaceIdentity) parents.add(id);
+  };
+
+  // 1. Field composition.governed-by (if present)
+  addParent(resolveWorkspaceRef(textField(ws, 'composition.governed-by'), workspaces));
+
+  // 2. Explicit edges: ws --governed-by--> parent, or parent --govern--> ws
+  for (const edge of ws.edges ?? []) {
+    if (edge.predicate === 'governed-by' && (!edge.direction || edge.direction === 'out')) {
+      addParent(resolveWorkspaceRef(edge, workspaces));
+    } else if (edge.predicate === 'govern' && edge.direction === 'in') {
+      addParent(resolveWorkspaceRef(edge, workspaces));
+    }
+  }
+  for (const other of workspaces) {
+    if (other.identity === workspaceIdentity) continue;
+    for (const edge of other.edges ?? []) {
+      if (edge.predicate === 'govern' && (!edge.direction || edge.direction === 'out')) {
+        if (resolveWorkspaceRef(edge, workspaces) === workspaceIdentity) addParent(other.identity);
+      }
+    }
+  }
+
+  // 3. Structural containment of authored roots (e.g. .ia/src enclosing .ia/src/eng, or . enclosing subpaths)
+  const roots = authoredRoots(view);
+  const ownRoots = roots.filter(r => r.workspace === workspaceIdentity);
+  for (const own of ownRoots) {
+    for (const other of roots) {
+      if (other.workspace === workspaceIdentity) continue;
+      const strictlyEncloses =
+        (other.root === '.' && own.root !== '.') ||
+        (other.root !== own.root && own.root.startsWith(`${other.root}/`)) ||
+        (other.base === '.' && own.base !== '.' && (other.root === '.' || other.root === '.ia/src'));
+      if (strictlyEncloses) addParent(other.workspace);
+    }
+  }
+
+  return [...parents];
+}
+
+// True when ancestorWorkspace === targetWorkspace or ancestorWorkspace governs/encloses targetWorkspace.
+export function workspaceCovers(ancestorWorkspace, targetWorkspace, view) {
+  if (!ancestorWorkspace || !targetWorkspace) return false;
+  if (ancestorWorkspace === targetWorkspace) return true;
+  if (!view) return false;
+  const visited = new Set([targetWorkspace]);
+  const queue = [targetWorkspace];
+  while (queue.length > 0) {
+    const current = queue.shift();
+    for (const parent of workspaceParentsOf(current, view)) {
+      if (parent === ancestorWorkspace) return true;
+      if (!visited.has(parent)) {
+        visited.add(parent);
+        queue.push(parent);
+      }
+    }
+  }
+  return false;
+}
+
 export function organisationOf(view) {
   const roots = authoredRoots(view);
-  const outermost = roots.filter(
-    candidate => !roots.some(other => other.root !== candidate.root && (other.root === '.' || candidate.root.startsWith(`${other.root}/`))),
+  const candidates = [...new Set(roots.map(entry => entry.workspace))];
+  if (candidates.length === 0) return null;
+  const outermost = candidates.filter(
+    candidate => !candidates.some(other => other !== candidate && workspaceCovers(other, candidate, view) && !workspaceCovers(candidate, other, view)),
   );
-  const organisations = new Set(outermost.map(entry => entry.workspace));
-  return organisations.size === 1 ? ([...organisations][0] ?? null) : null;
+  return outermost.length === 1 ? (outermost[0] ?? null) : null;
 }
 
 function parseKeyEntry(text) {
@@ -305,13 +548,17 @@ function parseKeyEntry(text) {
   if (parts.length !== 5) return null;
   const [keyId, algorithm, publicText, status, from] = parts;
   if (!keyId || !algorithm || !publicText || !STATUSES.includes(status)) return null;
+  if (status === 'active' && from !== '-') return null;
   const publicKey = decodePublicKey(publicText);
+  const fromCommit = from === '-' ? null : from;
+  const fromCommitValid = status === 'active' ? true : fromCommit !== null && COMMIT_RE.test(fromCommit);
   return {
     keyId,
     algorithm,
     publicKey,
     status,
-    fromCommit: from === '-' ? null : from,
+    fromCommit,
+    fromCommitValid,
     idMatchesKey: publicKey !== null && keyIdOf(publicKey) === keyId,
   };
 }
@@ -324,6 +571,8 @@ export function parseApprover(record) {
   if (account === null || display === null || workspaces === null || entries === null) return null;
   const keys = entries.map(parseKeyEntry);
   if (keys.some(key => key === null)) return null;
+  const uniqueKeyIds = new Set(keys.map(key => key.keyId));
+  if (uniqueKeyIds.size !== keys.length) return null;
   return {
     identity: record.identity,
     account,
@@ -342,12 +591,14 @@ export function keyEntryText(entry) {
   return `${entry.keyId} ${entry.algorithm} ${encodeBase64url(entry.publicKey)} ${entry.status} ${entry.fromCommit ?? '-'}`;
 }
 
-export function parseRule(record) {
+export function parseRule(record, view = null) {
   const quorum = Number(textField(record, 'demand.quorum'));
   if (!Number.isInteger(quorum) || quorum < 1) return null;
   return {
     identity: record.identity,
     digest: record.digest,
+    sourcePath: record.sourcePath,
+    workspace: view ? workspaceOfPath(view, record.sourcePath) : null,
     words: listField(record, 'demand.words') ?? [],
     kinds: listField(record, 'demand.kinds') ?? [],
     paths: listField(record, 'demand.paths') ?? [],
@@ -363,6 +614,15 @@ export function parseRule(record) {
 
 export function selectsRecords(rule) {
   return rule.words.length > 0 || rule.kinds.length > 0 || rule.paths.length > 0 || rule.coversUnrecognisedPieces;
+}
+
+function ruleCoversRoot(rule) {
+  return (
+    rule.words.includes('approver') ||
+    rule.words.includes('approval-rule') ||
+    rule.kinds.includes('governance') ||
+    rule.kinds.includes('definition')
+  );
 }
 
 function decodeReference(reference) {
@@ -425,8 +685,11 @@ export function isUnrecognised(piece, target) {
 
 export function unrecognisedPieces(target, head, findings) {
   const claims = new Map();
-  const newDockets = recordsOfFacet(head, DOCKET_WORD).filter(record => !target.records.has(record.identity));
-  for (const record of newDockets) {
+  const changedOrNewDockets = recordsOfFacet(head, DOCKET_WORD).filter(record => {
+    const prior = target.records.get(record.identity);
+    return prior === undefined || prior.digest !== record.digest;
+  });
+  for (const record of changedOrNewDockets) {
     const parsed = parseDocket(record);
     if (!parsed.ok) {
       findings.push({ name: 'docket-malformed', subject: record.identity, detail: parsed.reason });
@@ -437,8 +700,10 @@ export function unrecognisedPieces(target, head, findings) {
       findings.push({ ...refusal, subject: record.identity });
       continue;
     }
-    for (const piece of parsed.docket.pieces) {
-      claims.set(piece.record, [...(claims.get(piece.record) ?? []), { docket: record.identity, piece }]);
+    if (!target.records.has(record.identity)) {
+      for (const piece of parsed.docket.pieces) {
+        claims.set(piece.record, [...(claims.get(piece.record) ?? []), { docket: record.identity, piece }]);
+      }
     }
   }
   const unrecognised = new Set();
@@ -515,7 +780,12 @@ export function parseApproval(record) {
   if (!KEY_KINDS.includes(text('key-kind')) || !VIAS.includes(text('via'))) {
     return { ok: false, reason: 'key-kind or via is not a known value' };
   }
-  if (!RFC3339_UTC.test(text('signed-at'))) return { ok: false, reason: 'signed-at is not RFC 3339 UTC' };
+  const signedAtText = text('signed-at');
+  try {
+    parseNowTimestamp(signedAtText);
+  } catch {
+    return { ok: false, reason: 'signed-at is not RFC 3339 UTC' };
+  }
   const dependsOnRefs = refList(dependsOn, 'depends-on');
   const ruleRefs = refList(rules, 'rules');
   const systems = systemList(systemTexts);
@@ -548,7 +818,7 @@ export function parseApproval(record) {
         keyKind: text('key-kind'),
         via: text('via'),
         request: text('request'),
-        signedAt: text('signed-at'),
+        signedAt: signedAtText,
       },
     },
   };
@@ -625,10 +895,11 @@ export function sealRecord(request) {
     signedAt: (request.signedAt instanceof Date ? request.signedAt.toISOString() : String(request.signedAt)).replace(/\.\d{3}Z$/, 'Z'),
   });
   const signature = signStatement(statement, request.key);
+  const dir = request.approvalsDir ?? (request.view ? approvalsDirOf(request.workspace, request.view) : APPROVALS_DIR);
   return {
     statement,
     signature,
-    path: `${APPROVALS_DIR}/${approvalFileName(request.record.name, statement)}`,
+    path: `${dir}/${approvalFileName(request.record.name, statement)}`,
     source: approvalSource(approvalName(request.record.name, statement), request.signer.display, statement, signature),
   };
 }
@@ -641,10 +912,12 @@ export function changesBetween(target, head) {
   const changes = [];
   for (const after of head.records.values()) {
     const before = target.records.get(after.identity) ?? null;
-    if (after.facet === APPROVAL_WORD || before?.digest === after.digest) continue;
+    const unchanged = before !== null && before.digest === after.digest && before.sourcePath === after.sourcePath;
+    if (after.facet === APPROVAL_WORD || unchanged) continue;
+    const kind = before === null ? 'added' : before.digest === after.digest ? 'moved' : 'changed';
     changes.push({
       identity: after.identity,
-      kind: before === null ? 'added' : 'changed',
+      kind,
       before,
       after,
       record: after,
@@ -667,14 +940,19 @@ export function changesBetween(target, head) {
   return changes.sort(byIdentity);
 }
 
-export function rulesCovering(rules, record, unrecognised) {
-  return rules.filter(
-    rule =>
+export function rulesCovering(rules, record, unrecognised, view = null) {
+  const recordWs = view ? workspaceOfPath(view, record.sourcePath) : null;
+  return rules.filter(rule => {
+    if (view && rule.workspace && recordWs && !workspaceCovers(rule.workspace, recordWs, view)) {
+      return false;
+    }
+    return (
       rule.words.includes(record.facet) ||
       rule.kinds.includes(record.kind) ||
       rule.paths.some(prefix => record.sourcePath.startsWith(prefix)) ||
-      (rule.coversUnrecognisedPieces && unrecognised.has(record.identity)),
-  );
+      (rule.coversUnrecognisedPieces && unrecognised.has(record.identity))
+    );
+  });
 }
 
 export function parseSlackNotice(text) {
@@ -688,7 +966,8 @@ export function parseSlackNotice(text) {
 function noticeEnteredAt(notice, ctx) {
   const { facts } = ctx.input;
   const blob = facts.targetBlobOf(notice.sourcePath);
-  const entry = blob === null ? null : facts.targetEntryOfBlob(blob);
+  if (blob === null) return null;
+  const entry = typeof facts.targetLatestEntryOf === 'function' ? facts.targetLatestEntryOf(notice.sourcePath, blob) : facts.targetEntryOfBlob(blob);
   return entry === null ? null : facts.targetCommitTime(entry);
 }
 
@@ -722,7 +1001,7 @@ function judgeSlackRoute(change, before, after, ctx) {
   const noticed = noticeEnteredAt(before, ctx);
   if (noticed === null) return { route: 'none' };
   const age = ctx.input.now.getTime() - noticed.getTime();
-  if (age < NOTICE_DELAY_MS) {
+  if (!(age >= NOTICE_DELAY_MS)) {
     return {
       route: 'refused',
       finding: finding('slack-id-pending-early', `the notice entered the target branch ${noticed.toISOString()}, fewer than seven days ago`),
@@ -737,23 +1016,32 @@ function slackIdsOf(approver) {
   return [approver.slack, announced?.action === 'remove' ? null : (announced?.id ?? null)].flatMap(id => (id === null ? [] : [id]));
 }
 
-function rosterOf(target, standing) {
+function rosterOf(view, standing) {
   const roster = [];
-  for (const record of recordsOfFacet(target, 'approver')) {
+  for (const record of recordsOfFacet(view, 'approver')) {
     const approver = parseApprover(record);
-    if (approver === null || approver.keys.some(k => !k.idMatchesKey || k.publicKey === null || k.algorithm !== 'ed25519')) {
+    if (
+      approver === null ||
+      approver.keys.some(k => !k.idMatchesKey || k.publicKey === null || k.algorithm !== 'ed25519' || !k.fromCommitValid)
+    ) {
       standing.push({ name: 'rule-malformed', subject: record.identity, detail: 'an approver record is malformed or carries a mismatched key id' });
     } else {
       roster.push(approver);
     }
   }
   const accounts = roster.map(approver => approver.account);
-  for (const account of new Set(accounts.filter((entry, index) => accounts.indexOf(entry) !== index))) {
+  const duplicateAccounts = new Set(accounts.filter((entry, index) => accounts.indexOf(entry) !== index));
+  for (const account of duplicateAccounts) {
     standing.push({ name: 'duplicate-approver', subject: account, detail: `two approver records name the account ${account}` });
   }
   const slackIds = roster.flatMap(approver => slackIdsOf(approver));
-  for (const slack of new Set(slackIds.filter((id, index) => slackIds.indexOf(id) !== index))) {
+  const duplicateSlackIds = new Set(slackIds.filter((id, index) => slackIds.indexOf(id) !== index));
+  for (const slack of duplicateSlackIds) {
     standing.push({ name: 'duplicate-slack-id', subject: slack, detail: `two approver records carry the Slack id ${slack}` });
+  }
+  for (const approver of roster) {
+    approver.taintedAccount = duplicateAccounts.has(approver.account);
+    approver.taintedSlack = slackIdsOf(approver).some(id => duplicateSlackIds.has(id));
   }
   return roster;
 }
@@ -761,7 +1049,7 @@ function rosterOf(target, standing) {
 function unknownWordWarnings(head) {
   const minted = mintedWords(head);
   return recordsOfFacet(head, 'approval-rule').flatMap(record => {
-    const rule = parseRule(record);
+    const rule = parseRule(record, head);
     if (rule === null) return [];
     const unknown = rule.words.filter(word => !minted.has(word));
     const coversNothing = unknown.length === rule.words.length && rule.kinds.length === 0 && rule.paths.length === 0 && !rule.coversUnrecognisedPieces;
@@ -773,10 +1061,10 @@ function unknownWordWarnings(head) {
   });
 }
 
-function rulesOf(target, standing) {
+function rulesOf(view, standing) {
   const rules = [];
-  for (const record of recordsOfFacet(target, 'approval-rule')) {
-    const rule = parseRule(record);
+  for (const record of recordsOfFacet(view, 'approval-rule')) {
+    const rule = parseRule(record, view);
     if (rule === null || !selectsRecords(rule)) {
       standing.push({
         name: 'rule-malformed',
@@ -790,36 +1078,79 @@ function rulesOf(target, standing) {
   return rules;
 }
 
+function deduplicateFindings(list) {
+  const seen = new Set();
+  return list.filter(f => {
+    const key = `${f.name}\0${f.subject ?? ''}\0${f.detail ?? ''}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export function buildContext(input) {
-  const standing = [];
+  if (input.now !== undefined && (!(input.now instanceof Date) || Number.isNaN(input.now.getTime()))) {
+    throw new Error('now must be a valid Date');
+  }
+  const baseStanding = [];
   if (!input.lineEndingsPinned) {
-    standing.push({
+    baseStanding.push({
       name: 'line-endings-unpinned',
       subject: '.gitattributes',
       detail: 'the target branch does not pin line endings (* text eol=lf); a current-revision comparison is refused',
     });
   }
+  const targetStanding = [];
   const organisation = organisationOf(input.target);
   if (organisation === null) {
-    standing.push({ name: 'scope-unresolved', subject: 'target', detail: 'the target branch declares no single organisation workspace' });
+    targetStanding.push({ name: 'scope-unresolved', subject: 'target', detail: 'the target branch declares no single organisation workspace' });
   }
-  standing.push(...unknownWordWarnings(input.head));
+  const roster = rosterOf(input.target, targetStanding);
+  const rules = rulesOf(input.target, targetStanding);
+
+  const headStanding = [];
+  if (organisationOf(input.head) === null) {
+    headStanding.push({ name: 'scope-unresolved', subject: 'head', detail: 'the head branch declares no single organisation workspace' });
+  }
+  rosterOf(input.head, headStanding);
+  rulesOf(input.head, headStanding);
+
+  const docketStanding = [];
+  const unrecognised = unrecognisedPieces(input.target, input.head, docketStanding);
+  const warnings = unknownWordWarnings(input.head);
+
+  const changes = changesBetween(input.target, input.head);
+  const rootRepairOnly =
+    changes.length > 0 &&
+    changes.every(c => ROOT_FACETS.has(c.record.facet) || c.record.facet === 'workspace') &&
+    !headStanding.some(isFailing) &&
+    !docketStanding.some(isFailing);
+
+  const standing = deduplicateFindings([
+    ...baseStanding,
+    ...(rootRepairOnly ? [] : targetStanding),
+    ...headStanding,
+    ...docketStanding,
+    ...warnings,
+  ]);
+
   return {
     input,
-    organisation,
-    roster: rosterOf(input.target, standing),
-    rules: rulesOf(input.target, standing),
-    unrecognised: unrecognisedPieces(input.target, input.head, standing),
+    organisation: organisation ?? organisationOf(input.head),
+    roster,
+    rules,
+    unrecognised,
     standing,
   };
 }
 
 function keyOnRoster(roster, keyId) {
+  const matches = [];
   for (const approver of roster) {
     const key = approver.keys.find(entry => entry.keyId === keyId);
-    if (key !== undefined) return { approver, key };
+    if (key !== undefined) matches.push({ approver, key });
   }
-  return null;
+  return matches.length === 1 ? (matches[0] ?? null) : null;
 }
 
 const sameSystems = (a, b) => a.length === b.length && a.every((entry, index) => entry.system === b[index]?.system && entry.version === b[index]?.version);
@@ -828,7 +1159,7 @@ function keyStanding(key, approval, ctx) {
   if (key.status === 'active') return null;
   const name = key.status === 'retired' ? 'key-retired' : 'key-revoked';
   const { facts } = ctx.input;
-  const from = key.fromCommit === null ? null : facts.targetPositionOf(key.fromCommit);
+  const from = key.fromCommit === null || !key.fromCommitValid ? null : facts.targetPositionOf(key.fromCommit);
   if (from === null) return { name, detail: `key ${key.keyId} is ${key.status} from a commit that is not on the target branch` };
   const blob = facts.headBlobOf(approval.sourcePath);
   const entered = blob === null ? null : facts.targetEntryOfBlob(blob);
@@ -900,6 +1231,10 @@ export function judgeApproval(change, approval, ctx) {
     report({ name: 'seal-forged', detail: `key ${s.keyId} belongs to ${found.approver.account}, not ${s.signer}` });
   } else if (!verifyStatement(s, approval.signature, found.key.publicKey)) {
     report({ name: 'seal-forged', detail: 'the signature does not verify over the rebuilt statement' });
+  } else if (found.approver.taintedAccount) {
+    report({ name: 'signer-not-allowed', detail: `account ${found.approver.account} is duplicated on the target branch and cannot ratify until repaired` });
+  } else if (s.via === 'slack' && found.approver.taintedSlack) {
+    report({ name: 'signer-not-allowed', detail: `${found.approver.account} shares a duplicate Slack id on the target branch and must ratify via desk` });
   } else {
     const standing = keyStanding(found.key, approval, ctx);
     if (standing !== null) report(standing);
@@ -919,45 +1254,85 @@ export function judgeApproval(change, approval, ctx) {
 }
 
 function sealedDemand(ctx, route, subject = null, viaDesk = false) {
+  const untaintedCount = ctx.roster.filter(a => !a.taintedAccount).length;
+  const distinct = untaintedCount <= 1 ? 1 : 2;
+  const subjectTainted = subject !== null && ctx.roster.some(a => a.account === subject && a.taintedAccount);
   return {
     viaDesk,
-    distinct: ctx.roster.length <= 1 ? 1 : 2,
-    subject: ctx.roster.length <= 1 ? null : subject,
+    distinct,
+    subject: distinct <= 1 || subjectTainted ? null : subject,
     route,
   };
 }
 
-function isRevocation(was, now) {
+function isRevocation(was, now, ctx) {
   const samePublicKey = was.publicKey !== null && now.publicKey !== null && Buffer.from(was.publicKey).equals(Buffer.from(now.publicKey));
-  return was.keyId === now.keyId && was.algorithm === now.algorithm && samePublicKey && was.status !== 'revoked' && now.status === 'revoked' && now.fromCommit !== null;
+  if (
+    was.keyId !== now.keyId ||
+    was.algorithm !== now.algorithm ||
+    !samePublicKey ||
+    was.status === 'revoked' ||
+    now.status !== 'revoked' ||
+    !now.fromCommitValid ||
+    now.fromCommit === null
+  ) {
+    return false;
+  }
+  const nowPos = ctx.input.facts.targetPositionOf(now.fromCommit);
+  if (nowPos === null) return false;
+  if (was.status === 'retired') {
+    if (!was.fromCommitValid || was.fromCommit === null) return false;
+    const wasPos = ctx.input.facts.targetPositionOf(was.fromCommit);
+    if (wasPos === null || nowPos > wasPos) return false;
+  }
+  return true;
 }
 
-function editOf(before, after) {
+function touchesOutsideAllowedFields(beforeRecord, afterRecord, allowedFieldKeys) {
+  if (beforeRecord.sourcePath !== afterRecord.sourcePath) return true;
+  if (JSON.stringify(beforeRecord.edges ?? []) !== JSON.stringify(afterRecord.edges ?? [])) return true;
+  const allowed = new Set(allowedFieldKeys);
+  const allKeys = new Set([...Object.keys(beforeRecord.fields ?? {}), ...Object.keys(afterRecord.fields ?? {})]);
+  for (const key of allKeys) {
+    if (allowed.has(key)) continue;
+    if (JSON.stringify(beforeRecord.fields?.[key]) !== JSON.stringify(afterRecord.fields?.[key])) return true;
+  }
+  return false;
+}
+
+function editOf(before, after, beforeRecord, afterRecord, ctx) {
   const keyIds = approver => approver.keys.map(key => key.keyId);
   const entry = (approver, keyId) => approver.keys.find(key => key.keyId === keyId);
   const sameJson = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-  const otherFields = !sameJson([before.account, before.display, before.workspaces, before.founding], [after.account, after.display, after.workspaces, after.founding]);
+  const nonRouteMetadataChanged = touchesOutsideAllowedFields(beforeRecord, afterRecord, [
+    'keys.entries',
+    'person.slack',
+    'person.slack-pending',
+    'authority.recovery-pending',
+  ]);
   const addedKeys = keyIds(after).filter(id => !keyIds(before).includes(id));
   const removedKeys = keyIds(before).filter(id => !keyIds(after).includes(id));
+  const keyOrderChanged = addedKeys.length === 0 && removedKeys.length === 0 && !sameJson(keyIds(before), keyIds(after));
   const changedKeys = keyIds(before).filter(id => {
     const was = entry(before, id);
     const now = entry(after, id);
     return now !== undefined && was !== undefined && !sameJson(was, now);
   });
   const revocationsOnly =
+    !keyOrderChanged &&
     addedKeys.length === 0 &&
     removedKeys.length === 0 &&
     changedKeys.length > 0 &&
     changedKeys.every(id => {
       const was = entry(before, id);
       const now = entry(after, id);
-      return was !== undefined && now !== undefined && isRevocation(was, now);
+      return was !== undefined && now !== undefined && isRevocation(was, now, ctx);
     });
   const slackTouched = before.slack !== after.slack || before.slackPending !== after.slackPending;
   return {
-    otherFields,
+    otherFields: nonRouteMetadataChanged || keyOrderChanged,
     slackTouched,
-    anyOther: otherFields || slackTouched,
+    anyOther: nonRouteMetadataChanged || keyOrderChanged || slackTouched,
     addedKeys,
     removedKeys,
     changedKeys,
@@ -967,16 +1342,19 @@ function editOf(before, after) {
 }
 
 function judgeRecovery(change, before, after, ctx) {
-  const edit = editOf(before, after);
+  const edit = editOf(before, after, change.before, change.after, ctx);
   const pending = before.recoveryPending;
   if (pending === null) {
     return { findings: [{ name: 'recovery-not-announced', subject: change.identity, detail: 'the key entries changed and no recovery notice is on the target branch' }], demand: null };
   }
   const [announcedId, ...retiring] = pending.split(' ');
-  if (after.recoveryPending !== null || edit.anyOther) {
+  if (after.recoveryPending !== null || touchesOutsideAllowedFields(change.before, change.after, ['authority.recovery-pending', 'keys.entries'])) {
     return { findings: [{ name: 'recovery-touches-more', subject: change.identity, detail: "a recovery clears the notice and touches only the approver's key entries" }], demand: null };
   }
-  const untouched = edit.changedKeys.every(id => retiring.includes(id)) && edit.removedKeys.length === 0;
+  const beforeUntouchedOrder = before.keys.map(k => k.keyId);
+  const afterRemainingOrder = after.keys.filter(k => beforeUntouchedOrder.includes(k.keyId)).map(k => k.keyId);
+  const orderPreserved = JSON.stringify(beforeUntouchedOrder) === JSON.stringify(afterRemainingOrder);
+  const untouched = orderPreserved && edit.changedKeys.every(id => retiring.includes(id)) && edit.removedKeys.length === 0;
   const retired = retiring.every(id => after.keys.find(key => key.keyId === id)?.status !== 'active');
   if (!untouched || !retired) {
     return { findings: [{ name: 'recovery-touches-more', subject: change.identity, detail: 'a recovery may only retire or revoke the keys the notice names' }], demand: null };
@@ -988,7 +1366,8 @@ function judgeRecovery(change, before, after, ctx) {
   if (noticed === null) {
     return { findings: [{ name: 'recovery-not-announced', subject: change.identity, detail: 'the notice commit is not on the target branch history' }], demand: null };
   }
-  if (ctx.input.now.getTime() - noticed.getTime() < NOTICE_DELAY_MS) {
+  const age = ctx.input.now.getTime() - noticed.getTime();
+  if (!(age >= NOTICE_DELAY_MS)) {
     return { findings: [{ name: 'recovery-too-early', subject: change.identity, detail: `the notice entered the target branch ${noticed.toISOString()}, fewer than seven days ago` }], demand: null };
   }
   return { findings: [{ name: 'recovered-by-person', subject: change.identity, detail: "the sole approver's key was replaced after the notice and its delay; a person merges it" }], demand: null };
@@ -997,9 +1376,9 @@ function judgeRecovery(change, before, after, ctx) {
 function uncomputableFromCommit(before, after, ctx) {
   const { facts } = ctx.input;
   return after.keys.find(key => {
-    const was = before.keys.find(entry => entry.keyId === key.keyId);
+    const was = before?.keys.find(entry => entry.keyId === key.keyId);
     const written = key.status !== 'active' && (was === undefined || was.fromCommit !== key.fromCommit || was.status !== key.status);
-    return written && (key.fromCommit === null || facts.targetPositionOf(key.fromCommit) === null);
+    return written && (!key.fromCommitValid || key.fromCommit === null || facts.targetPositionOf(key.fromCommit) === null);
   });
 }
 
@@ -1011,17 +1390,17 @@ function judgeApproverEdit(change, before, after, ctx) {
       demand: null,
     };
   }
-  const edit = editOf(before, after);
-  if (edit.revocationsOnly && !edit.anyOther && !edit.pendingChanged) {
+  const edit = editOf(before, after, change.before, change.after, ctx);
+  if (edit.revocationsOnly && !touchesOutsideAllowedFields(change.before, change.after, ['keys.entries'])) {
     return { findings: [{ name: 'revocation', subject: change.identity, detail: 'a key was revoked by the unsealed route; a person merges it' }], demand: null };
   }
   const keysMoved = edit.addedKeys.length + edit.removedKeys.length + edit.changedKeys.length > 0;
-  if (edit.slackTouched && !keysMoved && !edit.otherFields) {
+  if (edit.slackTouched && !keysMoved && !touchesOutsideAllowedFields(change.before, change.after, ['person.slack', 'person.slack-pending'])) {
     const route = judgeSlackRoute(change, before, after, ctx);
     if (route.route !== 'none') return { findings: [route.finding], demand: null };
   }
   if (ctx.roster.length === 1) {
-    if (!keysMoved && edit.pendingChanged && !edit.anyOther) {
+    if (!keysMoved && edit.pendingChanged && !touchesOutsideAllowedFields(change.before, change.after, ['authority.recovery-pending'])) {
       return after.recoveryPending === null
         ? { findings: [{ name: 'recovery-cancelled', subject: change.identity, detail: 'the recovery notice was cleared; a person merges it' }], demand: null }
         : { findings: [{ name: 'recovery-announced', subject: change.identity, detail: `a recovery of the sole approver's key was announced: ${after.recoveryPending}` }], demand: null };
@@ -1041,14 +1420,20 @@ export function judgeRoot(change, ctx) {
     return { findings: [], demand: sealedDemand(ctx, 'docket change') };
   }
   if (change.record.facet === 'approval-rule') {
-    if (ctx.roster.length === 0) {
-      return { findings: [{ name: 'root-needs-approver', subject: change.identity, detail: 'no approver is on the target branch to approve a rule change' }], demand: null };
-    }
     if (change.after !== null) {
-      const rule = parseRule(change.after);
-      if (rule?.merge === 'automatic') {
+      const rule = parseRule(change.after, ctx.input.head);
+      if (rule === null || !selectsRecords(rule)) {
+        return {
+          findings: [{ name: 'rule-malformed', subject: change.identity, detail: 'a rule needs a quorum of at least 1 and one of words, kinds, paths or pieces' }],
+          demand: null,
+        };
+      }
+      if (rule.merge === 'automatic' && ruleCoversRoot(rule)) {
         return { findings: [{ name: 'root-needs-person', subject: change.identity, detail: 'a rule on approval-rule or approver records may not merge automatically' }], demand: null };
       }
+    }
+    if (ctx.roster.length === 0) {
+      return { findings: [{ name: 'root-needs-approver', subject: change.identity, detail: 'no approver is on the target branch to approve a rule change' }], demand: null };
     }
     return { findings: [], demand: sealedDemand(ctx, 'rule change') };
   }
@@ -1059,6 +1444,13 @@ export function judgeRoot(change, ctx) {
     if (change.kind === 'added') {
       if (after === null || after.keys.some(k => !k.idMatchesKey || k.publicKey === null || k.algorithm !== 'ed25519')) {
         return { findings: [{ name: 'rule-malformed', subject: change.identity, detail: 'the approver record is malformed' }], demand: null };
+      }
+      const badAddedKey = uncomputableFromCommit(null, after, ctx);
+      if (badAddedKey !== undefined) {
+        return {
+          findings: [{ name: 'from-commit-uncomputable', subject: change.identity, detail: `key ${badAddedKey.keyId}: from-commit must be a commit already on the target branch's first-parent history` }],
+          demand: null,
+        };
       }
       if (n === 0) {
         return after.founding
@@ -1076,8 +1468,11 @@ export function judgeRoot(change, ctx) {
       }
       return { findings: [], demand: sealedDemand(ctx, 'approver deleted', before?.account ?? null) };
     }
-    if (before === null || after === null || after.keys.some(k => !k.idMatchesKey || k.publicKey === null || k.algorithm !== 'ed25519')) {
+    if (after === null || after.keys.some(k => !k.idMatchesKey || k.publicKey === null || k.algorithm !== 'ed25519')) {
       return { findings: [{ name: 'rule-malformed', subject: change.identity, detail: 'the approver record is malformed' }], demand: null };
+    }
+    if (before === null) {
+      return { findings: [], demand: sealedDemand(ctx, 'approver repair') };
     }
     return judgeApproverEdit(change, before, after, ctx);
   }
@@ -1085,71 +1480,105 @@ export function judgeRoot(change, ctx) {
 }
 
 function fileNameParts(path) {
-  const [name = '', digest = '', tag = ''] = (path.split('/').pop() ?? '').split('.');
-  return { name, digest, tag };
+  const file = path.split('/').pop() ?? '';
+  const match = APPROVAL_FILE_RE.exec(file);
+  return match === null ? null : { name: match[1], digest: match[2], tag: match[3] };
 }
 
 function readApprovals(input, findings) {
   const approvals = [];
   for (const record of recordsOfFacet(input.head, APPROVAL_WORD)) {
-    const parsed = parseApproval(record);
-    if (parsed.ok) {
-      const { name, digest, tag } = fileNameParts(record.sourcePath);
-      const s = parsed.approval.statement;
-      if (digest === s.recordDigest.slice(0, 12) && tag === nameSafeKeyTag(s.keyId)) {
-        approvals.push({ approval: parsed.approval, claimedName: name });
-      }
-    } else if (input.target.records.get(record.identity)?.digest !== record.digest) {
-      findings.push({ name: 'seal-malformed', subject: record.sourcePath, detail: parsed.reason });
+    const prior = input.target.records.get(record.identity);
+    if (prior !== undefined && prior.digest === record.digest && prior.sourcePath === record.sourcePath) {
+      continue;
     }
+    const parsed = parseApproval(record);
+    if (!parsed.ok) {
+      findings.push({ name: 'seal-malformed', subject: record.sourcePath, detail: parsed.reason });
+      continue;
+    }
+    const parts = fileNameParts(record.sourcePath);
+    const s = parsed.approval.statement;
+    const expectedRecordName = s.record.split('/').pop() ?? '';
+    if (parts === null || parts.name !== expectedRecordName || parts.digest !== s.recordDigest.slice(0, 12) || parts.tag !== nameSafeKeyTag(s.keyId)) {
+      findings.push({
+        name: 'seal-malformed',
+        subject: record.sourcePath,
+        detail: `approval file name must match ${expectedRecordName}.${s.recordDigest.slice(0, 12)}.${nameSafeKeyTag(s.keyId)}.ia`,
+      });
+      continue;
+    }
+    approvals.push({ approval: parsed.approval, claimedName: parts.name });
   }
   return approvals;
+}
+
+function validLanguageSet(inputOrOpts) {
+  return new Set([inputOrOpts.language, inputOrOpts.cliVersion].filter(v => typeof v === 'string' && v.length > 0));
+}
+
+function validRevisionSet(view) {
+  return new Set([view.revision, view.unsealedRevision, ...(view.validRevisions ?? [])].filter(v => typeof v === 'string' && v.length > 0));
 }
 
 function revisionRefusal(revision, language, ctx) {
   if (!ctx.input.lineEndingsPinned) {
     return { name: 'line-endings-unpinned-revision', detail: 'a current-revision rule cannot compare the revision while line endings are not pinned' };
   }
-  if (language !== ctx.input.language) {
+  const languages = validLanguageSet(ctx.input);
+  if (languages.size > 0 && !languages.has(language)) {
     return { name: 'stale', detail: 'a current-revision rule: the language version changed; re-ratify', cause: 'the language version changed; re-ratify' };
   }
-  return revision === ctx.input.head.revision
+  const revisions = validRevisionSet(ctx.input.head);
+  return revisions.has(revision)
     ? null
     : { name: 'stale', detail: 'a current-revision rule: the organisation revision changed; re-ratify', cause: 'the organisation revision changed; re-ratify' };
 }
 
-// Workspace ancestor walk: an approver scoped to a workspace or one of its governed-by ancestors may ratify it.
-function approverCoversWorkspace(approver, workspaceIdentity, view) {
+export function approverCoversWorkspace(approver, workspaceIdentity, view) {
   if (!workspaceIdentity) return false;
-  const visited = new Set();
-  let current = workspaceIdentity;
-  while (current && !visited.has(current)) {
-    visited.add(current);
-    if (approver.workspaces.includes(current)) return true;
-    const ws = view.records.get(current);
-    const parentRef = ws ? textField(ws, 'composition.governed-by') : null;
-    if (!parentRef) break;
-    const parentName = parentRef.replace(/^@workspace\s+/, '');
-    const match = recordsOfFacet(view, 'workspace').find(r => r.name === parentName || r.identity === parentRef);
-    current = match?.identity ?? null;
+  return approver.workspaces.some(granted => workspaceCovers(granted, workspaceIdentity, view));
+}
+
+function requiredWorkspacesForRule(rule, change, ctx) {
+  const required = [];
+  if (change.before !== null) {
+    const beforeRules = rulesCovering([rule], change.before, ctx.unrecognised, ctx.input.target);
+    if (beforeRules.length > 0) {
+      const ws = workspaceOfPath(ctx.input.target, change.before.sourcePath);
+      if (ws) required.push({ workspace: ws, view: ctx.input.target });
+    }
   }
-  return false;
+  if (change.after !== null) {
+    const afterRules = rulesCovering([rule], change.after, ctx.unrecognised, ctx.input.head);
+    if (afterRules.length > 0) {
+      const ws = workspaceOfPath(ctx.input.head, change.after.sourcePath);
+      if (ws) required.push({ workspace: ws, view: ctx.input.head });
+    }
+  }
+  if (required.length === 0) {
+    const fallbackView = change.kind === 'deleted' ? ctx.input.target : ctx.input.head;
+    const ws = workspaceOfPath(fallbackView, change.record.sourcePath);
+    if (ws) required.push({ workspace: ws, view: fallbackView });
+  }
+  return required;
 }
 
 function answersToRule(rule, change, judgements, ctx) {
   const accounts = new Set();
   const findings = [];
-  const view = change.kind === 'deleted' ? ctx.input.target : ctx.input.head;
-  const workspace = workspaceOfPath(view, change.record.sourcePath);
+  const requiredSeats = requiredWorkspacesForRule(rule, change, ctx);
   for (const judgement of judgements) {
     const { approver } = judgement;
     const s = judgement.approval.statement;
     if (!judgement.valid || approver === null || !s.rules.some(ref => ref.identity === rule.identity)) continue;
+    const coversAllSeats =
+      requiredSeats.length > 0 && requiredSeats.every(({ workspace, view }) => approverCoversWorkspace(approver, workspace, view));
     const allowed =
       rule.via.includes(s.via) &&
       KEY_KIND_STRENGTH[s.keyKind] >= KEY_KIND_STRENGTH[rule.keyKind] &&
       (rule.from === null || rule.from.includes(approver.account)) &&
-      approverCoversWorkspace(approver, workspace, view);
+      coversAllSeats;
     if (!allowed) {
       findings.push({
         name: 'signer-not-allowed',
@@ -1180,15 +1609,34 @@ function answersToRoot(demand, judgements, subject) {
   return { met, findings: [] };
 }
 
+function coveringRulesForChange(change, ctx) {
+  const map = new Map();
+  if (change.before !== null) {
+    for (const rule of rulesCovering(ctx.rules, change.before, ctx.unrecognised, ctx.input.target)) {
+      map.set(rule.identity, rule);
+    }
+  }
+  if (change.after !== null) {
+    for (const rule of rulesCovering(ctx.rules, change.after, ctx.unrecognised, ctx.input.head)) {
+      map.set(rule.identity, rule);
+    }
+  }
+  return [...map.values()];
+}
+
 function judgeChange(change, candidates, ctx) {
-  const rules = rulesCovering(ctx.rules, change.record, ctx.unrecognised);
+  const rules = coveringRulesForChange(change, ctx);
   const root = ROOT_FACETS.has(change.record.facet) ? judgeRoot(change, ctx) : { findings: [], demand: null };
   if (rules.length === 0 && root.demand === null && root.findings.length === 0) {
     return { report: null, findings: [], needsPerson: false };
   }
-  const attached = candidates
-    .filter(({ approval, claimedName }) => approval.statement.record === change.identity || claimedName === change.record.name)
+  const forRecord = candidates
+    .filter(({ approval }) => approval.statement.record === change.identity)
     .map(({ approval }) => approval);
+  const exactCurrent = forRecord.filter(
+    approval => approval.statement.action === change.action && approval.statement.recordDigest === change.expectedDigest,
+  );
+  const attached = exactCurrent.length > 0 ? exactCurrent : forRecord;
   const judgements = attached.map(approval => judgeApproval(change, approval, ctx));
   const findings = [...root.findings, ...judgements.flatMap(j => j.findings)];
   let met = true;
@@ -1251,8 +1699,9 @@ export function checkSeal(input) {
 // ---------------------------------------------------------------------------
 
 export function checkWorkspace(view, options = {}) {
-  const language = options.language ?? null;
   const lfPinned = options.lineEndingsPinned ?? true;
+  const languages = validLanguageSet(options);
+  const revisions = validRevisionSet(view);
   const findings = [];
   if (!lfPinned) {
     findings.push({
@@ -1270,7 +1719,7 @@ export function checkWorkspace(view, options = {}) {
   findings.push(...unknownWordWarnings(view));
 
   for (const rule of rules) {
-    if (rule.merge === 'automatic' && (rule.words.includes('approver') || rule.words.includes('approval-rule') || rule.kinds.includes('governance'))) {
+    if (rule.merge === 'automatic' && ruleCoversRoot(rule)) {
       findings.push({
         name: 'root-needs-person',
         subject: rule.identity,
@@ -1279,6 +1728,8 @@ export function checkWorkspace(view, options = {}) {
     }
   }
 
+  const unrecognised = new Set();
+  const docketClaims = new Map();
   for (const record of recordsOfFacet(view, DOCKET_WORD)) {
     const parsed = parseDocket(record);
     if (!parsed.ok) {
@@ -1286,12 +1737,20 @@ export function checkWorkspace(view, options = {}) {
       continue;
     }
     const refusal = refusalOf(parsed.docket, view);
-    if (refusal !== null) findings.push({ ...refusal, subject: record.identity });
+    if (refusal !== null) {
+      findings.push({ ...refusal, subject: record.identity });
+      continue;
+    }
+    for (const piece of parsed.docket.pieces) {
+      docketClaims.set(piece.record, [...(docketClaims.get(piece.record) ?? []), piece]);
+    }
+  }
+  for (const [pieceId, pieces] of docketClaims) {
+    if (pieces.some(piece => isUnrecognised(piece, view))) unrecognised.add(pieceId);
   }
 
-  const records = [];
-  const validApprovalsByRecord = new Map();
-
+  // Pre-parse approvals so we can distinguish superseded historical seals from tampered/unsealed current records
+  const parsedApprovals = [];
   for (const record of recordsOfFacet(view, APPROVAL_WORD)) {
     const parsed = parseApproval(record);
     if (!parsed.ok) {
@@ -1300,20 +1759,30 @@ export function checkWorkspace(view, options = {}) {
     }
     const { approval } = parsed;
     const s = approval.statement;
-    const { digest: nameDigest, tag: nameTag } = fileNameParts(record.sourcePath);
-    if (nameDigest !== s.recordDigest.slice(0, 12) || nameTag !== nameSafeKeyTag(s.keyId)) {
+    const parts = fileNameParts(record.sourcePath);
+    const expectedRecordName = s.record.split('/').pop() ?? '';
+    if (
+      parts === null ||
+      parts.name !== expectedRecordName ||
+      parts.digest !== s.recordDigest.slice(0, 12) ||
+      parts.tag !== nameSafeKeyTag(s.keyId)
+    ) {
       findings.push({
         name: 'seal-malformed',
         subject: record.sourcePath,
-        detail: 'approval file name does not match <record-name>.<12-digest>.<8-keytag>.ia',
+        detail: `approval file name does not match ${expectedRecordName}.${s.recordDigest.slice(0, 12)}.${nameSafeKeyTag(s.keyId)}.ia`,
       });
       continue;
     }
+    parsedApprovals.push({ record, approval });
+  }
 
-    let sealOk = true;
+  // First pass: evaluate each approval record
+  const evaluated = parsedApprovals.map(({ record, approval }) => {
+    const s = approval.statement;
+    const sealFindings = [];
     const failSeal = (name, detail, cause) => {
-      sealOk = false;
-      findings.push({ name, subject: record.sourcePath, detail, ...(cause ? { cause } : {}) });
+      sealFindings.push({ name, subject: record.sourcePath, detail, ...(cause ? { cause } : {}) });
     };
 
     const here = workspaceOfPath(view, record.sourcePath);
@@ -1325,29 +1794,41 @@ export function checkWorkspace(view, options = {}) {
     }
 
     const found = keyOnRoster(roster, s.keyId);
+    let cryptoOk = false;
     if (found === null) {
       failSeal('signer-unknown', `key ${s.keyId} is not on the workspace approver roster`);
     } else if (found.approver.account !== s.signer) {
       failSeal('seal-forged', `key ${s.keyId} belongs to ${found.approver.account}, not ${s.signer}`);
     } else if (!verifyStatement(s, approval.signature, found.key.publicKey)) {
       failSeal('seal-forged', 'the signature does not verify over the rebuilt RFC 8785 JCS statement');
-    } else if (found.key.status !== 'active') {
-      failSeal(found.key.status === 'retired' ? 'key-retired' : 'key-revoked', `key ${s.keyId} has status ${found.key.status}`);
+    } else {
+      cryptoOk = true;
+      if (found.approver.taintedAccount) {
+        failSeal('signer-not-allowed', `account ${found.approver.account} is duplicated and cannot ratify`);
+      } else if (s.via === 'slack' && found.approver.taintedSlack) {
+        failSeal('signer-not-allowed', `${found.approver.account} shares a duplicate Slack id and must ratify via desk`);
+      } else if (found.key.status !== 'active') {
+        failSeal(found.key.status === 'retired' ? 'key-retired' : 'key-revoked', `key ${s.keyId} has status ${found.key.status}`);
+      }
     }
 
     const targetRecord = view.records.get(s.record) ?? null;
+    let isHistoricalDigest = false;
     if (s.action === 'approve') {
       if (targetRecord === null) {
+        isHistoricalDigest = true;
         failSeal('seal-wrong-record', `approved record ${s.record} is absent from the workspace`);
       } else {
         if (workspaceOfPath(view, targetRecord.sourcePath) !== s.workspace) {
           failSeal('seal-wrong-workspace', `record ${s.record} is not seated in ${s.workspace}`);
         }
         if (targetRecord.digest !== s.recordDigest) {
+          isHistoricalDigest = true;
           failSeal('seal-wrong-record', 'the record changed after it was signed: its digest differs from seal.record-digest');
         }
       }
     } else if (targetRecord !== null) {
+      isHistoricalDigest = true;
       failSeal('seal-wrong-record', `delete seal names ${s.record}, which is still present in the workspace`);
     }
 
@@ -1357,6 +1838,7 @@ export function checkWorkspace(view, options = {}) {
       }
     }
 
+    const countedRules = [];
     for (const ruleRef of s.rules) {
       const rule = rules.find(r => r.identity === ruleRef.identity);
       if (!rule || rule.digest !== ruleRef.digest) {
@@ -1372,19 +1854,82 @@ export function checkWorkspace(view, options = {}) {
         if (!allowed) {
           failSeal('signer-not-allowed', `${found.approver.account} may not sign for ${rule.identity} here`);
         } else if (rule.staleness === 'current-revision') {
-          if (!lfPinned) failSeal('line-endings-unpinned-revision', 'a current-revision rule requires pinned LF line endings');
-          else if (language !== null && s.language !== language) failSeal('stale', 'the language version changed; re-ratify', 'the language version changed; re-ratify');
-          else if (s.revision !== view.revision) failSeal('stale', 'the organisation revision changed; re-ratify', 'the organisation revision changed; re-ratify');
+          if (!lfPinned) {
+            failSeal('line-endings-unpinned-revision', 'a current-revision rule requires pinned LF line endings');
+          } else if (languages.size > 0 && !languages.has(s.language)) {
+            failSeal('stale', 'the language version changed; re-ratify', 'the language version changed; re-ratify');
+          } else if (!revisions.has(s.revision)) {
+            failSeal('stale', 'the organisation revision changed; re-ratify', 'the organisation revision changed; re-ratify');
+          } else {
+            countedRules.push(rule.identity);
+          }
+        } else {
+          countedRules.push(rule.identity);
         }
       }
     }
 
-    if (sealOk && found !== null) {
-      const entries = validApprovalsByRecord.get(s.record) ?? [];
-      entries.push({ approval, approver: found.approver });
-      validApprovalsByRecord.set(s.record, entries);
+    return {
+      record,
+      approval,
+      found,
+      cryptoOk,
+      isHistoricalDigest,
+      sealOk: sealFindings.length === 0,
+      sealFindings,
+      countedRules,
+    };
+  });
+
+  // Records with at least one valid current seal supersede older cryptographically-valid historical seals
+  const recordsWithValidCurrentSeal = new Set(
+    evaluated.filter(e => e.sealOk).map(e => e.approval.statement.record),
+  );
+
+  const records = [];
+  const ruleAccountsByRecord = new Map();
+
+  for (const item of evaluated) {
+    const s = item.approval.statement;
+    if (!item.sealOk && item.cryptoOk && item.isHistoricalDigest && recordsWithValidCurrentSeal.has(s.record)) {
+      records.push({ identity: item.record.identity, change: 'verified', verdict: 'superseded' });
+      continue;
     }
-    records.push({ identity: record.identity, change: 'verified', verdict: sealOk ? 'ratified' : 'unratified' });
+    findings.push(...item.sealFindings);
+    if (item.sealOk && item.found !== null && s.action === 'approve') {
+      for (const ruleId of item.countedRules) {
+        const key = `${s.record}\0${ruleId}`;
+        const set = ruleAccountsByRecord.get(key) ?? new Set();
+        set.add(item.found.approver.account);
+        ruleAccountsByRecord.set(key, set);
+      }
+    }
+    records.push({ identity: item.record.identity, change: 'verified', verdict: item.sealOk ? 'ratified' : 'unratified' });
+  }
+
+  // Enforce covering @approval-rule quorum over all workspace-authored non-approval records
+  const authoredRecords = [...view.records.values()]
+    .filter(r => r.facet !== APPROVAL_WORD && (r.provenance ?? 'workspace') === 'workspace' && workspaceOfPath(view, r.sourcePath) !== null)
+    .sort(byIdentity);
+
+  for (const authored of authoredRecords) {
+    const covering = rulesCovering(rules, authored, unrecognised, view);
+    if (covering.length === 0) continue;
+    let met = true;
+    for (const rule of covering) {
+      const accounts = ruleAccountsByRecord.get(`${authored.identity}\0${rule.identity}`) ?? new Set();
+      if (accounts.size < rule.quorum) {
+        met = false;
+        findings.push({
+          name: 'unratified',
+          subject: authored.identity,
+          detail: `rule ${rule.identity}: ${accounts.size} of ${rule.quorum} distinct approver(s)`,
+        });
+      }
+    }
+    if (!met) {
+      records.push({ identity: authored.identity, change: 'workspace', verdict: 'unratified' });
+    }
   }
 
   return {
@@ -1393,7 +1938,7 @@ export function checkWorkspace(view, options = {}) {
     revision: view.revision,
     approvers: roster.length,
     rules: rules.length,
-    approvals: records.length,
+    approvals: evaluated.length,
     records,
     findings,
     needsPersonMerge: roster.length > 0 || rules.length > 0,
@@ -1430,6 +1975,8 @@ function recordOfSnapshot(entry) {
     name: entry.name,
     digest: entry.digest,
     sourcePath: entry.source.path,
+    provenance: entry.provenance ?? 'workspace',
+    edges: entry.edges ?? [],
     fields,
   };
 }
@@ -1442,14 +1989,15 @@ export class IaCliError extends Error {
 }
 
 export class IaCli {
-  constructor(commandOrPath) {
+  constructor(commandOrPath, options = {}) {
     this.command = Array.isArray(commandOrPath) ? commandOrPath : [process.execPath, commandOrPath];
+    this.env = options.env ?? process.env;
   }
 
   execute(args, cwd) {
     const done = spawnSync(this.command[0], [...this.command.slice(1), ...args], {
       cwd,
-      env: { ...process.env, IA_NO_HANDOFF: '1' },
+      env: { ...this.env, IA_NO_HANDOFF: '1' },
       encoding: 'utf8',
       maxBuffer: MAX_BUFFER,
       windowsHide: true,
@@ -1467,7 +2015,7 @@ export class IaCli {
 
   version() {
     const done = spawnSync(this.command[0], [...this.command.slice(1), '--version'], {
-      env: { ...process.env, IA_NO_HANDOFF: '1' },
+      env: { ...this.env, IA_NO_HANDOFF: '1' },
       encoding: 'utf8',
       windowsHide: true,
     });
@@ -1476,14 +2024,15 @@ export class IaCli {
 
   restore(root) {
     if (existsSync(join(root, '.ia', 'distributions.lock.json')) && !existsSync(join(root, '.ia', 'distributions'))) {
-      this.run(root, ['restore', '--apply', '--yes']);
+      const catalogArgs = existsSync(join(root, 'vendor', 'ia', 'catalog.json')) ? ['--catalog', 'vendor/ia/catalog.json'] : [];
+      this.run(root, ['restore', ...catalogArgs, '--apply', '--yes']);
     }
   }
 
   validateAdmitted(root) {
     const done = spawnSync(this.command[0], [...this.command.slice(1), 'validate', '--root', root, '--severity', 'error', '--json'], {
       cwd: root,
-      env: { ...process.env, IA_NO_HANDOFF: '1' },
+      env: { ...this.env, IA_NO_HANDOFF: '1' },
       encoding: 'utf8',
       maxBuffer: MAX_BUFFER,
       windowsHide: true,
@@ -1509,6 +2058,98 @@ export class IaCli {
       records: new Map(snapshot.records.map(entry => [entry.identity, recordOfSnapshot(entry)])),
     };
   }
+}
+
+// Strips @approval records/files in a scratch copy so current-revision seals match pre-seal authored revisions
+// without ever accepting post-seal edits to non-approval records.
+function stripApprovalRecordsFromFile(fullPath) {
+  if (!existsSync(fullPath)) return;
+  const content = readFileSync(fullPath, 'utf8');
+  const blocks = content.split(/^(?=@)/m);
+  const header = blocks[0]?.startsWith('@') ? '' : (blocks.shift() ?? '');
+  const kept = blocks.filter(block => !/^@approval\s/.test(block));
+  if (kept.length === 0) {
+    rmSync(fullPath, { force: true });
+  } else {
+    writeFileSync(fullPath, `${header}${kept.join('')}`);
+  }
+}
+
+function captureRevisionWithoutApprovalPaths(cli, baseDir, scratchRoot, tag, approvalPathsToStrip) {
+  const probe = join(scratchRoot, tag);
+  mkdirSync(probe, { recursive: true });
+  for (const name of readdirSync(baseDir)) {
+    if (name === '.git') continue;
+    cpSync(join(baseDir, name), join(probe, name), {
+      recursive: true,
+      filter: src => !/[\\/]\.ia[\\/]work(?:[\\/]|$)/.test(src),
+    });
+  }
+  for (const relPath of approvalPathsToStrip) {
+    stripApprovalRecordsFromFile(join(probe, relPath));
+  }
+  try {
+    return cli.capture(probe).revision;
+  } catch {
+    return null;
+  }
+}
+
+function populateValidRevisions(cli, directory, view, scratchRoot, label, targetView = null) {
+  const validRevisions = new Set([view.revision]);
+  const approvalRecords = recordsOfFacet(view, APPROVAL_WORD);
+  if (approvalRecords.length === 0) {
+    view.unsealedRevision = view.revision;
+    view.validRevisions = [...validRevisions];
+    return;
+  }
+
+  const allApprovalPaths = [...new Set(approvalRecords.map(r => r.sourcePath))];
+  const unsealed = captureRevisionWithoutApprovalPaths(cli, directory, scratchRoot, `${label}-unsealed`, allApprovalPaths);
+  if (unsealed !== null) {
+    view.unsealedRevision = unsealed;
+    validRevisions.add(unsealed);
+  }
+
+  if (targetView !== null) {
+    const newOrEditedPaths = [
+      ...new Set(
+        approvalRecords
+          .filter(r => {
+            const prior = targetView.records.get(r.identity);
+            return prior === undefined || prior.digest !== r.digest || prior.sourcePath !== r.sourcePath;
+          })
+          .map(r => r.sourcePath),
+      ),
+    ];
+    if (newOrEditedPaths.length > 0 && newOrEditedPaths.length < allApprovalPaths.length) {
+      const prePr = captureRevisionWithoutApprovalPaths(cli, directory, scratchRoot, `${label}-prepr`, newOrEditedPaths);
+      if (prePr !== null) validRevisions.add(prePr);
+    }
+  }
+
+  // Support sequential multi-signer seals where Signer K ran ia capture with Signers 1..K-1's @approval files already present
+  const parsed = approvalRecords
+    .map(r => ({ record: r, parsed: parseApproval(r) }))
+    .filter(x => x.parsed.ok)
+    .sort((a, b) => {
+      const ta = a.parsed.approval.statement.signedAt;
+      const tb = b.parsed.approval.statement.signedAt;
+      return ta < tb ? -1 : ta > tb ? 1 : a.record.sourcePath < b.record.sourcePath ? -1 : 1;
+    });
+
+  const unresolvedTargetRevisions = new Set(
+    parsed.map(x => x.parsed.approval.statement.revision).filter(rev => !validRevisions.has(rev)),
+  );
+  if (unresolvedTargetRevisions.size > 0 && parsed.length > 1) {
+    for (let i = 1; i < parsed.length; i++) {
+      const stripFromHere = [...new Set(parsed.slice(i).map(x => x.record.sourcePath))];
+      const stepRev = captureRevisionWithoutApprovalPaths(cli, directory, scratchRoot, `${label}-step-${i}`, stripFromHere);
+      if (stepRev !== null) validRevisions.add(stepRev);
+    }
+  }
+
+  view.validRevisions = [...validRevisions];
 }
 
 export function safeRef(ref) {
@@ -1629,12 +2270,50 @@ export class Git {
       const position = positions.get((commit ?? '').trim());
       if (position === undefined) continue;
       for (const row of rows) {
-        const match = /^:\d+ \d+ [0-9a-f]+ ([0-9a-f]+) [AMCR]\d*\t/.exec(row);
-        const blob = match?.[1];
-        if (blob !== undefined) entries.set(blob, position);
+        const match = /^:\d+ \d+ ([0-9a-f]+) ([0-9a-f]+) ([AMCR]\d*)\t/.exec(row);
+        if (!match) continue;
+        const [, oldBlob, newBlob, status] = match;
+        if (status.startsWith('R') && oldBlob === newBlob) continue;
+        if (oldBlob !== newBlob && !entries.has(newBlob)) {
+          entries.set(newBlob, position);
+        }
       }
     }
     return entries;
+  }
+
+  latestEntryForPath(ref, targetPath) {
+    const positions = new Map(this.firstParentLine(ref).map((commit, index) => [commit, index]));
+    const log = this.text([
+      'log',
+      '--first-parent',
+      '--root',
+      '--raw',
+      '--no-abbrev',
+      '-M',
+      '--format=%x01%H',
+      '--end-of-options',
+      safeRef(ref),
+    ]);
+    let trackedPath = targetPath;
+    for (const block of log.split('\x01').filter(Boolean)) {
+      const [commit, ...rows] = block.split('\n');
+      const position = positions.get((commit ?? '').trim());
+      if (position === undefined) continue;
+      for (const row of rows) {
+        const match = /^:\d+ \d+ ([0-9a-f]+) ([0-9a-f]+) ([A-Z]\d*)\t([^\t]+)(?:\t([^\t]+))?$/.exec(row);
+        if (!match) continue;
+        const [, oldBlob, newBlob, status, firstPath, secondPath] = match;
+        const newPath = secondPath ?? firstPath;
+        if (newPath !== trackedPath) continue;
+        if (status.startsWith('R') && oldBlob === newBlob) {
+          trackedPath = firstPath;
+          break;
+        }
+        return position;
+      }
+    }
+    return null;
   }
 }
 
@@ -1642,20 +2321,21 @@ export function gitFacts(git, options) {
   const line = git.firstParentLine(options.targetRef);
   const positions = new Map(line.map((commit, index) => [commit, index]));
   let entries = null;
+  const pathEntryCache = new Map();
   return {
     headBlobOf: path => git.blobAt(options.headRef, path),
     targetBlobOf: path => git.blobAt(options.targetRef, path),
-    targetPositionOf: commit => {
-      try {
-        return positions.get(git.commitOf(commit)) ?? null;
-      } catch {
-        return null;
-      }
-    },
-    isAncestorOfTarget: commit => git.isAncestor(commit, options.targetRef),
+    targetPositionOf: commit => (COMMIT_RE.test(commit) ? (positions.get(commit) ?? null) : null),
+    isAncestorOfTarget: commit => COMMIT_RE.test(commit) && git.isAncestor(commit, options.targetRef),
     targetEntryOfBlob: blob => {
       entries ??= git.firstEntries(options.targetRef, options.pathspecs);
       return entries.get(blob) ?? null;
+    },
+    targetLatestEntryOf: (path, _blob) => {
+      if (!pathEntryCache.has(path)) {
+        pathEntryCache.set(path, git.latestEntryForPath(options.targetRef, path));
+      }
+      return pathEntryCache.get(path) ?? null;
     },
     targetCommitTime: position => {
       const commit = line[position];
@@ -1668,38 +2348,79 @@ export function lineEndingsPinned(git, ref) {
   return LF_PIN_RE.test(git.readFileAt(ref, '.gitattributes') ?? '');
 }
 
-export function corpusAt(git, cli, ref, scratch) {
-  const directory = join(scratch, ref.replace(/[^A-Za-z0-9._-]/g, '_'));
+export function corpusAt(git, cli, ref, scratch, targetView = null) {
+  const label = ref.replace(/[^A-Za-z0-9._-]/g, '_');
+  const directory = join(scratch, label);
   git.exportTree(ref, directory);
+  if (!existsSync(join(directory, 'vendor', 'ia', 'catalog.json')) && existsSync(join(git.repository, 'vendor', 'ia', 'catalog.json'))) {
+    cpSync(join(git.repository, 'vendor', 'ia'), join(directory, 'vendor', 'ia'), { recursive: true });
+  }
   cli.restore(directory);
   cli.validateAdmitted(directory);
-  return cli.capture(directory);
+  const view = cli.capture(directory);
+  populateValidRevisions(cli, directory, view, scratch, label, targetView);
+  return view;
 }
 
 export function checkPullRequest(pullRequest, options = {}) {
   if (!options.cli) throw new Error('checkPullRequest requires an explicit IaCli instance');
   const cli = options.cli;
+  const now = options.now ?? new Date();
+  if (!(now instanceof Date) || Number.isNaN(now.getTime())) {
+    throw new Error('options.now must be a valid Date');
+  }
   const git = new Git(pullRequest.repository);
   const targetCommit = git.commitOf(pullRequest.targetRef);
   const headCommit = git.commitOf(pullRequest.headRef);
   const scratch = mkdtempSync(join(tmpdir(), 'ia-seal-pr-'));
   try {
-    const target = corpusAt(git, cli, targetCommit, scratch);
-    const head = corpusAt(git, cli, headCommit, scratch);
+    const target = corpusAt(git, cli, targetCommit, scratch, null);
+    const head = corpusAt(git, cli, headCommit, scratch, target);
+    const cliVer = cli.version();
+    const pathspecs = [...new Set([...authoredRootPaths(target), ...authoredRootPaths(head), APPROVALS_DIR])];
     return checkSeal({
       target,
       head,
-      language: cli.version(),
+      language: floorLanguageVersion(head) ?? cliVer,
+      cliVersion: cliVer,
       lineEndingsPinned: lineEndingsPinned(git, targetCommit),
-      now: options.now ?? new Date(),
+      now,
       facts: gitFacts(git, {
         targetRef: targetCommit,
         headRef: headCommit,
-        pathspecs: [...authoredRootPaths(target), APPROVALS_DIR],
+        pathspecs,
       }),
     });
   } finally {
     rmSync(scratch, { recursive: true, force: true });
+  }
+}
+
+function copyWorkspaceSourcesForAudit(root, copy) {
+  mkdirSync(copy, { recursive: true });
+  const skipTop = new Set(['.git', 'node_modules', 'vendor', '.scratch']);
+  const walkCopy = (srcDir, dstDir) => {
+    for (const name of readdirSync(srcDir)) {
+      if (srcDir === root && skipTop.has(name)) continue;
+      const srcPath = join(srcDir, name);
+      const dstPath = join(dstDir, name);
+      if (name === '.ia') {
+        cpSync(srcPath, dstPath, {
+          recursive: true,
+          filter: s => !/[\\/]\.ia[\\/]work(?:[\\/]|$)/.test(s),
+        });
+      } else if (name === '.gitattributes') {
+        cpSync(srcPath, dstPath);
+      } else if (statSync(srcPath).isDirectory()) {
+        if (existsSync(join(srcPath, '.ia')) || readdirSync(srcPath).some(child => statSync(join(srcPath, child)).isDirectory())) {
+          walkCopy(srcPath, dstPath);
+        }
+      }
+    }
+  };
+  walkCopy(root, copy);
+  if (existsSync(join(root, 'vendor', 'ia', 'catalog.json'))) {
+    cpSync(join(root, 'vendor', 'ia'), join(copy, 'vendor', 'ia'), { recursive: true });
   }
 }
 
@@ -1714,21 +2435,20 @@ export function runWorkspaceAudit(command, root = process.cwd()) {
   const scratch = realpathSync.native(mkdtempSync(join(tmpdir(), 'ia-seal-ws-')));
   const copy = join(scratch, 'workspace');
   try {
-    mkdirSync(copy, { recursive: true });
-    cpSync(join(root, '.ia'), join(copy, '.ia'), {
-      recursive: true,
-      filter: src => !/[\\/]\.ia[\\/]work(?:[\\/]|$)/.test(src),
-    });
-    if (existsSync(join(root, '.gitattributes'))) {
-      cpSync(join(root, '.gitattributes'), join(copy, '.gitattributes'));
-    }
+    copyWorkspaceSourcesForAudit(root, copy);
     cli.restore(copy);
     cli.validateAdmitted(copy);
     const view = cli.capture(copy);
+    populateValidRevisions(cli, copy, view, scratch, 'ws', null);
+    const cliVer = cli.version();
     const lfPinned = existsSync(join(copy, '.gitattributes'))
       ? LF_PIN_RE.test(readFileSync(join(copy, '.gitattributes'), 'utf8'))
       : true;
-    return checkWorkspace(view, { lineEndingsPinned: lfPinned });
+    return checkWorkspace(view, {
+      lineEndingsPinned: lfPinned,
+      language: floorLanguageVersion(view) ?? cliVer,
+      cliVersion: cliVer,
+    });
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }
@@ -1766,9 +2486,10 @@ function main(argv) {
     if (!cliEntry || !existsSync(resolve(cliEntry))) {
       throw new Error('pull-request mode requires --cli <@inventarch/cli dist/main.js> or IA_CLI_PATH');
     }
+    const now = opts.now !== undefined ? parseNowTimestamp(opts.now) : undefined;
     const report = checkPullRequest(
       { repository: resolve(opts.repo), targetRef: opts.target, headRef: opts.head },
-      { cli: new IaCli([process.execPath, resolve(cliEntry)]), ...(opts.now ? { now: new Date(opts.now) } : {}) },
+      { cli: new IaCli([process.execPath, resolve(cliEntry)]), ...(now ? { now } : {}) },
     );
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
     return passes(report) ? 0 : 1;

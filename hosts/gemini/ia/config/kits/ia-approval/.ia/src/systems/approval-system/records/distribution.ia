@@ -1,0 +1,8 @@
+#! ia 1.0
+
+@distribution ia-approval-distribution
+  meaning
+    says "The release root of the public IA approval base kit: approval-system with the approver, approval-rule, docket and approval words, their canonical schemas and authoring guides, intake recognition and seal rules, and the offline check-seal verifier."
+    answers "Which records does the IA approval kit release ship?"
+  distribution
+    records [@system approval-system]

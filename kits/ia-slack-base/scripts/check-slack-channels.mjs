@@ -238,7 +238,7 @@ export function checkSlackChannels(snapshot) {
       if (membersRaw.length > 1) {
         report('SLACK_PERSON_APP_POSTURE', ch, `@slack-channel ${ch.name}: slack.app person may list only its single owner in slack.members`);
       }
-      if ((form && form !== 'direct') || (scalarText(sectionField(ch, 'slack.kind')) && kind !== 'direct')) {
+      if (form !== 'direct' || kind !== 'direct') {
         report(
           'SLACK_PERSON_APP_POSTURE',
           ch,
@@ -265,12 +265,21 @@ export function checkSlackChannels(snapshot) {
       }
     }
 
-    if (answers === 'on' && allowList.length === 0) {
-      report(
-        'SLACK_ANSWERS_ALLOWLIST_EMPTY',
-        ch,
-        `@slack-channel ${ch.name}: slack.answers on requires at least one allowed entry in slack.sources or slack.shows`,
-      );
+    if (answers === 'on') {
+      if (allowList.length === 0) {
+        report(
+          'SLACK_ANSWERS_ALLOWLIST_EMPTY',
+          ch,
+          `@slack-channel ${ch.name}: slack.answers on requires at least one allowed entry in slack.sources or slack.shows`,
+        );
+      }
+      if (allowList.some(entry => entry.trim() === '*')) {
+        report(
+          'SLACK_ANSWERS_WILDCARD',
+          ch,
+          `@slack-channel ${ch.name}: slack.answers on cannot use a wildcard '*' read allow-list`,
+        );
+      }
     }
 
     if (rate !== null && !RATE_RE.test(rate)) {

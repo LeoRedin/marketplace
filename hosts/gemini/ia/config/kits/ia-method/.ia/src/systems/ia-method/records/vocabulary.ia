@@ -1,0 +1,42 @@
+#! ia 1.0
+
+@capability method-vocabulary
+  meaning
+    says "Read the IA language's own taxonomy under the IA methodology: the method-vocabulary playbook's cells for looking up a word, its schema and its place in the taxonomy (artifact-set, axis, cardinality, category, dimension, intent-shape, kind, lane, move, phase, placement, predicate, primitive and value-type) through ia vocabulary and ia position --word. It reads only and grants no authority."
+    answers "Which procedure does an agent follow to read the IA vocabulary and its taxonomy?"
+  composition
+    playbooks [@playbook method-vocabulary]
+  execution
+    effects [read]
+
+@playbook method-vocabulary
+  meaning
+    says "How an agent reads the IA vocabulary: look a word up with ia vocabulary and its schema with --schema, read the fourteen taxonomy words (artifact-set, axis, cardinality, category, dimension, intent-shape, kind, lane, move, phase, placement, predicate, primitive and value-type) through ia vocabulary <word> and ia position --word <word>, state intent to the CLI in those terms, and mint no words."
+    answers "How does an agent read the IA vocabulary and its taxonomy?"
+  subject
+    subject-word kind
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia vocabulary for the public words and ia vocabulary <word> --schema for one word's sections, fields and edges. The taxonomy words, artifact-set, axis, cardinality, category, dimension, intent-shape, kind, lane, move, phase, placement, predicate, primitive and value-type, name the language itself: read each with ia vocabulary <word> and ia position --word <word>."
+      Inference means "Place the question on the taxonomy: a word's kind and category say what role its records play, its owner says where to seat, its move and primitive say which cells meet it, and the intent shape and phase say which lanes ia position reads."
+      Decision means "Answer from what ia vocabulary and ia position return; when they do not settle the question, say so rather than guess."
+      Learning means "Note where the taxonomy surprised the work; it may show a word used in the wrong role."
+    plan
+      primary Inference
+      Attention means "Restate the question in the language's terms: the shape, phase, primitive, seat and word the work would state to ia position."
+      Inference means "Choose the word whose kind fits the record the work needs, and the intent shape and phase to state it with; taxonomy words are values to state, not records to author."
+      Decision means "Mint no words: when no public word fits, say so and bring it to the person."
+      Learning means "Say how to tell that the choice fits: ia preview accepts the record and ia position delivers the cells and rules the work expects."
+    act
+      primary Decision
+      Attention means "Check each value the work states to the CLI against ia vocabulary: a phase is orient, plan, act or learn, and a primitive, a move and a shape are closed values."
+      Inference means "When ia position or ia preview refuses a value, read the refusal against the taxonomy word it names and correct the value."
+      Decision means "State intent to the CLI only as shape, phase, primitive, seat and word; the CLI never receives free text, and taxonomy words are never authored here."
+      Learning means "Keep the refusal codes that taught the work what a value means."
+    learn
+      primary Learning
+      Attention means "Report which taxonomy values the work stated and what ia position returned for each."
+      Inference means "Say whether the word, shape and phase chosen led to the cells and rules the work needed."
+      Decision means "Record any mismatch in the handoff packet, with the command that shows it."
+      Learning means "When a taxonomy word was misread, propose a clarification to the owner of the guidance that misled the work, as method-improvement-lifecycle describes."

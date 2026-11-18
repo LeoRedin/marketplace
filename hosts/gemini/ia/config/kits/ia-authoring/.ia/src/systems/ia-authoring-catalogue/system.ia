@@ -1,0 +1,20 @@
+#! ia 1.0
+
+@system ia-authoring-catalogue
+  provider "local"
+  version "0.1.0"
+  describes "The catalogue-authoring part of the IA authoring kit: the house rules a plugin catalogue enforces on every plugin, restated as conventions, one capability with its playbook for bringing a plugin inside them, and the check that runs the catalogue's validator. It is used with the host-authoring part, whose host-qualify activity qualifies the plugin on its hosts. This system mints no words and grants no authority."
+  steward @agent catalogue-authoring-steward
+  requires
+    - agent-system
+    - agent-composition-system
+    - workspace-system
+    - governance-system
+    - compliance-system
+
+@agent catalogue-authoring-steward
+  meaning
+    says "Owns the records of the IA authoring kit's catalogue-authoring part and reviews every change to them."
+    answers "Who owns the catalogue-authoring part of the IA authoring kit?"
+  governance
+    applies [convention, playbook, capability, contract, check, case]

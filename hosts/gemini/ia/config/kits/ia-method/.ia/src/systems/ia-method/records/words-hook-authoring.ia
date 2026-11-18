@@ -1,0 +1,42 @@
+#! ia 1.0
+
+@capability hook-method
+  meaning
+    says "Work with hook records under the IA methodology: the hook-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking a hook. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for a hook?"
+  composition
+    playbooks [@playbook hook-method]
+  execution
+    effects [read, local-write]
+
+@playbook hook-method
+  meaning
+    says "How an agent works with hook records, each a host event, tool or path selection and guard message, whose registration and guard need a host adapter: orient through ia position --word hook and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with hook records?"
+  subject
+    subject-word hook
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word hook at the seat the work concerns, read the hook records it points at with ia read, and run ia vocabulary hook --schema for the sections and fields a hook carries."
+      Inference means "Read the hook's event, selection and guard message."
+      Decision means "hook is a word of hook-authoring-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/hook-authoring-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these hook records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the hook must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Choose the event and the narrowest tool or path selection, and write a guard message that says what to do instead."
+      Decision means "Extend an existing hook through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the hook will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the hook; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Author the hook's event, selection and message; registering it with the host is the host adapter's job."
+      Decision means "Change hook records only through ia preview hook <name> <field>=<value>..., then ia author with the same form and the digest preview returned, then ia validate; use --set or --relate the same way for one field or relationship."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Once the host registers it, check that the hook fires only where intended; a declared hook is not a registered one."
+      Decision means "Reconcile the records that cite or depend on the hook, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."

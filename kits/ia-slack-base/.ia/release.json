@@ -38,8 +38,8 @@
   "description": "The public base Slack space settings kit (slack-system): the slack-channel word with its canonical schema and authoring guide, the five public Slack channel governance rules, and the offline check-slack-channels verifier.",
   "source": {
     "repository": "https://github.com/inventarch/marketplace.git",
-    "commit": "f81522f9d91c870fb598489bdf11aac805badb72",
+    "commit": "d7e0c52128d6285ff61049ee38b8d6772927a39b",
     "recipe": "ustar-v1",
-    "epoch": 1795014194
+    "epoch": 1795033116
   }
 }

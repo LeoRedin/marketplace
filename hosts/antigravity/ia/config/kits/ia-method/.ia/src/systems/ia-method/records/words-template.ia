@@ -1,0 +1,42 @@
+#! ia 1.0
+
+@capability template-method
+  meaning
+    says "Work with template records under the IA methodology: the template-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking a template. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for a template?"
+  composition
+    playbooks [@playbook template-method]
+  execution
+    effects [read, local-write]
+
+@playbook template-method
+  meaning
+    says "How an agent works with template records, each bounded rendering inputs and an output structure, which rendering neither publishes nor installs: orient through ia position --word template and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with template records?"
+  subject
+    subject-word template
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word template at the seat the work concerns, read the template records it points at with ia read, and run ia vocabulary template --schema for the sections and fields a template carries."
+      Inference means "Read the template's inputs and output structure."
+      Decision means "template is a word of template-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/template-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these template records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the template must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Bound the inputs and the output structure the template renders."
+      Decision means "Extend an existing template through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the template will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the template; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Author the template's inputs and output; rendering it publishes and installs nothing."
+      Decision means "Change template records only through ia preview template <name> <field>=<value>..., then ia author with the same form and the digest preview returned, then ia validate; use --set or --relate the same way for one field or relationship."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Render it with sample inputs and check the output's structure."
+      Decision means "Reconcile the records that cite or depend on the template, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."

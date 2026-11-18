@@ -1,0 +1,34 @@
+#! ia 1.0
+
+@law design-semantic-tokens-only
+  meaning
+    says "Parts and code-lowering recipes paint exclusively with semantic or component @design-token classes: raw hex colours, palette utilities, primitive tokens, square-bracket arbitrary values and !important flags are refused in @part token lists, recipe.classes and recipe.overrides. In adapt mode, size, spacing and layout adjustments are reported as component-library gaps rather than written into recipe.overrides, and define mode is refused whenever the target @part already declares part.code-export."
+    answers "Which styling tokens and recipe overrides are admitted when lowering UI parts?"
+  governance
+    severity blocking
+    requires "Use semantic or component tokens only, forbid raw colours, palette classes, primitive tokens, arbitrary bracket classes, !important flags, adapt size/spacing/layout overrides, and define recipes over parts with part.code-export."
+  subject
+    subject-word recipe
+    subject-kind definition
+
+@law design-active-patterns-and-recipes-sealed
+  meaning
+    says "A @pattern or @recipe with standing proposed may run only inside an isolated scratch copy marked proposed and never emits code for an application repository; promoting a @pattern or @recipe to standing active requires an @approval seal binding its record identity and digest, and any workspace composing @approval-rule records alongside @pattern and @recipe must carry a rule covering both words."
+    answers "When may a @pattern or @recipe be marked active and used to emit application code?"
+  governance
+    severity blocking
+    requires "Require a valid @approval seal for every active @pattern and active @recipe, keep proposed records confined to scratch runs, and require an @approval-rule covering pattern and recipe when approval rules are present."
+  subject
+    subject-word pattern
+    subject-kind definition
+
+@law design-single-claimant-no-order-tiebreak
+  meaning
+    says "Every design node has at most one structural claimant: innermost matching @part instance (by exact case-sensitive part.figma-names, else part.name), else most specific @pattern, else unrecognised, with slot contents planned independently. Two @part records claiming the same Figma component set, or two patterns of equal specificity matching a shared node, are ambiguous and held rather than resolved by listing order."
+    answers "How is node ownership resolved across parts, slots and patterns, and how are ties handled?"
+  governance
+    severity blocking
+    requires "Enforce unique Figma component-set claims across active and proposed @part records, plan slot contents independently, and hold equal-specificity ties as ambiguous rather than breaking ties by order."
+  subject
+    subject-word part
+    subject-kind definition

@@ -1,0 +1,45 @@
+{
+  "formatVersion": 1,
+  "id": "inventarch/ia-slack-base-kit",
+  "version": "0.1.0",
+  "distribution": "workspace-system/definition/distribution/ia-slack-base-distribution",
+  "engine": "^0.1.1",
+  "language": [
+    "1.0"
+  ],
+  "dependencies": [
+    {
+      "id": "inventarch/language",
+      "range": "^3.0.0",
+      "systems": [
+        "agent-system",
+        "compliance-system",
+        "governance-system",
+        "work-system",
+        "workspace-system"
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "path": "assets/slack-vocabulary.md",
+      "role": "documentation"
+    },
+    {
+      "path": "checks.json",
+      "role": "asset"
+    },
+    {
+      "path": "scripts/check-slack-channels.mjs",
+      "role": "asset"
+    }
+  ],
+  "license": "Apache-2.0",
+  "description": "The public base Slack space settings kit (slack-system): the slack-channel word with its canonical schema and authoring guide, the five public Slack channel governance rules, and the offline check-slack-channels verifier.",
+  "source": {
+    "repository": "https://github.com/inventarch/marketplace.git",
+    "commit": "d7e0c52128d6285ff61049ee38b8d6772927a39b",
+    "recipe": "ustar-v1",
+    "epoch": 1795033116
+  }
+}

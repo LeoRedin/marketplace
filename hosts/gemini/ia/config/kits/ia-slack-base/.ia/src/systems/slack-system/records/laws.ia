@@ -1,0 +1,23 @@
+#! ia 1.0
+
+@law slack-user-bound-before-served
+  meaning
+    says "A Slack user is served only if their Slack user identifier is bound to a directory account by an authenticated session and listed in the space's slack.members; Slack workspace membership alone grants nothing. An unbound user in a served space receives at most one fixed notice naming no internal service address, any unknown direct or external Slack Connect sender receives silence, and service stops as soon as directory access ends."
+    answers "When may a Slack user be served in a space governed by a @slack-channel record?"
+  governance
+    severity blocking
+    requires "Serve only bound Slack user identifiers listed in slack.members while directory access holds; give unbound users in a served space one fixed notice without internal addresses and give unknown external senders silence."
+  subject
+    subject-word slack-channel
+    subject-kind binding
+
+@law slack-channel-audience-disclosure
+  meaning
+    says "What a Slack integration posts or answers in a space is bounded by the read allow-list (the union of slack.shows and slack.sources) and by every present person's directory access, because posted messages leave IA's retention boundary permanently. Omitted slack.disclosure defaults to link-only (posting only a fixed phrase and link in shared spaces and sending content only by direct message to a bound, authorized asker). A public channel may never be a content space beyond workspace-wide material, and a person-app or personal workspace space never discloses records outside a direct conversation with its sole owner."
+    answers "What may be disclosed in a Slack space, and why is link-only the default?"
+  governance
+    severity blocking
+    requires "Restrict reads to the union of slack.shows and slack.sources, default slack.disclosure to link-only, require explicit allow-lists without wildcards for content spaces, and confine person-app spaces to single-owner direct conversations."
+  subject
+    subject-word slack-channel
+    subject-kind binding

@@ -1,0 +1,20 @@
+#! ia 1.0
+
+@capability authoring-probing-the-ia-toolchain
+  meaning
+    says "Find out what IA 3.x admits before writing real records, by experiment in a scratch copy: read the vocabulary first, write the smallest probe that asks the question, run it against a copy, record the answer as a rule with its error code, fix, language version and date, and check what admission does not. Use it before writing records of uncertain admission, on an unfamiliar validation error, or for why is this edge unconsented and is this field allowed. The toolchain-prober profile runs it."
+    answers "Does IA admit this, and if not, which rule refuses it and what is the fix?"
+  composition
+    playbooks [@playbook authoring-probing-the-ia-toolchain, @playbook authoring-toolchain-prober]
+  execution
+    effects [read, local-write]
+
+@capability authoring-workspace-authoring
+  meaning
+    says "Author records of adopted IA words in an existing workspace without a new system: inspect the exact schemas, pins, roots, bindings and task authority, draft the smallest changes under the authorised source root, check them in a scratch copy, apply the exact authorised changes, validate and report actual evidence. Use it when only records are needed."
+    answers "How are instances of existing words authored in a workspace?"
+  composition
+    playbooks [@playbook authoring-workspace-authoring]
+    checks [@check authoring-workspace-validate, @check authoring-field-lint]
+  execution
+    effects [read, local-write]

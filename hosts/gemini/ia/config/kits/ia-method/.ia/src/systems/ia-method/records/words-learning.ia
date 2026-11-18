@@ -1,0 +1,83 @@
+#! ia 1.0
+
+@capability observation-method
+  meaning
+    says "Work with observation records under the IA methodology: the observation-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking an observation. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for an observation?"
+  composition
+    playbooks [@playbook observation-method]
+  execution
+    effects [read, local-write]
+
+@playbook observation-method
+  meaning
+    says "How an agent works with observation records, each an attributed account of evidence with its interpretation and retention, whose claims field typing does not verify: orient through ia position --word observation and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with observation records?"
+  subject
+    subject-word observation
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word observation at the seat the work concerns, read the observation records it points at with ia read, and run ia vocabulary observation --schema for the sections and fields an observation carries."
+      Inference means "Read the observations left on the seat: who observed what, when, and how it was interpreted."
+      Decision means "observation is a word of learning-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/learning-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these observation records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the observation must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Decide what the work will observe, and how each observation will be attributed and retained."
+      Decision means "Extend an existing observation through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the observation will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the observation; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Author the observation with its attribution, evidence and interpretation, keeping what was seen apart from what it means."
+      Decision means "Change observation records only through ia preview observation <name> <field>=<value>..., then ia author with the same form and the digest preview returned, then ia validate; use --set or --relate the same way for one field or relationship."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Check the observation against its evidence, and link it to any improvement it prompts."
+      Decision means "Reconcile the records that cite or depend on the observation, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."
+
+@capability improvement-method
+  meaning
+    says "Work with improvement records under the IA methodology: the improvement-method playbook's orient, plan, act and learn cells for finding, planning, changing and checking an improvement. It grants no authority; the workspace's mandates decide what the participant may change."
+    answers "Which procedure does an agent follow for an improvement?"
+  composition
+    playbooks [@playbook improvement-method]
+  execution
+    effects [read, local-write]
+
+@playbook improvement-method
+  meaning
+    says "How an agent works with improvement records, each a proposed change with review and publication metadata, which neither authorizes nor applies the change: orient through ia position --word improvement and the word's schema, plan through the owner of the word, change records only through ia preview, ia author and ia validate, and leave the account reconciled."
+    answers "How does an agent work with improvement records?"
+  subject
+    subject-word improvement
+  cognition
+    orient
+      primary Attention
+      Attention means "Run ia position --word improvement at the seat the work concerns, read the improvement records it points at with ia read, and run ia vocabulary improvement --schema for the sections and fields an improvement carries."
+      Inference means "Read the open improvements on the target and whether their digests still match its current text."
+      Decision means "improvement is a word of learning-system: when the seat is not that system or a workspace that composes it, re-seat with ia position --seat floor/definition/system/learning-system before going on; its steward pointer is to read, not to invoke."
+      Learning means "Read the observations and improvements earlier work left on these improvement records before repeating it."
+    plan
+      primary Inference
+      Attention means "Restate what the improvement must satisfy: the intent, the blocking rules and the mandate at the seat, and the ceiling of any provisional foundation."
+      Inference means "Name the target, its owning system and path, the exact text it replaces and that text's digest, the candidate, its verification and its reversal."
+      Decision means "Extend an existing improvement through its owner where one covers the need, and bring each consequential choice to the person with a recommendation."
+      Learning means "Say how the improvement will be judged and what would leave it inconclusive."
+    act
+      primary Decision
+      Attention means "Read what ia preview compiles for the improvement; a refusal means the plan is wrong about the record, not that the check is in the way."
+      Inference means "Author the improvement as a proposal only; the target's owner reviews it and applies it."
+      Decision means "Change improvement records only through ia preview improvement <name> <field>=<value>..., then ia author with the same form and the digest preview returned, then ia validate; use --set or --relate the same way for one field or relationship."
+      Learning means "Keep each refusal with its code, fix it within the step, and preview again."
+    learn
+      primary Learning
+      Attention means "Run ia validate and the checks that apply, report them verbatim, and say which claims they evidence and which stay unevaluated."
+      Inference means "Treat a proposal whose target changed since its digest as stale: rebase it on the current text or withdraw it."
+      Decision means "Reconcile the records that cite or depend on the improvement, and leave the handoff packet method-handoff-packet describes."
+      Learning means "Propose what the work taught to the owners concerned, as method-improvement-lifecycle describes, or state that there is none."

@@ -20,9 +20,9 @@
       {
         "id": "inventarch/ia-approval-kit",
         "version": "0.1.0",
-        "archive": "3568650f5238d580add75f09952c00aed570d4514c8f6ce12f9d4d00154ed2d1",
-        "manifest": "03304d685438cae492318747771c3542e2e88bf06b0e20be3e8e80a0e2bf24ee",
-        "sources": "83c57965e4e3686747c6627116aa7fcbda81717db54621504ae41a000b8a9f5d",
+        "archive": "e5aea59347041fe271d03f261e740e8660c8b56d9a4875550a3c94ae88c532cb",
+        "manifest": "1a39f7b09e600179224f3c782dd472447e36fcc1eff91530a95eef784ea56bc0",
+        "sources": "dc82aeae90d4232e4ed395bdd76a7ec94b2e63f897ee85035c7372d5d4a7d5cd",
         "folder": "ia-approval"
       },
       {
@@ -36,9 +36,9 @@
       {
         "id": "inventarch/ia-design-base-kit",
         "version": "0.1.0",
-        "archive": "7442df74f80c82648127fe6af16d3ddb28e89c689397aa41f382556bedf38c3a",
-        "manifest": "6d0b02efa36afbaeed73fb26a073e32e11cc2f3fab10c67fbd1b66ef1894f8ab",
-        "sources": "c57c3c203b89da2345c97787c3f58822dc638cd1c6bd5f0ffb814b835ce62fa6",
+        "archive": "713e08b978283008f87dc2da74130b3bdc32f94ceb4b0184262dcff060ee0dc4",
+        "manifest": "0ed70dd15999e361e2ced70b531b1adb60320e3cea24d91ab73fc7cac87428eb",
+        "sources": "b792e3e9690dace2ac781c6992450af2befeb1efb4d3eca45c746bc84e0e97d4",
         "folder": "ia-design-base"
       },
       {
@@ -60,9 +60,9 @@
       {
         "id": "inventarch/ia-product-base-kit",
         "version": "0.1.0",
-        "archive": "05a7df92a78ab853c26976b2e84305aaef2b37be6c6ab7d32368fce4fc8d2688",
-        "manifest": "946c3fefc5de7a0c19b1ef51fc599ab13acc1e17bd1ddb8f36ef96af5679de74",
-        "sources": "7f7e6f9c188ae7aeed828593035cdf82aba4bf3b0477a021c009eb6e66f9cbad",
+        "archive": "398330483252196b4ebedc0636eb9401bd5a268fe36ac07b2405bb144181759e",
+        "manifest": "2a4d91923e2c481b2c043af097b8a2eb9ed2b3176383ebe658189ec5220ac4ec",
+        "sources": "cdcf55423bbc8feec80222b2e8a6731bb9ba7ccb485696b760c011a43d39f73c",
         "folder": "ia-product-base"
       },
       {
@@ -76,9 +76,9 @@
       {
         "id": "inventarch/ia-slack-base-kit",
         "version": "0.1.0",
-        "archive": "df4ff0c37e9dcc3e0aa0914b3be61d8292ce1f2150e1b9976010f2f15140db17",
-        "manifest": "5d3ba4fe9d9592e0b30ee8cac474d4421df0a22a91f201975b36e6bb99150219",
-        "sources": "3d0fb02eb460838f1b6466fc4570c710059320a72647f7aa6a2dd2e6702b646c",
+        "archive": "3f75797fd69d033cb01d52e69af3d4b819cbab4e19619f282acd9e8caa277092",
+        "manifest": "d4c5e16c3f86389276ba86d998cc9abedcb8b0b17b6ffd6d034cb38e0fe8ba11",
+        "sources": "926498468416072b6ea17dbaf0d69ad91bdd79b3e81b70ff9d9abe2b6fab674c",
         "folder": "ia-slack-base"
       }
     ]

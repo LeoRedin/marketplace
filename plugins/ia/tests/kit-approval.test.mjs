@@ -12,16 +12,22 @@ import { expandFolder } from '../scripts/lib/releases.mjs';
 import {
   APPROVALS_DIR,
   CanonicalError,
+  IaCli,
+  approvalsDirOf,
   buildStatement,
   canonicalize,
+  checkPullRequest,
   checkSeal,
+  checkWorkspace,
   decodeBase64url,
+  decodePublicKey,
   encodeBase64url,
   generateSigningKey,
   isFailing,
   keyEntryText,
   keyIdOf,
   nameSafeKeyTag,
+  parseNowTimestamp,
   passes,
   scalarIsCanonical,
   sealRecord,
@@ -1064,4 +1070,836 @@ test('REQ-APPROVAL-05 failure: head-only authority, bad dockets and broken works
     { env, encoding: 'utf8', windowsHide: true },
   );
   assert.equal(checkRun.status, 3, checkRun.stdout + checkRun.stderr);
+});
+
+test('REQ-APPROVAL-06: historical target seals do not poison edits/deletions or allow downgrade replays, and same-name records stay isolated', () => {
+  const { key } = generateSigningKey();
+  const approver = approverRec('lead', 'acct-lead', 'Operator A', [
+    keyEntryText({ keyId: key.keyId, algorithm: 'ed25519', publicKey: key.rawPublicKey, status: 'active', fromCommit: null }),
+  ]);
+  const ruleBoth = makeRecord('approval-system/governance/approval-rule/gov-both', 'approval-system', 'governance', 'approval-rule', 'gov-both', '11'.repeat(32), '.ia/src/rules.ia', {
+    'demand.words': ['spec', 'decision'],
+    'demand.quorum': '1',
+    'demand.via': ['desk'],
+    'demand.key-kind': 'service-held',
+    'demand.staleness': 'unchanged-inputs',
+    'demand.merge': 'person',
+  });
+  const toolchain = {
+    language: '3.2.0',
+    systems: [
+      { system: 'approval-system', version: '0.1.0' },
+      { system: 'work-system', version: '3.2.0' },
+    ],
+  };
+
+  // Record v1 + old seal already on target
+  const specV1 = makeRecord('work-system/contract/spec/auth', 'work-system', 'contract', 'spec', 'auth', '21'.repeat(32), '.ia/src/specs.ia', {});
+  const sealV1 = sealRecord({
+    action: 'approve',
+    organisation: 'workspace-system/definition/workspace/org-kb',
+    workspace: 'workspace-system/definition/workspace/org-kb',
+    record: { identity: specV1.identity, name: specV1.name },
+    recordDigest: specV1.digest,
+    dependsOn: [],
+    rules: [{ identity: ruleBoth.identity, digest: ruleBoth.digest }],
+    revision: '0'.repeat(64),
+    toolchain,
+    baseCommit: '1'.repeat(40),
+    signer: { account: 'acct-lead', display: 'Operator A' },
+    key,
+    keyKind: 'service-held',
+    via: 'desk',
+    request: 'req-v1',
+    signedAt: new Date('2026-11-10T00:00:00Z'),
+  });
+  const targetWithV1 = makeView('0'.repeat(64), [...baseRecords(), approver, ruleBoth, specV1, approvalCorpusRecord(sealV1)]);
+
+  // 1. Edit specV1 -> specV2 AND add same-name @decision auth, leaving sealV1 untouched in .ia/src/approvals/
+  const specV2 = makeRecord('work-system/contract/spec/auth', 'work-system', 'contract', 'spec', 'auth', '22'.repeat(32), '.ia/src/specs.ia', {});
+  const decSameName = makeRecord('work-system/definition/decision/auth', 'work-system', 'definition', 'decision', 'auth', '33'.repeat(32), '.ia/src/decisions.ia', {});
+  const sealV2 = sealRecord({
+    action: 'approve',
+    organisation: 'workspace-system/definition/workspace/org-kb',
+    workspace: 'workspace-system/definition/workspace/org-kb',
+    record: { identity: specV2.identity, name: specV2.name },
+    recordDigest: specV2.digest,
+    dependsOn: [],
+    rules: [{ identity: ruleBoth.identity, digest: ruleBoth.digest }],
+    revision: '1'.repeat(64),
+    toolchain,
+    baseCommit: '1'.repeat(40),
+    signer: { account: 'acct-lead', display: 'Operator A' },
+    key,
+    keyKind: 'service-held',
+    via: 'desk',
+    request: 'req-v2',
+    signedAt: new Date('2026-11-18T00:00:00Z'),
+  });
+  const sealDec = sealRecord({
+    action: 'approve',
+    organisation: 'workspace-system/definition/workspace/org-kb',
+    workspace: 'workspace-system/definition/workspace/org-kb',
+    record: { identity: decSameName.identity, name: decSameName.name },
+    recordDigest: decSameName.digest,
+    dependsOn: [],
+    rules: [{ identity: ruleBoth.identity, digest: ruleBoth.digest }],
+    revision: '1'.repeat(64),
+    toolchain,
+    baseCommit: '1'.repeat(40),
+    signer: { account: 'acct-lead', display: 'Operator A' },
+    key,
+    keyKind: 'service-held',
+    via: 'desk',
+    request: 'req-dec',
+    signedAt: new Date('2026-11-18T00:01:00Z'),
+  });
+
+  const headEdit = makeView('1'.repeat(64), [
+    ...baseRecords(),
+    approver,
+    ruleBoth,
+    specV2,
+    decSameName,
+    approvalCorpusRecord(sealV1),
+    approvalCorpusRecord(sealV2),
+    approvalCorpusRecord(sealDec),
+  ]);
+  const editRep = checkSeal({
+    target: targetWithV1,
+    head: headEdit,
+    language: '3.2.0',
+    lineEndingsPinned: true,
+    now: new Date('2026-11-18T01:00:00Z'),
+    facts: defaultFacts(),
+  });
+  assert.equal(passes(editRep), true, JSON.stringify(editRep.findings));
+  assert.deepEqual(editRep.records, [
+    { identity: specV2.identity, change: 'changed', verdict: 'ratified' },
+    { identity: decSameName.identity, change: 'added', verdict: 'ratified' },
+  ]);
+
+  // Workspace audit also accepts superseded sealV1 alongside current sealV2
+  const wsEditRep = checkWorkspace(headEdit, { language: '3.2.0', lineEndingsPinned: true });
+  assert.equal(passes(wsEditRep), true, JSON.stringify(wsEditRep.findings));
+  assert.ok(wsEditRep.records.some(r => r.verdict === 'superseded'));
+
+  // 2. Delete specV1 while keeping historical sealV1 untouched on disk + adding delete seal
+  const sealDel = sealRecord({
+    action: 'delete',
+    organisation: 'workspace-system/definition/workspace/org-kb',
+    workspace: 'workspace-system/definition/workspace/org-kb',
+    record: { identity: specV1.identity, name: specV1.name },
+    recordDigest: specV1.digest,
+    dependsOn: [],
+    rules: [{ identity: ruleBoth.identity, digest: ruleBoth.digest }],
+    revision: '2'.repeat(64),
+    toolchain,
+    baseCommit: '1'.repeat(40),
+    signer: { account: 'acct-lead', display: 'Operator A' },
+    key,
+    keyKind: 'service-held',
+    via: 'desk',
+    request: 'req-del',
+    signedAt: new Date('2026-11-18T00:02:00Z'),
+  });
+  // Place delete seal under a distinct record name / file? Wait: delete seal has same recordDigest + keyId as sealV1, so its path replaces sealV1!
+  // If a DIFFERENT signer (or person-held key) signs the deletion while sealV1 remains untouched, both files coexist!
+  const { key: keyPeer } = generateSigningKey();
+  const approverWithPeer = approverRec('lead', 'acct-lead', 'Operator A', [
+    keyEntryText({ keyId: key.keyId, algorithm: 'ed25519', publicKey: key.rawPublicKey, status: 'active', fromCommit: null }),
+    keyEntryText({ keyId: keyPeer.keyId, algorithm: 'ed25519', publicKey: keyPeer.rawPublicKey, status: 'active', fromCommit: null }),
+  ]);
+  const targetForDel = makeView('0'.repeat(64), [...baseRecords(), approverWithPeer, ruleBoth, specV1, approvalCorpusRecord(sealV1)]);
+  const sealDelBySecondKey = sealRecord({
+    action: 'delete',
+    organisation: 'workspace-system/definition/workspace/org-kb',
+    workspace: 'workspace-system/definition/workspace/org-kb',
+    record: { identity: specV1.identity, name: specV1.name },
+    recordDigest: specV1.digest,
+    dependsOn: [],
+    rules: [{ identity: ruleBoth.identity, digest: ruleBoth.digest }],
+    revision: '2'.repeat(64),
+    toolchain,
+    baseCommit: '1'.repeat(40),
+    signer: { account: 'acct-lead', display: 'Operator A' },
+    key: keyPeer,
+    keyKind: 'service-held',
+    via: 'desk',
+    request: 'req-del-2',
+    signedAt: new Date('2026-11-18T00:02:00Z'),
+  });
+  const delRep = checkSeal({
+    target: targetForDel,
+    head: makeView('2'.repeat(64), [...baseRecords(), approverWithPeer, ruleBoth, approvalCorpusRecord(sealV1), approvalCorpusRecord(sealDelBySecondKey)]),
+    language: '3.2.0',
+    lineEndingsPinned: true,
+    now: new Date('2026-11-18T01:00:00Z'),
+    facts: defaultFacts(),
+  });
+  assert.equal(passes(delRep), true, JSON.stringify(delRep.findings));
+  assert.equal(delRep.records[0]?.verdict, 'ratified');
+
+  // 3. Downgrade replay guard: reverting specV2 -> specV1 WITHOUT a fresh seal cannot reuse sealV1 already on target
+  const targetAtV2 = headEdit;
+  const downgradeHead = makeView('3'.repeat(64), [
+    ...baseRecords(),
+    approver,
+    ruleBoth,
+    specV1,
+    decSameName,
+    approvalCorpusRecord(sealV1),
+    approvalCorpusRecord(sealV2),
+    approvalCorpusRecord(sealDec),
+  ]);
+  const downgradeRep = checkSeal({
+    target: targetAtV2,
+    head: downgradeHead,
+    language: '3.2.0',
+    lineEndingsPinned: true,
+    now: new Date('2026-11-18T02:00:00Z'),
+    facts: defaultFacts(),
+  });
+  assert.equal(passes(downgradeRep), false);
+  assert.ok(downgradeRep.findings.some(f => f.name === 'unratified' && f.subject === specV1.identity));
+
+  // 4. Mismatched filename stem on @approval is refused as seal-malformed
+  const badStemApproval = { ...approvalCorpusRecord(sealDec), sourcePath: sealDec.path.replace('/auth.', '/wrong-stem.') };
+  const badStemRep = checkSeal({
+    target: targetWithV1,
+    head: makeView('4'.repeat(64), [...targetWithV1.records.values(), decSameName, badStemApproval]),
+    language: '3.2.0',
+    lineEndingsPinned: true,
+    now: new Date('2026-11-18T02:00:00Z'),
+    facts: defaultFacts(),
+  });
+  assert.equal(passes(badStemRep), false);
+  assert.ok(badStemRep.findings.some(f => f.name === 'seal-malformed'));
+});
+
+test('REQ-APPROVAL-07: unsealed revocation refuses forward from-commit moves, metadata piggybacking and non-hex from-commits', () => {
+  const { key: keyActive } = generateSigningKey();
+  const { key: keyRetired } = generateSigningKey();
+  const c1 = '1'.repeat(40);
+  const c2 = '2'.repeat(40);
+  const c3 = '3'.repeat(40);
+  const c4 = '4'.repeat(40);
+  const facts = defaultFacts({ targetCommits: [c1, c2, c3, c4] });
+
+  const beforeApp = approverRec(
+    'lead',
+    'acct-lead',
+    'Operator A',
+    [
+      keyEntryText({ keyId: keyActive.keyId, algorithm: 'ed25519', publicKey: keyActive.rawPublicKey, status: 'active', fromCommit: null }),
+      keyEntryText({ keyId: keyRetired.keyId, algorithm: 'ed25519', publicKey: keyRetired.rawPublicKey, status: 'retired', fromCommit: c2 }),
+    ],
+    ['workspace-system/definition/workspace/org-kb'],
+    { 'meaning.says': 'Original bio.' },
+  );
+  const target = makeView('0'.repeat(64), [...baseRecords(), beforeApp]);
+
+  // 1. Valid unsealed revocation: active -> revoked c3, or retired c2 -> revoked c1 (c1 <= c2), touching ONLY keys.entries
+  const validRevoke = approverRec(
+    'lead',
+    'acct-lead',
+    'Operator A',
+    [
+      keyEntryText({ keyId: keyActive.keyId, algorithm: 'ed25519', publicKey: keyActive.rawPublicKey, status: 'revoked', fromCommit: c3 }),
+      keyEntryText({ keyId: keyRetired.keyId, algorithm: 'ed25519', publicKey: keyRetired.rawPublicKey, status: 'revoked', fromCommit: c1 }),
+    ],
+    ['workspace-system/definition/workspace/org-kb'],
+    { 'meaning.says': 'Original bio.' },
+  );
+  const okRep = checkSeal({
+    target,
+    head: makeView('1'.repeat(64), [...baseRecords(), validRevoke]),
+    language: '3.2.0',
+    lineEndingsPinned: true,
+    now: new Date('2026-11-18T00:00:00Z'),
+    facts,
+  });
+  assert.equal(passes(okRep), true, JSON.stringify(okRep.findings));
+  assert.ok(okRep.findings.some(f => f.name === 'revocation'));
+
+  // 2. Forward move retired c2 -> revoked c4 (c4 > c2) is REFUSED on the unsealed route
+  const forwardRevoke = approverRec(
+    'lead',
+    'acct-lead',
+    'Operator A',
+    [
+      keyEntryText({ keyId: keyActive.keyId, algorithm: 'ed25519', publicKey: keyActive.rawPublicKey, status: 'active', fromCommit: null }),
+      keyEntryText({ keyId: keyRetired.keyId, algorithm: 'ed25519', publicKey: keyRetired.rawPublicKey, status: 'revoked', fromCommit: c4 }),
+    ],
+    ['workspace-system/definition/workspace/org-kb'],
+    { 'meaning.says': 'Original bio.' },
+  );
+  const fwdRep = checkSeal({
+    target,
+    head: makeView('2'.repeat(64), [...baseRecords(), forwardRevoke]),
+    language: '3.2.0',
+    lineEndingsPinned: true,
+    now: new Date('2026-11-18T00:00:00Z'),
+    facts,
+  });
+  assert.equal(passes(fwdRep), false, 'forward retired -> revoked move must not pass unsealed');
+
+  // 3. Piggybacking meaning.says change onto an unsealed revocation is REFUSED
+  const piggybackRevoke = approverRec(
+    'lead',
+    'acct-lead',
+    'Operator A',
+    [
+      keyEntryText({ keyId: keyActive.keyId, algorithm: 'ed25519', publicKey: keyActive.rawPublicKey, status: 'revoked', fromCommit: c3 }),
+      keyEntryText({ keyId: keyRetired.keyId, algorithm: 'ed25519', publicKey: keyRetired.rawPublicKey, status: 'retired', fromCommit: c2 }),
+    ],
+    ['workspace-system/definition/workspace/org-kb'],
+    { 'meaning.says': 'Tampered bio piggybacked on revocation!' },
+  );
+  const piggyRep = checkSeal({
+    target,
+    head: makeView('3'.repeat(64), [...baseRecords(), piggybackRevoke]),
+    language: '3.2.0',
+    lineEndingsPinned: true,
+    now: new Date('2026-11-18T00:00:00Z'),
+    facts,
+  });
+  assert.equal(passes(piggyRep), false, 'meaning.says edit must not pass unsealed');
+
+  // 4. Symbolic ref HEAD~1 in from-commit is REFUSED as from-commit-uncomputable
+  const headTildeRevoke = approverRec(
+    'lead',
+    'acct-lead',
+    'Operator A',
+    [
+      `${keyActive.keyId} ed25519 ${encodeBase64url(keyActive.rawPublicKey)} revoked HEAD~1`,
+      keyEntryText({ keyId: keyRetired.keyId, algorithm: 'ed25519', publicKey: keyRetired.rawPublicKey, status: 'retired', fromCommit: c2 }),
+    ],
+    ['workspace-system/definition/workspace/org-kb'],
+    { 'meaning.says': 'Original bio.' },
+  );
+  const symRep = checkSeal({
+    target,
+    head: makeView('4'.repeat(64), [...baseRecords(), headTildeRevoke]),
+    language: '3.2.0',
+    lineEndingsPinned: true,
+    now: new Date('2026-11-18T00:00:00Z'),
+    facts,
+  });
+  assert.equal(passes(symRep), false);
+  assert.ok(symRep.findings.some(f => f.name === 'from-commit-uncomputable'));
+});
+
+test('REQ-APPROVAL-08: head standing blocks quorum-0 and duplicate-slack-id introduction while sealed root-only repair PRs unbrick target', () => {
+  const { key: keyA } = generateSigningKey();
+  const { key: keyB } = generateSigningKey();
+  const appA = approverRec(
+    'lead',
+    'acct-lead',
+    'Operator A',
+    [keyEntryText({ keyId: keyA.keyId, algorithm: 'ed25519', publicKey: keyA.rawPublicKey, status: 'active', fromCommit: null })],
+    ['workspace-system/definition/workspace/org-kb'],
+    { 'person.slack': 'U01234567' },
+  );
+  const appB = approverRec(
+    'peer',
+    'acct-peer',
+    'Operator B',
+    [keyEntryText({ keyId: keyB.keyId, algorithm: 'ed25519', publicKey: keyB.rawPublicKey, status: 'active', fromCommit: null })],
+    ['workspace-system/definition/workspace/org-kb'],
+    { 'person.slack': 'U09999999' },
+  );
+  const cleanTarget = makeView('0'.repeat(64), [...baseRecords(), appA, appB]);
+  const toolchain = {
+    language: '3.2.0',
+    systems: [{ system: 'approval-system', version: '0.1.0' }],
+  };
+
+  // 1. Even with 2 valid seals, introducing a quorum: 0 rule on head is REFUSED
+  const badRule = makeRecord('approval-system/governance/approval-rule/zero-q', 'approval-system', 'governance', 'approval-rule', 'zero-q', '41'.repeat(32), '.ia/src/rules.ia', {
+    'demand.words': ['spec'],
+    'demand.quorum': '0',
+  });
+  const sealBadA = sealRecord({
+    action: 'approve',
+    organisation: 'workspace-system/definition/workspace/org-kb',
+    workspace: 'workspace-system/definition/workspace/org-kb',
+    record: { identity: badRule.identity, name: badRule.name },
+    recordDigest: badRule.digest,
+    dependsOn: [],
+    rules: [],
+    revision: '1'.repeat(64),
+    toolchain,
+    baseCommit: '1'.repeat(40),
+    signer: { account: 'acct-lead', display: 'Operator A' },
+    key: keyA,
+    keyKind: 'service-held',
+    via: 'desk',
+    request: 'r1',
+    signedAt: new Date('2026-11-18T00:00:00Z'),
+  });
+  const sealBadB = sealRecord({
+    action: 'approve',
+    organisation: 'workspace-system/definition/workspace/org-kb',
+    workspace: 'workspace-system/definition/workspace/org-kb',
+    record: { identity: badRule.identity, name: badRule.name },
+    recordDigest: badRule.digest,
+    dependsOn: [],
+    rules: [],
+    revision: '1'.repeat(64),
+    toolchain,
+    baseCommit: '1'.repeat(40),
+    signer: { account: 'acct-peer', display: 'Operator B' },
+    key: keyB,
+    keyKind: 'service-held',
+    via: 'desk',
+    request: 'r2',
+    signedAt: new Date('2026-11-18T00:01:00Z'),
+  });
+  const introBadRuleRep = checkSeal({
+    target: cleanTarget,
+    head: makeView('1'.repeat(64), [...cleanTarget.records.values(), badRule, approvalCorpusRecord(sealBadA), approvalCorpusRecord(sealBadB)]),
+    language: '3.2.0',
+    lineEndingsPinned: true,
+    now: new Date('2026-11-18T01:00:00Z'),
+    facts: defaultFacts(),
+  });
+  assert.equal(passes(introBadRuleRep), false);
+  assert.ok(introBadRuleRep.findings.some(f => f.name === 'rule-malformed'));
+
+  // 2. Introducing duplicate Slack ID on head is REFUSED
+  const appBDupSlack = approverRec(
+    'peer',
+    'acct-peer',
+    'Operator B',
+    [keyEntryText({ keyId: keyB.keyId, algorithm: 'ed25519', publicKey: keyB.rawPublicKey, status: 'active', fromCommit: null })],
+    ['workspace-system/definition/workspace/org-kb'],
+    { 'person.slack': 'U01234567' },
+  );
+  const introDupSlackRep = checkSeal({
+    target: cleanTarget,
+    head: makeView('2'.repeat(64), [...baseRecords(), appA, appBDupSlack]),
+    language: '3.2.0',
+    lineEndingsPinned: true,
+    now: new Date('2026-11-18T01:00:00Z'),
+    facts: defaultFacts(),
+  });
+  assert.equal(passes(introDupSlackRep), false);
+  assert.ok(introDupSlackRep.findings.some(f => f.name === 'duplicate-slack-id'));
+
+  // 3. If target already has badRule (quorum: 0), a sealed root-only repair PR fixing quorum: 0 -> 1 PASSES and unbricks target!
+  const brickedTarget = makeView('0'.repeat(64), [...cleanTarget.records.values(), badRule]);
+  const fixedRule = makeRecord('approval-system/governance/approval-rule/zero-q', 'approval-system', 'governance', 'approval-rule', 'zero-q', '42'.repeat(32), '.ia/src/rules.ia', {
+    'demand.words': ['spec'],
+    'demand.quorum': '1',
+  });
+  const sealFixA = sealRecord({
+    action: 'approve',
+    organisation: 'workspace-system/definition/workspace/org-kb',
+    workspace: 'workspace-system/definition/workspace/org-kb',
+    record: { identity: fixedRule.identity, name: fixedRule.name },
+    recordDigest: fixedRule.digest,
+    dependsOn: [],
+    rules: [],
+    revision: '3'.repeat(64),
+    toolchain,
+    baseCommit: '1'.repeat(40),
+    signer: { account: 'acct-lead', display: 'Operator A' },
+    key: keyA,
+    keyKind: 'service-held',
+    via: 'desk',
+    request: 'fix-1',
+    signedAt: new Date('2026-11-18T00:00:00Z'),
+  });
+  const sealFixB = sealRecord({
+    action: 'approve',
+    organisation: 'workspace-system/definition/workspace/org-kb',
+    workspace: 'workspace-system/definition/workspace/org-kb',
+    record: { identity: fixedRule.identity, name: fixedRule.name },
+    recordDigest: fixedRule.digest,
+    dependsOn: [],
+    rules: [],
+    revision: '3'.repeat(64),
+    toolchain,
+    baseCommit: '1'.repeat(40),
+    signer: { account: 'acct-peer', display: 'Operator B' },
+    key: keyB,
+    keyKind: 'service-held',
+    via: 'desk',
+    request: 'fix-2',
+    signedAt: new Date('2026-11-18T00:01:00Z'),
+  });
+  const repairRep = checkSeal({
+    target: brickedTarget,
+    head: makeView('3'.repeat(64), [...cleanTarget.records.values(), fixedRule, approvalCorpusRecord(sealFixA), approvalCorpusRecord(sealFixB)]),
+    language: '3.2.0',
+    lineEndingsPinned: true,
+    now: new Date('2026-11-18T01:00:00Z'),
+    facts: defaultFacts(),
+  });
+  assert.equal(passes(repairRep), true, JSON.stringify(repairRep.findings));
+});
+
+test('REQ-APPROVAL-09: moves, nested workspaces, checkWorkspace quorum, small-order Ed25519 keys and --now validation', () => {
+  // 1. All 8 canonical small-order Ed25519 points + non-canonical y >= p rejected
+  const smallOrderHex = [
+    '0100000000000000000000000000000000000000000000000000000000000000',
+    'ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f',
+    '0000000000000000000000000000000000000000000000000000000000000000',
+    '0000000000000000000000000000000000000000000000000000000000000080',
+    'c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a',
+    'c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac03fa',
+    '26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc05',
+    '26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc85',
+    'edffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f', // y = p (non-canonical)
+  ];
+  for (const hex of smallOrderHex) {
+    const raw = new Uint8Array(Buffer.from(hex, 'hex'));
+    assert.equal(decodePublicKey(encodeBase64url(raw)), null, `must reject point ${hex}`);
+  }
+
+  // 2. --now validation
+  assert.equal(parseNowTimestamp('2026-11-18T12:30:00Z').toISOString(), '2026-11-18T12:30:00.000Z');
+  assert.throws(() => parseNowTimestamp('not-a-date'), /--now/);
+  assert.throws(() => parseNowTimestamp('2026-02-31T00:00:00Z'), /--now/);
+
+  // 3. Pure file moves out of / into governed path require seals
+  const { key: orgKey } = generateSigningKey();
+  const orgApprover = approverRec('lead', 'acct-lead', 'Operator A', [
+    keyEntryText({ keyId: orgKey.keyId, algorithm: 'ed25519', publicKey: orgKey.rawPublicKey, status: 'active', fromCommit: null }),
+  ]);
+  const pathRule = makeRecord('approval-system/governance/approval-rule/gov-folder', 'approval-system', 'governance', 'approval-rule', 'gov-folder', '51'.repeat(32), '.ia/src/rules.ia', {
+    'demand.paths': ['.ia/src/governed/'],
+    'demand.quorum': '1',
+  });
+  const specInGov = makeRecord('work-system/contract/spec/movable', 'work-system', 'contract', 'spec', 'movable', '61'.repeat(32), '.ia/src/governed/spec.ia', {});
+  const specOutside = { ...specInGov, sourcePath: '.ia/src/free/spec.ia' };
+  const moveTarget = makeView('0'.repeat(64), [...baseRecords(), orgApprover, pathRule, specInGov]);
+  const moveUnsealedRep = checkSeal({
+    target: moveTarget,
+    head: makeView('1'.repeat(64), [...baseRecords(), orgApprover, pathRule, specOutside]),
+    language: '3.2.0',
+    lineEndingsPinned: true,
+    now: new Date('2026-11-18T00:00:00Z'),
+    facts: defaultFacts(),
+  });
+  assert.equal(passes(moveUnsealedRep), false, 'moving out of governed path without seal must fail');
+  assert.ok(moveUnsealedRep.findings.some(f => f.name === 'unratified' && f.subject === specInGov.identity));
+
+  const moveSeal = sealRecord({
+    action: 'approve',
+    organisation: 'workspace-system/definition/workspace/org-kb',
+    workspace: 'workspace-system/definition/workspace/org-kb',
+    record: { identity: specOutside.identity, name: specOutside.name },
+    recordDigest: specOutside.digest,
+    dependsOn: [],
+    rules: [{ identity: pathRule.identity, digest: pathRule.digest }],
+    revision: '1'.repeat(64),
+    toolchain: {
+      language: '3.2.0',
+      systems: [
+        { system: 'approval-system', version: '0.1.0' },
+        { system: 'work-system', version: '3.2.0' },
+      ],
+    },
+    baseCommit: '1'.repeat(40),
+    signer: { account: 'acct-lead', display: 'Operator A' },
+    key: orgKey,
+    keyKind: 'service-held',
+    via: 'desk',
+    request: 'req-move',
+    signedAt: new Date('2026-11-18T00:00:00Z'),
+  });
+  const moveSealedRep = checkSeal({
+    target: moveTarget,
+    head: makeView('1'.repeat(64), [...baseRecords(), orgApprover, pathRule, specOutside, approvalCorpusRecord(moveSeal)]),
+    language: '3.2.0',
+    lineEndingsPinned: true,
+    now: new Date('2026-11-18T00:00:00Z'),
+    facts: defaultFacts(),
+  });
+  assert.equal(passes(moveSealedRep), true, JSON.stringify(moveSealedRep.findings));
+  assert.deepEqual(moveSealedRep.records, [{ identity: specOutside.identity, change: 'moved', verdict: 'ratified' }]);
+
+  // 4. Nested workspaces: org approver covers governed-by child workspace, child rule stays scoped to child, and sealRecord writes into child approvalsDir
+  const childWs = {
+    ...makeRecord(
+      'workspace-system/definition/workspace/eng-ws',
+      'workspace-system',
+      'definition',
+      'workspace',
+      'eng-ws',
+      'a2'.repeat(32),
+      '.ia/src/workspaces.ia',
+      { 'composition.sources': ['.ia/src/eng @authored'] },
+    ),
+    edges: [{ predicate: 'governed-by', direction: 'out', target: 'workspace-system/definition/workspace/org-kb' }],
+  };
+  const childRule = makeRecord('approval-system/governance/approval-rule/eng-specs', 'approval-system', 'governance', 'approval-rule', 'eng-specs', '71'.repeat(32), '.ia/src/eng/rules.ia', {
+    'demand.words': ['spec'],
+    'demand.quorum': '1',
+  });
+  const nestedTarget = makeView('0'.repeat(64), [...baseRecords(), childWs, orgApprover, childRule]);
+  assert.equal(approvalsDirOf(childWs.identity, nestedTarget), '.ia/src/eng/approvals');
+
+  // Root spec in org-kb is NOT governed by childRule in eng-ws, while engSpec in eng-ws IS governed and ratified by orgApprover
+  const rootSpec = makeRecord('work-system/contract/spec/org-spec', 'work-system', 'contract', 'spec', 'org-spec', '81'.repeat(32), '.ia/src/specs.ia', {});
+  const engSpec = makeRecord('work-system/contract/spec/eng-spec', 'work-system', 'contract', 'spec', 'eng-spec', '82'.repeat(32), '.ia/src/eng/specs.ia', {});
+  const engSeal = sealRecord({
+    action: 'approve',
+    organisation: 'workspace-system/definition/workspace/org-kb',
+    workspace: childWs.identity,
+    view: nestedTarget,
+    record: { identity: engSpec.identity, name: engSpec.name },
+    recordDigest: engSpec.digest,
+    dependsOn: [],
+    rules: [{ identity: childRule.identity, digest: childRule.digest }],
+    revision: '2'.repeat(64),
+    toolchain: {
+      language: '3.2.0',
+      systems: [
+        { system: 'approval-system', version: '0.1.0' },
+        { system: 'work-system', version: '3.2.0' },
+      ],
+    },
+    baseCommit: '1'.repeat(40),
+    signer: { account: 'acct-lead', display: 'Operator A' },
+    key: orgKey,
+    keyKind: 'service-held',
+    via: 'desk',
+    request: 'req-eng',
+    signedAt: new Date('2026-11-18T00:00:00Z'),
+  });
+  assert.ok(engSeal.path.startsWith('.ia/src/eng/approvals/'));
+  const nestedHead = makeView('2'.repeat(64), [...nestedTarget.records.values(), rootSpec, engSpec, approvalCorpusRecord(engSeal)]);
+  const nestedRep = checkSeal({
+    target: nestedTarget,
+    head: nestedHead,
+    language: '3.2.0',
+    lineEndingsPinned: true,
+    now: new Date('2026-11-18T00:00:00Z'),
+    facts: defaultFacts(),
+  });
+  assert.equal(passes(nestedRep), true, JSON.stringify(nestedRep.findings));
+  assert.deepEqual(nestedRep.records, [{ identity: engSpec.identity, change: 'added', verdict: 'ratified' }]);
+
+  // 5. checkWorkspace quorum: unsealed covered record in workspace mode fails unratified
+  const wsUnsealed = makeView('3'.repeat(64), [...nestedTarget.records.values(), engSpec]);
+  const wsRep = checkWorkspace(wsUnsealed, { language: '3.2.0', lineEndingsPinned: true });
+  assert.equal(passes(wsRep), false);
+  assert.ok(wsRep.findings.some(f => f.name === 'unratified' && f.subject === engSpec.identity));
+});
+
+test('REQ-APPROVAL-10: real Git + CLI 3.8.0 current-revision seals pass and re-filed notice resets the 7-day timer', { skip: SKIP_CLI }, t => {
+  const base = realpathSync.native(mkdtempSync(join(tmpdir(), 'ia-approval-git-live-')));
+  t.after(() => rmSync(base, { recursive: true, force: true }));
+  const repo = join(base, 'repo');
+  const home = join(base, 'home');
+  mkdirSync(home, { recursive: true });
+  const env = { ...process.env, IA_HOME: home, IA_CLI_PATH: CLI, IA_NO_HANDOFF: '1' };
+
+  const gitRun = (args, extraEnv = {}) => {
+    const res = spawnSync('git', ['-C', repo, ...args], {
+      env: { ...env, GIT_AUTHOR_NAME: 'Test', GIT_AUTHOR_EMAIL: 'test@example.org', GIT_COMMITTER_NAME: 'Test', GIT_COMMITTER_EMAIL: 'test@example.org', ...extraEnv },
+      encoding: 'utf8',
+      windowsHide: true,
+    });
+    assert.equal(res.status, 0, `git ${args.join(' ')}: ${res.stdout}\n${res.stderr}`);
+    return res.stdout.trim();
+  };
+
+  spawnSync(process.execPath, [CLI, 'init', repo, '--host', 'none', '--apply', '--yes', '--json'], { env, encoding: 'utf8', windowsHide: true });
+  adopt(repo, findKit('ia-approval'), { cli: { argv: [process.execPath, CLI], version: '3.8.0' }, env });
+  const wsFile = join(repo, '.ia', 'src', 'workspace.ia');
+  const wsText = readFileSync(wsFile, 'utf8').replace(/systems \[([^\]]+)\]/, 'systems [$1, @system approval-system]');
+  writeFileSync(wsFile, wsText);
+  writeFileSync(join(repo, '.gitattributes'), '* text=auto eol=lf\n*.tgz binary\n');
+  writeFileSync(join(repo, '.gitignore'), '.ia/distributions/\n.ia/work/\n');
+  const wsId = `workspace-system/definition/workspace/${/^@workspace\s+([a-z0-9-]+)/m.exec(wsText)[1]}`;
+
+  const { key: oldKey } = generateSigningKey();
+  const { key: recovKey } = generateSigningKey();
+
+  const writeApprover = recoveryPending => {
+    writeFileSync(
+      join(repo, '.ia', 'src', 'approvers.ia'),
+      `#! ia 1.0
+
+@approver sole-approver
+  meaning
+    says "Sole workspace approver."
+    answers "Who ratifies?"
+  person
+    account "acct-sole"
+    display "Sole Operator"
+  authority
+    workspaces ["${wsId}"]
+    anchor founding${recoveryPending ? `\n    recovery-pending "${recoveryPending}"` : ''}
+  keys
+    entries ["${keyEntryText({ keyId: oldKey.keyId, algorithm: 'ed25519', publicKey: oldKey.rawPublicKey, status: 'active', fromCommit: null })}"]
+
+@approval-rule strict-rev-rule
+  meaning
+    says "Decisions require current-revision seals."
+    answers "Which records require current-revision?"
+  demand
+    words [decision]
+    quorum 1
+    staleness current-revision
+    merge person
+`,
+    );
+  };
+
+  gitRun(['init', '-b', 'main']);
+  // c1 (10 days ago): announce recovery
+  const pendingStr = `${recovKey.keyId} ${oldKey.keyId}`;
+  writeApprover(pendingStr);
+  gitRun(['add', '.']);
+  gitRun(['commit', '-m', 'c1: announce recovery 10d ago'], { GIT_COMMITTER_DATE: '2026-11-01T00:00:00Z', GIT_AUTHOR_DATE: '2026-11-01T00:00:00Z' });
+  const c1 = gitRun(['rev-parse', 'HEAD']);
+
+  // c2 (5 days ago): clear recovery notice
+  writeApprover(null);
+  gitRun(['add', '.']);
+  gitRun(['commit', '-m', 'c2: clear recovery'], { GIT_COMMITTER_DATE: '2026-11-06T00:00:00Z', GIT_AUTHOR_DATE: '2026-11-06T00:00:00Z' });
+
+  // c3 (1 hour ago): re-file identical recovery notice blob!
+  writeApprover(pendingStr);
+  gitRun(['add', '.']);
+  gitRun(['commit', '-m', 'c3: re-file recovery 1h ago'], { GIT_COMMITTER_DATE: '2026-11-11T00:00:00Z', GIT_AUTHOR_DATE: '2026-11-11T00:00:00Z' });
+  const targetRef = gitRun(['rev-parse', 'HEAD']);
+
+  // Branch A: attempt to complete recovery only 1 hour after c3 -> must fail recovery-too-early (NOT use c1's timestamp!)
+  gitRun(['checkout', '-b', 'pr-early-recovery', targetRef]);
+  writeFileSync(
+    join(repo, '.ia', 'src', 'approvers.ia'),
+    `#! ia 1.0
+
+@approver sole-approver
+  meaning
+    says "Sole workspace approver."
+    answers "Who ratifies?"
+  person
+    account "acct-sole"
+    display "Sole Operator"
+  authority
+    workspaces ["${wsId}"]
+    anchor founding
+  keys
+    entries ["${keyEntryText({ keyId: oldKey.keyId, algorithm: 'ed25519', publicKey: oldKey.rawPublicKey, status: 'retired', fromCommit: c1 })}", "${keyEntryText({ keyId: recovKey.keyId, algorithm: 'ed25519', publicKey: recovKey.rawPublicKey, status: 'active', fromCommit: null })}"]
+
+@approval-rule strict-rev-rule
+  meaning
+    says "Decisions require current-revision seals."
+    answers "Which records require current-revision?"
+  demand
+    words [decision]
+    quorum 1
+    staleness current-revision
+    merge person
+`,
+  );
+  gitRun(['add', '.']);
+  gitRun(['commit', '-m', 'complete recovery early']);
+
+  const cliInstance = new IaCli([process.execPath, CLI], { env });
+  const earlyRep = checkPullRequest(
+    { repository: repo, targetRef: 'main', headRef: 'pr-early-recovery' },
+    { cli: cliInstance, now: new Date('2026-11-11T01:00:00Z') },
+  );
+  assert.equal(passes(earlyRep), false);
+  assert.ok(earlyRep.findings.some(f => f.name === 'recovery-too-early'), JSON.stringify(earlyRep.findings));
+
+  // Branch B: real current-revision decision seal against pre-seal ia capture revision -> PASSES checkPullRequest & check.mjs!
+  gitRun(['checkout', '-b', 'pr-current-rev', targetRef]);
+  writeFileSync(
+    join(repo, '.ia', 'src', 'decisions.ia'),
+    `#! ia 1.0
+
+@decision rev-pinned-dec
+  meaning
+    says "Decision sealed under current-revision."
+  work
+    title "Pinned decision"
+    status made
+  decision
+    question "Does current-revision pass on real CLI 3.8.0?"
+    decider "Sole Operator"
+    choice "Yes, via pre-seal corpus revision"
+    rationale "Approvals inside .ia/src cannot hash themselves."
+`,
+  );
+  const preSealView = cliInstance.capture(repo);
+  const decSnap = preSealView.records.get('work-system/definition/decision/rev-pinned-dec');
+  const ruleSnap = preSealView.records.get('approval-system/governance/approval-rule/strict-rev-rule');
+  const floorSys = [...preSealView.records.values()].find(r => r.system === 'floor' && r.facet === 'system');
+  const langVer = floorSys?.fields?.version ?? '3.3.0';
+
+  const revSeal = sealRecord({
+    action: 'approve',
+    organisation: wsId,
+    workspace: wsId,
+    record: { identity: decSnap.identity, name: decSnap.name },
+    recordDigest: decSnap.digest,
+    dependsOn: [],
+    rules: [{ identity: ruleSnap.identity, digest: ruleSnap.digest }],
+    revision: preSealView.revision,
+    toolchain: {
+      language: langVer,
+      systems: [
+        { system: 'approval-system', version: '0.1.0' },
+        { system: 'work-system', version: langVer },
+      ],
+    },
+    baseCommit: targetRef,
+    signer: { account: 'acct-sole', display: 'Sole Operator' },
+    key: oldKey,
+    keyKind: 'service-held',
+    via: 'desk',
+    request: 'req-cur-rev',
+    signedAt: new Date('2026-11-11T01:00:00Z'),
+  });
+  mkdirSync(join(repo, APPROVALS_DIR), { recursive: true });
+  writeFileSync(join(repo, revSeal.path), revSeal.source);
+  gitRun(['add', '.']);
+  gitRun(['commit', '-m', 'add current-revision decision and seal']);
+
+  const curRevPrRep = checkPullRequest(
+    { repository: repo, targetRef: 'main', headRef: 'pr-current-rev' },
+    { cli: cliInstance, now: new Date('2026-11-11T02:00:00Z') },
+  );
+  assert.equal(passes(curRevPrRep), true, JSON.stringify(curRevPrRep.findings));
+  assert.deepEqual(curRevPrRep.records, [{ identity: decSnap.identity, change: 'added', verdict: 'ratified' }]);
+
+  // CLI invalid --now exits 2
+  const badNowCli = spawnSync(
+    process.execPath,
+    [join(KIT, 'scripts', 'check-seal.mjs'), '--repo', repo, '--target', 'main', '--head', 'pr-current-rev', '--cli', CLI, '--now', 'not-a-date'],
+    { env, encoding: 'utf8', windowsHide: true },
+  );
+  assert.equal(badNowCli.status, 2);
+  assert.match(badNowCli.stderr, /--now/);
+
+  // Post-seal edit to another non-approval record invalidates current-revision -> fails stale!
+  writeFileSync(
+    join(repo, '.ia', 'src', 'extra.ia'),
+    `#! ia 1.0
+
+@task post-seal-task
+  meaning
+    says "Added after current-revision seal was signed."
+  work
+    title "Post-seal task"
+    status open
+`,
+  );
+  gitRun(['add', '.']);
+  gitRun(['commit', '-m', 'post-seal non-approval edit']);
+  const stalePrRep = checkPullRequest(
+    { repository: repo, targetRef: 'main', headRef: 'pr-current-rev' },
+    { cli: cliInstance, now: new Date('2026-11-11T02:00:00Z') },
+  );
+  assert.equal(passes(stalePrRep), false);
+  assert.ok(stalePrRep.findings.some(f => f.name === 'stale' && f.cause?.includes('organisation revision changed')));
 });

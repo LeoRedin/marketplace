@@ -1,0 +1,8 @@
+#! ia 1.0
+
+@distribution ia-repo-distribution
+  meaning
+    says "The release root of the public IA repository structure base kit: repo-system with the repository, layer, package and area words, their canonical schemas, authoring guidance, public dependency-role grammar, spec citation consent rows, and the offline check-layers verifier."
+    answers "Which records does the IA repo kit release ship?"
+  distribution
+    records [@system repo-system]

@@ -1,0 +1,12 @@
+#! ia 1.0
+
+@law method-provisional-foundation-ceiling
+  meaning
+    says "Work that rests on a provisional foundation goes one layer deep and no further. A foundation is provisional while a spec the work cites is not accepted (a superseded or withdrawn spec counts too, until the work points at its successor), or a decision the work requires, or that grounds a spec it cites, has no choice. The first layer may design, prototype and write tests against the proposed contract, on a branch. Until the foundation is ratified, no further work builds on that layer; nothing that depends on it is authored into the workspace's records beyond the work records that track it (lowering drafts stay drafts); and nothing is merged or released. The work that writes or revises the foundation itself is not resting on it. The work records its dependency: a task requires the open decision, so ia next reports it as blocked; a task cites a draft spec, and the spec is grounded by the decision that will ratify it, because ia next does not block on a cited spec. The plugin's ceiling report shows each task's layer."
+    answers "How far may work go on a spec or decision that is not yet ratified?"
+  governance
+    severity blocking
+    requires "Stop one layer above a provisional spec or open decision: record the dependency (require the decision; cite the spec and ground it on its ratifying decision), keep that layer on a branch, and build nothing on it, author nothing that depends on it beyond its work records, merge nothing and release nothing until the foundation is ratified."
+  subject
+    subject-word spec
+    subject-kind definition

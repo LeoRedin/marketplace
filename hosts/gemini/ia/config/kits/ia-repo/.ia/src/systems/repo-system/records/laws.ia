@@ -1,0 +1,34 @@
+#! ia 1.0
+
+@law repo-single-word-owner
+  meaning
+    says "A workspace may compose only one system that mints repository, layer, package or area; composing another system that declares any of the four words is refused by the language toolchain at the winning registration band. Layer profiles and repository architectures build on repo-system by authoring @layer, @repository, @package and @area records rather than re-minting shadow words."
+    answers "May a workspace compose another system that mints repository, layer, package or area?"
+  governance
+    severity blocking
+    requires "Compose no second system that mints repository, layer, package or area; express layer profiles and repository structures as records of repo-system."
+  subject
+    subject-word repository
+    subject-kind definition
+
+@law repo-downward-acyclic-dependencies
+  meaning
+    says "Repository structural graphs are directed acyclic graphs ordered by layer.rank: a @layer may require only @layer records of strictly lower rank; a @package's optional require @layer edge must match its package.layer reference; a @package may require only @package records whose assigned layer.rank is less than or equal to its own; classified packages must honour dependency-role boundaries (contract -> contract only; core -> core/contract only; no package -> host; runtime packages -> never tool; composition -> no same-rank sibling composition); and @layer, @package and @area require graphs must contain no cycles."
+    answers "What dependency direction, role purity and acyclicity invariants govern layers, packages and areas?"
+  governance
+    severity blocking
+    requires "Keep all @layer, @package and @area require graphs acyclic, respect layer.rank ordering, keep package.layer aligned with require @layer, and honour classified package.kind role boundaries."
+  subject
+    subject-word package
+    subject-kind definition
+
+@law repo-canonical-paths-and-locators
+  meaning
+    says "Every package.path and layer.paths entry must be a canonical repository-relative POSIX path without leading slashes, backslashes, drive colons or .. segments, and two @package records in the same repository scope may not declare identical or overlapping package.path roots. Every repository.url must be a non-empty canonical locator without embedded userinfo credentials, and repository visibility is governed by the Git host rather than claimed by a record field."
+    answers "What path and locator hygiene applies to @repository, @layer and @package records?"
+  governance
+    severity blocking
+    requires "Use canonical non-overlapping repository-relative POSIX paths on packages and layers, keep repository.url free of credentials, and never treat a record field as a visibility ACL."
+  subject
+    subject-word repository
+    subject-kind definition

@@ -10,6 +10,7 @@ import { adopt, findKit, sourcesDigest } from '../scripts/lib/kit.mjs';
 import { kitRecordNames } from '../scripts/lib/records.mjs';
 import { expandFolder } from '../scripts/lib/releases.mjs';
 import { FORMAT, STAGE_ORDER, checkDesignPatterns, inspectTokenClassList, isSafeRecipeOutput } from '../config/kits/ia-design-base/scripts/check-design-patterns.mjs';
+import { APPROVALS_DIR, generateSigningKey, keyEntryText, sealRecord } from '../config/kits/ia-approval/scripts/check-seal.mjs';
 
 const PLUGIN = fileURLToPath(new URL('..', import.meta.url));
 const REPO_ROOT = fileURLToPath(new URL('../../..', import.meta.url));
@@ -263,19 +264,31 @@ function synRecipe(name, opts) {
   };
 }
 
-function synApproval(name, targetIdentity, targetDigest) {
+function synApprover(name, account, key, workspaces = ['workspace-system/definition/workspace/design-ws']) {
   return {
-    identity: `approval-system/definition/approval/${name}`,
-    discriminator: 'approval',
+    identity: `approval-system/definition/approver/${name}`,
+    discriminator: 'approver',
     name,
     provenance: 'workspace',
     sections: [
       {
-        name: 'seal',
+        name: 'person',
         fields: [
-          { key: 'action', value: strVal('approve') },
-          { key: 'record', value: strVal(targetIdentity) },
-          { key: 'record-digest', value: strVal(targetDigest) },
+          { key: 'account', value: strVal(account) },
+          { key: 'display', value: strVal(name) },
+        ],
+      },
+      {
+        name: 'authority',
+        fields: [{ key: 'workspaces', value: listVal(workspaces.map(strVal)) }],
+      },
+      {
+        name: 'keys',
+        fields: [
+          {
+            key: 'entries',
+            value: listVal([strVal(keyEntryText({ keyId: key.keyId, algorithm: 'ed25519', publicKey: key.rawPublicKey, status: 'active', fromCommit: null }))]),
+          },
         ],
       },
     ],
@@ -283,13 +296,78 @@ function synApproval(name, targetIdentity, targetDigest) {
   };
 }
 
-function synApprovalRule(name, words) {
+function synSignedApproval(targetRecord, targetDigest, key, signerAccount, rules = [], wsId = 'workspace-system/definition/workspace/design-ws') {
+  const seal = sealRecord({
+    action: 'approve',
+    organisation: wsId,
+    workspace: wsId,
+    record: { identity: targetRecord.identity, name: targetRecord.name },
+    recordDigest: targetDigest,
+    dependsOn: [],
+    rules,
+    revision: '9'.repeat(64),
+    toolchain: { language: '3.2.0', systems: [{ system: 'design-base-system', version: '0.1.0' }] },
+    baseCommit: '1'.repeat(40),
+    signer: { account: signerAccount, display: signerAccount },
+    key,
+    keyKind: 'service-held',
+    via: 'desk',
+    request: `req-${targetRecord.name}`,
+    signedAt: new Date('2026-11-18T00:00:00Z'),
+  });
+  const s = seal.statement;
+  return {
+    identity: `approval-system/definition/approval/${targetRecord.name}-seal`,
+    discriminator: 'approval',
+    name: `${targetRecord.name}-seal`,
+    provenance: 'workspace',
+    origin: { file: seal.path, line: 3 },
+    sections: [
+      {
+        name: 'seal',
+        fields: [
+          { key: 'action', value: strVal(s.action) },
+          { key: 'organisation', value: strVal(s.organisation) },
+          { key: 'workspace', value: strVal(s.workspace) },
+          { key: 'record', value: strVal(s.record) },
+          { key: 'record-digest', value: strVal(s.recordDigest) },
+          { key: 'depends-on', value: listVal(s.dependsOn.map(d => strVal(`${d.identity} ${d.digest}`))) },
+          { key: 'rules', value: listVal(s.rules.map(r => strVal(`${r.identity} ${r.digest}`))) },
+          { key: 'revision', value: strVal(s.revision) },
+          { key: 'language-version', value: strVal(s.language) },
+          { key: 'system-versions', value: listVal(s.systems.map(sys => strVal(`${sys.system} ${sys.version}`))) },
+          { key: 'base-commit', value: strVal(s.baseCommit) },
+          { key: 'signer', value: strVal(s.signer) },
+          { key: 'key-id', value: strVal(s.keyId) },
+          { key: 'key-kind', value: strVal(s.keyKind) },
+          { key: 'via', value: strVal(s.via) },
+          { key: 'request', value: strVal(s.request) },
+          { key: 'signed-at', value: strVal(s.signedAt) },
+          { key: 'algorithm', value: strVal('ed25519') },
+          { key: 'signature', value: strVal(seal.signature) },
+        ],
+      },
+    ],
+    edges: [],
+  };
+}
+
+function synApprovalRule(name, words, quorum = 1, digest = '7'.repeat(64)) {
   return {
     identity: `approval-system/governance/approval-rule/${name}`,
     discriminator: 'approval-rule',
     name,
+    digest,
     provenance: 'workspace',
-    sections: [{ name: 'demand', fields: [{ key: 'words', value: listVal(words.map(strVal)) }] }],
+    sections: [
+      {
+        name: 'demand',
+        fields: [
+          { key: 'words', value: listVal(words.map(strVal)) },
+          { key: 'quorum', value: numVal(quorum) },
+        ],
+      },
+    ],
     edges: [],
   };
 }
@@ -609,9 +687,31 @@ test('REQ-DESIGN-BASE-04 success: compliant atomic hierarchy, overrides and seal
   assert.equal(isSafeRecipeOutput('.ia/src/workspace.ia'), false);
   assert.equal(inspectTokenClassList('bg-surface-primary text-ink-default').raw, false);
   assert.equal(inspectTokenClassList('bg-[#ff0000]').raw, true);
+  assert.equal(inspectTokenClassList('hover:bg-prim-blue-500', new Set(['bg-prim-blue-500'])).raw, true, 'variant-prefixed primitive token refused');
+  assert.equal(inspectTokenClassList('dark:focus:bg-prim-blue-500', new Set(['bg-prim-blue-500'])).raw, true, 'nested variant-prefixed primitive token refused');
 
+  const { key: designKey } = generateSigningKey();
   const patDigest = '1'.repeat(64);
   const recDigest = '2'.repeat(64);
+  const ruleDigest = '7'.repeat(64);
+  const btnUseRec = synRecipe('btn-use', {
+    part: 'design-base-system/definition/part/btn',
+    mode: 'use',
+    variants: ['variant=Default -> variant=action'],
+    standing: 'active',
+    digest: recDigest,
+  });
+  const toolbarPatRec = synPattern('toolbar-pat', {
+    yields: 'design-base-system/definition/part/toolbar',
+    matches: ['frame layout=horizontal', 'slot=actions'],
+    slots: ['actions <- root/right'],
+    recipe: 'design-base-system/definition/recipe/toolbar-compose',
+    standing: 'active',
+    digest: patDigest,
+  });
+  const namedRule = synApprovalRule('named-words-rule', ['pattern', 'recipe'], 1, ruleDigest);
+  const ruleRef = [{ identity: namedRule.identity, digest: ruleDigest }];
+
   const report = checkDesignPatterns({
     revision: 'rev-design-ok',
     records: [
@@ -626,7 +726,7 @@ test('REQ-DESIGN-BASE-04 success: compliant atomic hierarchy, overrides and seal
       synSlot('toolbar-actions', 'toolbar', 'actions'),
       synPart('toolbar', 'lvl-organism', { displayName: 'Toolbar', composes: ['search-box'], slots: ['toolbar-actions'] }),
       synPart('list-shell', 'lvl-template', { displayName: 'ListShell', composes: ['toolbar'] }),
-      synRecipe('btn-use', { part: 'design-base-system/definition/part/btn', mode: 'use', variants: ['variant=Default -> variant=action'], standing: 'active', digest: recDigest }),
+      btnUseRec,
       synRecipe('search-adapt', {
         part: 'design-base-system/definition/part/search-box',
         mode: 'adapt',
@@ -649,17 +749,11 @@ test('REQ-DESIGN-BASE-04 success: compliant atomic hierarchy, overrides and seal
         output: 'src/features/list-shell/ListShell.tsx',
         standing: 'proposed',
       }),
-      synPattern('toolbar-pat', {
-        yields: 'design-base-system/definition/part/toolbar',
-        matches: ['frame layout=horizontal', 'slot=actions'],
-        slots: ['actions <- root/right'],
-        recipe: 'design-base-system/definition/recipe/toolbar-compose',
-        standing: 'active',
-        digest: patDigest,
-      }),
-      synApprovalRule('named-words-rule', ['pattern', 'recipe']),
-      synApproval('seal-pat', 'design-base-system/definition/pattern/toolbar-pat', patDigest),
-      synApproval('seal-rec', 'design-base-system/definition/recipe/btn-use', recDigest),
+      toolbarPatRec,
+      synApprover('design-lead', 'acct-design', designKey),
+      namedRule,
+      synSignedApproval(toolbarPatRec, patDigest, designKey, 'acct-design', ruleRef),
+      synSignedApproval(btnUseRec, recDigest, designKey, 'acct-design', ruleRef),
     ],
   });
 
@@ -927,4 +1021,214 @@ test('REQ-DESIGN-BASE-05 failure: check.mjs exits 3 when check-design-patterns d
   assert.ok(body.findings.some(f => f.code === 'RECIPE_RAW_STYLE'));
   assert.ok(body.findings.some(f => f.code === 'RECIPE_ADAPT_SCALE'));
   assert.ok(body.findings.some(f => f.code === 'ACTIVE_RECIPE_UNSEALED'));
+});
+
+test('REQ-DESIGN-BASE-06: forged/zero-signature seals, missing digests and variant-prefixed primitives fail, while real Ed25519 seals pass', { skip: SKIP_CLI }, t => {
+  // 1. Unit: zero-signature fake @approval, missing record.digest, and hover:<primitive> class
+  const patNoDigest = { ...synPattern('no-digest-pat', { yields: 'design-base-system/definition/part/btn', standing: 'active' }), digest: undefined };
+  const fakeApproval = {
+    identity: 'approval-system/definition/approval/fake-seal',
+    discriminator: 'approval',
+    name: 'fake-seal',
+    provenance: 'workspace',
+    sections: [
+      {
+        name: 'seal',
+        fields: [
+          { key: 'action', value: strVal('approve') },
+          { key: 'organisation', value: strVal('workspace-system/definition/workspace/design-ws') },
+          { key: 'workspace', value: strVal('workspace-system/definition/workspace/design-ws') },
+          { key: 'record', value: strVal('design-base-system/definition/recipe/fake-sealed-rec') },
+          { key: 'record-digest', value: strVal('f'.repeat(64)) },
+          { key: 'depends-on', value: listVal([]) },
+          { key: 'rules', value: listVal([]) },
+          { key: 'revision', value: strVal('0'.repeat(64)) },
+          { key: 'language-version', value: strVal('3.2.0') },
+          { key: 'system-versions', value: listVal([strVal('design-base-system 0.1.0')]) },
+          { key: 'base-commit', value: strVal('1'.repeat(40)) },
+          { key: 'signer', value: strVal('nonexistent-signer') },
+          { key: 'key-id', value: strVal('kid-fake') },
+          { key: 'key-kind', value: strVal('service-held') },
+          { key: 'via', value: strVal('desk') },
+          { key: 'request', value: strVal('req-fake') },
+          { key: 'signed-at', value: strVal('2026-11-18T00:00:00Z') },
+          { key: 'algorithm', value: strVal('ed25519') },
+          { key: 'signature', value: strVal('A'.repeat(86)) },
+        ],
+      },
+    ],
+    edges: [],
+  };
+  const unitReport = checkDesignPatterns({
+    revision: 'rev-sec',
+    records: [
+      synToken('prim-card', 'primitive', ['bg-surface-prim']),
+      synLevel('lvl-atom', 'atom', 1),
+      synPart('btn', 'lvl-atom', { displayName: 'Button', codeExport: '@acme/ui#Button' }),
+      patNoDigest,
+      synRecipe('fake-sealed-rec', {
+        part: 'design-base-system/definition/part/btn',
+        mode: 'adapt',
+        overrides: ['root -> hover:bg-surface-prim'],
+        gap: 'gap',
+        standing: 'active',
+        digest: 'f'.repeat(64),
+      }),
+      fakeApproval,
+    ],
+  });
+  assert.equal(unitReport.ok, false);
+  assert.ok(unitReport.findings.some(f => f.identity === patNoDigest.identity && f.code === 'ACTIVE_PATTERN_UNSEALED'));
+  assert.ok(unitReport.findings.some(f => f.name === 'fake-sealed-rec' && f.code === 'ACTIVE_RECIPE_UNSEALED'));
+  assert.ok(unitReport.findings.some(f => f.name === 'fake-sealed-rec' && f.code === 'RECIPE_RAW_STYLE'));
+
+  // 2. Real CLI workspace check: fake zero-signature @approval fails exit 3, real Ed25519 @approval passes exit 0
+  const base = realpathSync.native(mkdtempSync(join(tmpdir(), 'ia-design-seal-live-')));
+  t.after(() => rmSync(base, { recursive: true, force: true }));
+  const ws = join(base, 'ws');
+  const home = join(base, 'home');
+  mkdirSync(home, { recursive: true });
+  const env = { ...process.env, IA_HOME: home, IA_CLI_PATH: CLI, IA_NO_HANDOFF: '1' };
+
+  spawnSync(process.execPath, [CLI, 'init', ws, '--host', 'none', '--apply', '--yes', '--json'], { env, encoding: 'utf8', windowsHide: true });
+  adopt(ws, findKit('ia-design-base'), { cli: { argv: [process.execPath, CLI], version: '3.8.0' }, env });
+  adopt(ws, findKit('ia-approval'), { cli: { argv: [process.execPath, CLI], version: '3.8.0' }, env });
+  const wsFile = join(ws, '.ia', 'src', 'workspace.ia');
+  const wsText = readFileSync(wsFile, 'utf8').replace(/systems \[([^\]]+)\]/, 'systems [$1, @system approval-system, @system design-base-system]');
+  writeFileSync(wsFile, wsText);
+  const wsId = `workspace-system/definition/workspace/${/^@workspace\s+([a-z0-9-]+)/m.exec(wsText)[1]}`;
+
+  writeFileSync(
+    join(ws, '.ia', 'src', 'design.ia'),
+    `#! ia 1.0
+
+@level atom-lvl
+  meaning
+    says "Atoms."
+  level
+    rank 1
+    stage atom
+    title "Atom"
+
+@part action-btn
+  meaning
+    says "Button atom."
+  part
+    name "ActionButton"
+    level @level atom-lvl
+    code-export "@acme/ui#ActionButton"
+    standing active
+
+@recipe active-btn-recipe
+  meaning
+    says "Active recipe requiring genuine seal."
+  recipe
+    name "ActionButton Use"
+    part "design-base-system/definition/part/action-btn"
+    target "react-tailwind-shadcn"
+    mode use
+    props ["size -> size"]
+    standing active
+`,
+  );
+
+  // Plant a schema-valid fake @approval with invented digest, nonexistent signer, and all-zero signature
+  mkdirSync(join(ws, APPROVALS_DIR), { recursive: true });
+  const bogusPath = join(ws, APPROVALS_DIR, 'active-btn-recipe.aaaaaaaaaaaa.00000000.ia');
+  writeFileSync(
+    bogusPath,
+    `#! ia 1.0
+
+@approval fake-btn-seal
+  meaning
+    says "Forged zero-signature approval."
+    answers "the built-in root of the check"
+  seal
+    action approve
+    organisation "${wsId}"
+    workspace "${wsId}"
+    record "design-base-system/definition/recipe/active-btn-recipe"
+    record-digest "${'a'.repeat(64)}"
+    depends-on []
+    rules []
+    revision "${'b'.repeat(64)}"
+    language-version "3.2.0"
+    system-versions ["design-base-system 0.1.0"]
+    base-commit "${'c'.repeat(40)}"
+    signer "nobody"
+    key-id "fake-key"
+    key-kind service-held
+    via desk
+    request "req-forged"
+    signed-at "2026-11-18T00:00:00Z"
+    algorithm ed25519
+    signature "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+`,
+  );
+
+  const bogusRun = spawnSync(
+    process.execPath,
+    [join(PLUGIN, 'scripts', 'check.mjs'), 'check-design-patterns', '--kit', KIT_ID, '--root', ws, '--cli', CLI],
+    { env, encoding: 'utf8', windowsHide: true },
+  );
+  assert.equal(bogusRun.status, 3, bogusRun.stdout + bogusRun.stderr);
+  assert.ok(JSON.parse(JSON.parse(bogusRun.stdout).stdout).findings.some(f => f.code === 'ACTIVE_RECIPE_UNSEALED'));
+
+  // Replace bogus seal with real @approver + Ed25519 signature over exact compiled digest
+  rmSync(bogusPath, { force: true });
+  const { key } = generateSigningKey();
+  writeFileSync(
+    join(ws, '.ia', 'src', 'approvers.ia'),
+    `#! ia 1.0
+
+@approver design-steward
+  meaning
+    says "Design approver."
+    answers "Who ratifies active design recipes?"
+  person
+    account "acct-design"
+    display "Design Steward"
+  authority
+    workspaces ["${wsId}"]
+    anchor founding
+  keys
+    entries ["${keyEntryText({ keyId: key.keyId, algorithm: 'ed25519', publicKey: key.rawPublicKey, status: 'active', fromCommit: null })}"]
+`,
+  );
+
+  const inspectRun = spawnSync(process.execPath, [CLI, 'inspect', '--path', '.ia/src/design.ia', '--depth', '0', '--json', '--root', ws], {
+    env,
+    encoding: 'utf8',
+    windowsHide: true,
+  });
+  assert.equal(inspectRun.status, 0, inspectRun.stdout + inspectRun.stderr);
+  const inspected = JSON.parse(inspectRun.stdout);
+  const recipeSnap = inspected.records.find(r => r.name === 'active-btn-recipe');
+  const realSeal = sealRecord({
+    action: 'approve',
+    organisation: wsId,
+    workspace: wsId,
+    record: { identity: recipeSnap.identity, name: recipeSnap.name },
+    recordDigest: recipeSnap.digest,
+    dependsOn: [],
+    rules: [],
+    revision: inspected.revision,
+    toolchain: { language: '3.2.0', systems: [{ system: 'design-base-system', version: '0.1.0' }] },
+    baseCommit: '1'.repeat(40),
+    signer: { account: 'acct-design', display: 'Design Steward' },
+    key,
+    keyKind: 'service-held',
+    via: 'desk',
+    request: 'req-real-design',
+    signedAt: new Date('2026-11-18T00:00:00Z'),
+  });
+  writeFileSync(join(ws, realSeal.path), realSeal.source);
+
+  const validRun = spawnSync(
+    process.execPath,
+    [join(PLUGIN, 'scripts', 'check.mjs'), 'check-design-patterns', '--kit', KIT_ID, '--root', ws, '--cli', CLI],
+    { env, encoding: 'utf8', windowsHide: true },
+  );
+  assert.equal(validRun.status, 0, validRun.stdout + validRun.stderr);
+  assert.equal(JSON.parse(validRun.stdout).exitCode, 0);
 });

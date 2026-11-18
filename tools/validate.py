@@ -321,11 +321,44 @@ def git_modes(root):
     if not (root / '.git').exists():
         return
     import subprocess
-    out = subprocess.run(['git', '-C', str(root), 'ls-files', '-s', '--', 'plugins', '.claude-plugin', '.agents'],
+    targets = ['plugins', '.claude-plugin', '.agents'] + (['hosts'] if (root / 'hosts').exists() else [])
+    out = subprocess.run(['git', '-C', str(root), 'ls-files', '-s', '--', *targets],
                          capture_output=True, text=True, check=True).stdout
     for line in out.splitlines():
         mode, _sha, _stage, path = line.split(None, 3)
         require(mode == '100644', f'tracked file mode {mode}: {path}')
+
+
+def host_bundles(root):
+    """When hosts/ is present, verify .agents/plugins.json and deterministic Google Antigravity and Gemini CLI bundles."""
+    hosts_dir = root / 'hosts'
+    if not hosts_dir.exists():
+        return
+    plugins_json = root / '.agents/plugins.json'
+    require(plugins_json.is_file() and load(plugins_json) == {'entries': [{'path': 'hosts/antigravity'}]},
+            '.agents/plugins.json must register hosts/antigravity')
+    claude_version = load(root / 'plugins/ia/.claude-plugin/plugin.json')['version']
+    agy = load(root / 'hosts/antigravity/ia/plugin.json')
+    require(set(agy) <= {'name', 'displayName', 'version', 'description', 'author', 'homepage', 'repository', 'logo', 'suggestedPrompts', 'disabled'},
+            'unknown top-level key in Antigravity plugin.json')
+    require(agy.get('name') == 'ia' and agy.get('version') == claude_version, 'Antigravity plugin.json version or name drift')
+    agy_mcp = load(root / 'hosts/antigravity/ia/mcp_config.json')
+    require(set(agy_mcp.get('mcpServers', {})) == {'ia', 'inventarch'} and
+            agy_mcp['mcpServers']['inventarch'] == {'url': ACCOUNT_MCP_URL},
+            'Antigravity mcp_config.json must declare ia and inventarch')
+    gem = load(root / 'hosts/gemini/ia/gemini-extension.json')
+    require(gem.get('name') == 'ia' and gem.get('version') == claude_version and gem.get('contextFileName') == 'GEMINI.md',
+            'Gemini CLI gemini-extension.json version or contextFileName drift')
+    require(set(gem.get('mcpServers', {})) == {'ia', 'inventarch'} and
+            gem['mcpServers']['inventarch'] == {'httpUrl': ACCOUNT_MCP_URL, 'oauth': {'enabled': True, 'clientId': 'gemini-cli'}},
+            'Gemini CLI gemini-extension.json must declare ia and inventarch')
+    for path in sorted(hosts_dir.rglob('*')):
+        rel = path.relative_to(root).as_posix()
+        require(not path.is_symlink(), 'symlink in hosts/: ' + rel)
+        require(not STRAY_DIRS.intersection(rel.split('/')), 'stray folder in hosts/: ' + rel)
+        if path.is_file():
+            data = safe_bytes(root, rel)
+            require(not SENSITIVE.search(data), 'sensitive bytes in hosts/: ' + rel)
 
 
 def record_coverage(root):
@@ -529,6 +562,7 @@ def validate(root=ROOT):
             safe_bytes(root, source)
     record_coverage(root)
     host_run_checks(root)
+    host_bundles(root)
     require(pins['released']['cli'] == '3.8.0' and 'pending' not in pins, 'release standing: sources.lock.json pins the released 3.8.0 and no unreleased build')
     schema_check(load(root / 'examples/review-dossier.json'), load(root / 'schemas/review-dossier.schema.json'))
     return {'status':'passed', 'plugins':len(PLUGINS), 'selectedFiles':len(entries), 'skills':skills,

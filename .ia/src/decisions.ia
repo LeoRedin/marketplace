@@ -781,6 +781,23 @@
   relationships
     supersedes @decision public-cli-3-6-0
 
+@decision public-gemini-and-antigravity-hosts
+  meaning
+    says "Ship deterministic first-class host bundles for Google Antigravity (hosts/antigravity/ia, registered via .agents/plugins.json) and Gemini CLI (hosts/gemini/ia), backed by agy-hook.mjs and gemini-hook.mjs over the core's bootstrap and kit handler runners, with headless gemini --approval-mode plan -p support in delegate.mjs."
+  work
+    title "Support Google Antigravity and Gemini CLI as first-class hosts"
+    status made
+    owner "InventArch maintainers"
+    start "2026-11-15"
+    ended "2026-11-15"
+    source "docs/decisions.md"
+  decision
+    question "How does the public catalogue deliver the ia plugin, its MCP door, its account connector and its lifecycle hooks to Google Antigravity and Gemini CLI without duplicating authored source?"
+    options ["A generate hosts/antigravity/ia and hosts/gemini/ia deterministically from plugins/ia via tools/build-host-plugins.mjs, with host-native manifests, subagent frontmatter and hook adapters", "B hand-maintain separate plugin trees per host", "C ship instructions and MCP snippets only, without native plugins or hooks"]
+    decider "Operator"
+    choice "A generate hosts/antigravity/ia and hosts/gemini/ia deterministically from plugins/ia via tools/build-host-plugins.mjs, with host-native manifests, subagent frontmatter and hook adapters"
+    rationale "Antigravity requires a clean root plugin.json, mcp_config.json, root hooks.json, rules/AGENTS.md and Antigravity subagent tool names, while Gemini CLI requires gemini-extension.json, hooks/hooks.json with millisecond timeouts, GEMINI.md and Gemini CLI tool names. Deterministic generation from plugins/ia keeps one authored source of truth, wires full lifecycle parity (including PostToolUse buffered into PLUGIN_DATA and flushed on PostInvocation in Antigravity, and strict single-JSON stdout in Gemini CLI), and adds --to gemini to scripts/delegate.mjs."
+
 # Public base vocabulary kits and steward hygiene (2026-11-18)
 
 @decision public-base-kits-approval-and-repo
