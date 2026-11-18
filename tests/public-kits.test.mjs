@@ -5,7 +5,7 @@
 // pinned @inventarch/cli dist/main.js (as the native lane does).
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -34,7 +34,7 @@ test('the committed package.json is the bundled kits\' claim: latest release, ar
   for (const key of ['scripts', 'dependencies', 'exports', 'bin', 'main', 'private']) assert.equal(pkg[key], undefined, key);
   assert.deepEqual(pkg.files, ['index.json', 'kits', 'archives', 'NOTICE']);
   assert.equal(pkg.ia.format, 1);
-  assert.deepEqual(pkg.ia.kits.map(k => k.folder), ['ia-authoring', 'ia-kb', 'ia-method']);
+  assert.deepEqual(pkg.ia.kits.map(k => k.folder), ['ia-approval', 'ia-authoring', 'ia-kb', 'ia-method', 'ia-repo']);
   for (const row of pkg.ia.kits) {
     const dir = join(ROOT, 'plugins/ia/config/kits', row.folder);
     const index = readReleases(dir);
@@ -68,7 +68,7 @@ test('the core config/public-kits.json is the package name and version, and pack
   const path = join(root, PLUGIN_CONFIG);
   assert.equal(run(root, '--check').status, 0);
   writeFileSync(path, JSON.stringify({ package: '@inventarch/public-kits', version: '9.9.9' }, null, 2) + '\n');
-  assert.match(run(root, '--check').err, /public-kits\.json is not @inventarch\/public-kits@1\.0\.\d+/);
+  assert.match(run(root, '--check').err, /public-kits\.json is not @inventarch\/public-kits@1\.\d+\.\d+/);
   writeFileSync(path, JSON.stringify({ package: '@inventarch/public-kits', version: JSON.parse(readFileSync(join(root, PACKAGE_DIR, 'package.json'), 'utf8')).version, kits: {} }, null, 2) + '\n');
   assert.equal(run(root, '--check').status, 1, 'a field beyond the package and version is drift');
   rmSync(path);
@@ -131,8 +131,11 @@ test('package --build packs every recorded release; its archives and manifests c
     assert.equal(sha256(readFileSync(join(pkg, 'archives', `${k.archive}.distribution.json`))), k.manifest, `${k.id} manifest`);
     assert.equal(sha256(archiveManifest(bytes)), k.manifest);
     const files = JSON.parse(archiveManifest(bytes)).files;
-    for (const sidecar of ['bindings.json', 'delivery.json'])
-      assert.ok(files.some(file => file.path === sidecar && file.role === 'asset'), `${k.id} retains ${sidecar}`);
+    for (const sidecar of ['bindings.json', 'delivery.json', 'checks.json', 'onwrite.json', 'handlers.json']) {
+      if (existsSync(join(ROOT, 'plugins/ia/config/kits', k.folder, sidecar))) {
+        assert.ok(files.some(file => file.path === sidecar && file.role === 'asset'), `${k.id} retains ${sidecar}`);
+      }
+    }
   }
   const [first] = packageClaim(root);
   const manifest = join(pkg, 'archives', `${first.archive}.distribution.json`);

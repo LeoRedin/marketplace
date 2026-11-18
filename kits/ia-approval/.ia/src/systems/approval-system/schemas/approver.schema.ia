@@ -1,0 +1,23 @@
+#! ia 1.0
+
+@schema approver
+  lowers to definition
+  sections
+    must have meaning
+    must have person
+    must have authority
+    must have keys
+    may have relationships
+    closed
+  fields
+    must have meaning.says as text
+    must have meaning.answers as text
+    must have person.account as text "The directory account identifier, never an email address."
+    may have person.slack as text "<Slack team id> <Slack user id>, present on an approver who ratifies through Slack."
+    may have person.slack-pending as text "<set|remove|change> <Slack team id> <Slack user id>: the notice of the delayed Slack identity route."
+    must have person.display as text "The display name shown to readers, never used to match identity."
+    must have authority.workspaces as list of text "The identities of the workspaces whose records, and whose descendants' records, this approver may ratify."
+    may have authority.anchor as id in [founding]
+    may have authority.recovery-pending as text "'<new key id> <old key ids to retire>', set only by a recovery notice for a sole approver."
+    may have authority.removal-pending as text "'<delete|rekey> <key ids>', set only by a removal notice."
+    must have keys.entries as list of text "Each '<key-id> <algorithm> <public key, base64url of the 32 raw bytes> <status> <from-commit or ->', status one of active, retired, revoked."

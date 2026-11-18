@@ -2,6 +2,10 @@
   "format": 1,
   "bundles": [
     {
+      "kit": "ia-approval",
+      "into": "plugins/ia/config/kits/ia-approval"
+    },
+    {
       "kit": "ia-authoring",
       "into": "plugins/ia/config/kits/ia-authoring"
     },
@@ -12,6 +16,10 @@
     {
       "kit": "ia-method",
       "into": "plugins/ia/config/kits/ia-method"
+    },
+    {
+      "kit": "ia-repo",
+      "into": "plugins/ia/config/kits/ia-repo"
     }
   ],
   "unbundled": []
