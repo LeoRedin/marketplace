@@ -37,9 +37,9 @@
   "license": "Apache-2.0",
   "description": "The public base Product Requirement Document kit (product-base-system): the prd word with its canonical schema, authoring guide, ratification and decomposition rules, consented relationships to specs, decisions, plans, dockets and approvals, and the offline check-prds verifier.",
   "source": {
-    "repository": null,
-    "commit": null,
+    "repository": "https://github.com/inventarch/marketplace.git",
+    "commit": "f81522f9d91c870fb598489bdf11aac805badb72",
     "recipe": "ustar-v1",
-    "epoch": 0
+    "epoch": 1795014194
   }
 }

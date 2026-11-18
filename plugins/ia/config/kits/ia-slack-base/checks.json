@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "checks": {
+    "slack-check-validate": {
+      "argv": [
+        "${IA}",
+        "validate",
+        "--json"
+      ],
+      "cwd": "workspace"
+    },
+    "check-slack-channels": {
+      "argv": [
+        "${NODE}",
+        "${KIT}/scripts/check-slack-channels.mjs",
+        "${IA}"
+      ],
+      "cwd": "workspace"
+    }
+  }
+}

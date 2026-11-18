@@ -37,9 +37,9 @@
   "license": "Apache-2.0",
   "description": "The public base Slack space settings kit (slack-system): the slack-channel word with its canonical schema and authoring guide, the five public Slack channel governance rules, and the offline check-slack-channels verifier.",
   "source": {
-    "repository": null,
-    "commit": null,
+    "repository": "https://github.com/inventarch/marketplace.git",
+    "commit": "f81522f9d91c870fb598489bdf11aac805badb72",
     "recipe": "ustar-v1",
-    "epoch": 0
+    "epoch": 1795014194
   }
 }

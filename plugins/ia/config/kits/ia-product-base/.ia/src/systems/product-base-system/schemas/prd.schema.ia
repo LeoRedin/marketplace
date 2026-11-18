@@ -1,0 +1,24 @@
+#! ia 1.0
+
+@schema prd
+  lowers to definition
+  sections
+    must have meaning
+    must have scope
+    must have governance
+    may have relationships
+    closed
+  fields
+    must have meaning.says as text
+    may have meaning.answers as text
+    may have meaning.title as text "Human-readable title of the Product Requirement Document."
+    must have meaning.problem as text "The user or business problem this PRD addresses."
+    must have scope.goals as list of text "Measurable product outcomes this PRD aims to achieve."
+    must have scope.non-goals as list of text "Explicitly excluded outcomes and out-of-scope boundaries."
+    must have scope.requirements as list of text "Product requirement clauses (for example 'REQ-01: <statement>')."
+    must have governance.status as id in [draft, in-review, ratified, active, superseded, withdrawn]
+    may have governance.owner as text "Accountable product owner or team."
+    may have governance.source as text "Optional credential-free repository path or external document locator."
+    may have governance.body-digest as text "Optional 64-character lowercase hex SHA-256 digest pinning a split or external PRD body."
+  edges
+    may supersede prd one
