@@ -36,9 +36,9 @@
       {
         "id": "inventarch/ia-design-base-kit",
         "version": "0.1.0",
-        "archive": "8d18d958b64e37520db3d0053a489233e09488756bdf0cb0ae3a21ee4ec18f7a",
-        "manifest": "af3dac8045d82830674a8909bf3fce1a53566d65626340d8a96476338b864288",
-        "sources": "bab64438ce1df2be03a5c204f71a1a858e59b43c7a75bb694bd9a054abaaf455",
+        "archive": "59f9f5499164c2ff08c1b0f414deb792dd64d7929a2fdf6d0f097f8c9c586019",
+        "manifest": "28eece2090f3ff537e5d18fb012b3ab99183f0cdb2f83e8d8d558234facf87d3",
+        "sources": "79e2f775b2cca68cf0e3a9544b946893a010f509c9e2605ea767db0ee209f67b",
         "folder": "ia-design-base"
       },
       {
@@ -60,9 +60,9 @@
       {
         "id": "inventarch/ia-product-base-kit",
         "version": "0.1.0",
-        "archive": "1355066644609fbc32e139b9c7cb3a21a9afdf7e06495a27ade65476ebec84c7",
-        "manifest": "9180e69ad60eb5218209e3c2c8555e7f1366e16bace1a3d4c432b25de8ef82c1",
-        "sources": "5e28a11670a6e504328ea8fa41ff53ff6b08b346e663cd06d8608cd4c1745e15",
+        "archive": "6cfd206a39f54ae8842f4c341b88a7770493c30c4b6a9fedd733eca56ed95a90",
+        "manifest": "1c92212228fff6166a0ffab393e2bcfc794e07fd494654ec182bc7d4a61cc1f8",
+        "sources": "cd45bcd0fc849fe2c97fc9ff96b4d5abc612d6d2f9b1d868c1bdecf21da07894",
         "folder": "ia-product-base"
       },
       {

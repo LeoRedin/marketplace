@@ -62,13 +62,13 @@
       "releases": "kits/ia-design-base/releases.json",
       "latest": {
         "version": "0.1.0",
-        "archive": "8d18d958b64e37520db3d0053a489233e09488756bdf0cb0ae3a21ee4ec18f7a",
+        "archive": "59f9f5499164c2ff08c1b0f414deb792dd64d7929a2fdf6d0f097f8c9c586019",
         "cli": "@inventarch/cli 3.8.0",
         "language": "inventarch/language ^3.0.0",
         "file": "kits/ia-design-base/releases/0.1.0.json",
         "source": {
           "repository": "https://github.com/inventarch/marketplace.git",
-          "commit": "c8bac7335c40e4f1e72739e48b62b6824bd0aa12"
+          "commit": "25e0c9336cafcbf98e4201e0758add4ef9fdd193"
         }
       },
       "versions": [
@@ -190,13 +190,13 @@
       "releases": "kits/ia-product-base/releases.json",
       "latest": {
         "version": "0.1.0",
-        "archive": "1355066644609fbc32e139b9c7cb3a21a9afdf7e06495a27ade65476ebec84c7",
+        "archive": "6cfd206a39f54ae8842f4c341b88a7770493c30c4b6a9fedd733eca56ed95a90",
         "cli": "@inventarch/cli 3.8.0",
         "language": "inventarch/language ^3.0.0",
         "file": "kits/ia-product-base/releases/0.1.0.json",
         "source": {
           "repository": "https://github.com/inventarch/marketplace.git",
-          "commit": "c8bac7335c40e4f1e72739e48b62b6824bd0aa12"
+          "commit": "25e0c9336cafcbf98e4201e0758add4ef9fdd193"
         }
       },
       "versions": [
