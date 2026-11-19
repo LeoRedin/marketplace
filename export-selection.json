@@ -321,7 +321,7 @@
     },
     {
       "path": "plugins/ia/config/kits/ia-design-base/.ia/release.json",
-      "sha256": "50849882aca73b70e4d67281f46ee8fbfea77cdf232765ef44db0e132c3f7ad0"
+      "sha256": "fa9d69f957eb50fb3f60aa1efee56fa0c1ea0cba95b2b9320d1bc41d5e273b38"
     },
     {
       "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/records/authoring-guides.ia",
@@ -389,15 +389,15 @@
     },
     {
       "path": "plugins/ia/config/kits/ia-design-base/releases/0.1.0.json",
-      "sha256": "332df2830053d118ef036692b0ac0f16fd64bf18872647ec6c1af0dd0c1e9d1c"
+      "sha256": "76675bfa0626f291cae52257e4ba8f1836e9cf21046d49dc61c3e6143592be7f"
     },
     {
       "path": "plugins/ia/config/kits/ia-design-base/releases.json",
-      "sha256": "cee74a7a5cf15bb1911bc16cd4cffd5260a7093d804843e67a06f2be5fa93e68"
+      "sha256": "89a2ad2491474102ed7ad1ebe36e7988df9427edb19ef5466ce62571d0768e96"
     },
     {
       "path": "plugins/ia/config/kits/ia-design-base/scripts/check-design-patterns.mjs",
-      "sha256": "c0de906197865ba9f84f8b3ee66c0533a64b1272d61e240b1206ab3da728c589"
+      "sha256": "b16753656102f6d8358bcc7793c8ae2a010fe0c9b81d2470b478e4d579526279"
     },
     {
       "path": "plugins/ia/config/kits/ia-kb/.ia/distributions.lock.json",
@@ -733,7 +733,7 @@
     },
     {
       "path": "plugins/ia/config/kits/ia-product-base/.ia/release.json",
-      "sha256": "51beaee7eb70b69eddccd73f0f92c5c227e84c3089de3b93d3d4fbb353ce919c"
+      "sha256": "91194dcc5930f512e62112185e314e7da7524824cdaa1462d670d4ccbedfbfe7"
     },
     {
       "path": "plugins/ia/config/kits/ia-product-base/.ia/src/systems/product-base-system/records/authoring-guides.ia",
@@ -781,15 +781,15 @@
     },
     {
       "path": "plugins/ia/config/kits/ia-product-base/releases/0.1.0.json",
-      "sha256": "4ca33943fdd891782b77046fbd7aef1971d327d2ab39ba5950e7618e82c49f8c"
+      "sha256": "2a1ac708e12923df6004a3df3289f2fe4ffb058db0c94c1a870fbd97495e40f6"
     },
     {
       "path": "plugins/ia/config/kits/ia-product-base/releases.json",
-      "sha256": "d218ed468afc2ca13d4f1ede67469c436593e68582eed3d24797be5bce99d7d4"
+      "sha256": "30c83556294f9f5c0170aa5aa09b2088b9333a5bf05f8257df45697f9bd71587"
     },
     {
       "path": "plugins/ia/config/kits/ia-product-base/scripts/check-prds.mjs",
-      "sha256": "477de3a0ad87a164ba569685f916d4e48df636da99d367ff349c9c57a05377ea"
+      "sha256": "02d078b09b45251e845530428b32eb8b272370903e8ac37e57fbe20febbea394"
     },
     {
       "path": "plugins/ia/config/kits/ia-repo/.ia/distributions.lock.json",
