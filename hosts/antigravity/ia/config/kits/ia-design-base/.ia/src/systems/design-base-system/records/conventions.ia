@@ -1,0 +1,31 @@
+#! ia 1.0
+
+@convention design-atomic-hierarchy-composition
+  meaning
+    says "Atomic Design stages ascend strictly from atom -> molecule -> organism -> page-template -> page (using page-template so the stage never collides with floor @template). Each @part references one @level and composes (via part.composes or require @part) only parts at the same or lower atomic stage without cycles, and every @slot listed in part.slots names that @part in slot.part. Reference: assets/design-vocabulary.md."
+    answers "How do atoms, molecules, organisms, page-templates and slots compose structurally?"
+  governance
+    severity advisory
+    requires "Rank @level stages in atom < molecule < organism < page-template < page order, compose @part records downward or peer-wise without cycles, and align part.slots with slot.part."
+  subject
+    subject-word part
+
+@convention design-pattern-language-and-evidence
+  meaning
+    says "Each entry in pattern.matches specifies a normalised node type (frame, group, text, instance, component, vector, shape or slot) with key=value constraints, repetition markers (1, ?, *, +) or slot=<name> fillers. Each entry in pattern.evidence records '<64-hex reading digest> <fileKey>#<nodeId>' for a committed frame reading so pattern provenance remains checkable when live frames drift. Reference: assets/design-vocabulary.md."
+    answers "How are pattern.matches and pattern.evidence formatted?"
+  governance
+    severity advisory
+    requires "Write structural node entries in pattern.matches, map slot fillers with '<slot> <- <path>' in pattern.slots against declared @slot records of the yielded @part, and pin 64-hex frame-reading digests in pattern.evidence."
+  subject
+    subject-word pattern
+
+@convention design-named-words-approval-rule
+  meaning
+    says "When admitting @pattern and @recipe into an organisation's knowledge base alongside ia-approval, ship an @approval-rule record with demand.words [pattern, recipe], demand.quorum 1 and demand.merge person in the same pull request so hand-authored and tool-proposed patterns and recipes alike require ratification without upward dependencies in the base approval kit. Reference: assets/design-vocabulary.md."
+    answers "How does an adopting organisation require seals on every @pattern and @recipe?"
+  governance
+    severity advisory
+    requires "Pair @pattern and @recipe adoption in a sealed workspace with an @approval-rule covering [pattern, recipe] under person merge."
+  subject
+    subject-word recipe

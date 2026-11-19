@@ -1,0 +1,166 @@
+# IA method kit
+
+`inventarch/ia-method-kit`: the IA methodology for agents, carried as a kit of IA records rather than as plugin prose. The `inventarch` core carries it and delivers it through its Work and Knowledge entry points. Read the method through the IA CLI and apply what it delivers: never restate it from memory, and treat the records as the source (the counts and names below are an index the kit may outgrow).
+
+## What the kit holds
+
+One system, `ia-method`, released under the Apache-2.0 licence. It mints no words and grants no authority: every record uses a public IA word, and the workspace's mandates decide what an agent may change.
+
+| Part | Records |
+| --- | --- |
+| How to think | 8 principles: `method-capability-is-the-unit`, `method-locate-before-inventing`, `method-same-pattern-every-layer`, `method-levels-of-knowledge`, `method-claims-within-evidence` (blocking), `method-lineage-accountable`, `method-ask-while-continuing`, `method-one-account` |
+| How to deliver | 4 conventions: `method-capture-before-delivery`, `method-handoff-packet`, `method-reconcile-on-change`, `method-improvement-lifecycle` |
+| The loop | the `method-operate` capability, composing the `method-operate` and `method-provisional-foundation` playbooks |
+| The ceiling and the evidence | the blocking law `method-provisional-foundation-ceiling`, and the `ia-method` contract (version 0.2.0) with its two requirements, its check and its cases |
+| Per word | one `<word>-method` capability and playbook for each of the 30 public record words, and `method-vocabulary` over the 14 taxonomy words |
+| Release | the `ia-method-distribution` distribution |
+
+Every playbook has the four phases, orient, plan, act and learn, each with its primary primitive and an Attention, Inference, Decision and Learning cell. `--phase` selects the cell; a whole-procedure delivery carries all sixteen in order.
+
+## The loop
+
+`method-operate` is the whole procedure behind the Work entry point (`delivery.json` declares it whole), so a request with no more specific binding gets all four phases:
+
+- **orient**: state the intent as shape, phase, seat and word to `ia position`, ground in the owning sources, find what exists before inventing, and re-seat with `ia position --seat` when a word belongs to another system;
+- **plan**: capture the scope and impact at the smallest useful depth, order the smallest coherent change through the owners of its words, and stay under the ceiling;
+- **act**: change records only through `ia preview`, then `ia author` with the digest it returned, then `ia validate`;
+- **learn**: run the checks and report them verbatim, have someone other than the author review, reconcile, leave the seven-part handoff packet, and propose improvements to their owners.
+
+## The ceiling
+
+Work that rests on a spec that is not accepted, or on a decision with no choice, goes one layer deep: design, prototype and tests on a branch. Nothing is built on that layer, nothing that depends on it is authored beyond its work records, and nothing is merged or released until the foundation is ratified. The law `method-provisional-foundation-ceiling` says so, and the `method-provisional-foundation` playbook says how to work under it. `ia next` blocks a task that requires an open decision, but not one that only cites a draft spec, and it does not count layers; the core's `scripts/ceiling.mjs` reports both, and fails closed (unknown, exit 2) when it cannot read a record. In an IA workspace, run `node "${CLAUDE_PLUGIN_ROOT}/scripts/ceiling.mjs" [--plan <plan>]` to see each task's layer, and `--task <task>` before starting one: exit 1 means beyond the ceiling (stop and ask for the ratification it waits on), exit 2 means unknown or refused (pass `--plan`, or run the command the message names; never treat it as clear).
+
+## Run points
+
+The kit ships no script. Its `onwrite.json` and `handlers.json` run one script of the core, `scripts/method-advise.mjs`, which runs the ceiling report and the exit-evidence report (`scripts/exit-evidence.mjs`) over a few tasks and says what they found. It only reports: it blocks nothing, and it is not the gate for a merge or a release.
+
+| When | Which tasks |
+| --- | --- |
+| a Write, Edit or MultiEdit of a `.ia` record file | the tasks the changed records of that file name, as `@task` records or as the subject of an `@observation` (at most 2) |
+| a Bash or PowerShell call, such as `ia author`, in a git work tree | the tasks in the `.ia` records under `.ia/src` that are not committed (at most 3 a call; the next calls take the rest). In a tracked file only the records that differ from the last commit count, and a new file counts whole |
+| a resumed or compacted session, in a git work tree | the same, reported again because the earlier report is gone from the context |
+
+What to expect:
+
+- **Scope is stated.** Every answer says how many tasks it evaluated, how many it did not (and why), how many of the evaluated ones came from the cache, and how many tasks sit in unchanged records that it did not examine. Only the changed or uncommitted records are in scope. A closed task that was committed with no evidence is not reported by a hook, and a change to a spec or a decision does not re-check the tasks that cite it. A record that was removed is covered only when it was the subject of an observation: the task it was about is then in scope, so taking evidence away from a closed task is reported. If git cannot say which records changed, the answer says so and the whole file is read. The full report is the only complete check: `node "${CLAUDE_PLUGIN_ROOT}/scripts/method-gate.mjs"` (add `--plan <plan>` for each plan).
+- **When the hook is silent**, it means one of these, and none of them is a clear result for the workspace: every task in scope was clear (on its first layer, evidenced, or not closed); no task was in scope; the result was a finding or a not-evaluated result already said and still in its window; the call was not in an IA workspace; a shell call was not in a git work tree (a resumed session says so instead); a written file was not a `.ia` record inside `.ia/src`; or the kit was skipped because it is not trusted (the session start says so once). A finding is reported once, again after a resume or compact, and again an hour later if it still holds. An exemption an author declared is listed, and no check verifies it.
+- **A check that could not run is printed as not evaluated, never as clear.** That covers a workspace the CLI does not admit (a half-written record), a read that failed or took too long (each read gets 5 seconds, the whole run 18), a task name that is not a derivable identity, git failing in a work tree, a `.ia` record in `.ia/src` that the hook will not read (over 1 MB, unreadable), and the tasks beyond a call's limit, which the next call takes. A run in which nothing was evaluated says so in its first line. The hook never downloads anything: it needs `@inventarch/cli` installed in the repository, or `IA_CLI_PATH`, and says so when it has neither; once a CLI can be found the task is tried again. A not-evaluated result is said once and again after a resume or compact, not on every call.
+- **The text it adds quotes your records.** Task titles and similar text come from the repository and are marked as data in the answer, not instructions.
+- **Cost.** Outside an IA workspace a hook costs about 70 to 90 ms. Inside one, with nothing changed, a shell call costs about 300 ms; a report over a changed task takes seconds, because the CLI reads the workspace.
+- **It runs only from this kit as released.** The kit's publisher must be on the core's list of trusted publishers, and the kit's bytes must be its recorded release; otherwise the hooks are skipped, and the session start says so once.
+- A small cache under the IA home (`advice`) keeps the last result per task so a shell call does not repeat a report. It holds nothing else and is safe to delete.
+
+## Activation
+
+Each governance record says when it is meant to apply with `activate when <axis> is <value>` lines in its `activation` section. Several lines mean any of them, and `and` joins axes in one line. The tier is the axis: 1 is any write (`move`), 2 is one kind of record (`artifact-set` or `kind`), 3 is the activity at that moment (`phase` or `primitive`). A record with no activation is universal, and the row gives the reason.
+
+The lines are declarations. They do not scope delivery today: the resolvers do not put `move`, `artifact-set` or word into the coordinate (IA issue 249), so a selector on those axes is neutral, and packets from the core resolver carry only the two blocking rules.
+
+| Record | Tier | Activation |
+| --- | --- | --- |
+| `method-capability-is-the-unit` | 3 | `phase is orient` or `phase is plan`: the account of the work is anchored while orienting on it and planning it. |
+| `method-locate-before-inventing` | 3 | `phase is orient` or `phase is plan`: finding what exists happens before a new thing is proposed. |
+| `method-same-pattern-every-layer` | 3 | `phase is plan`: it shapes how a change is arranged across its owners and layers. |
+| `method-levels-of-knowledge` | 3 | `phase is orient` or `phase is learn`: the level of a claim is read when orienting and stated when reporting. |
+| `method-claims-within-evidence` | universal | Its rule covers every meaningful state claim, and every phase makes one: orient reads states, plan restates them, act reports refusals and learn reports checks. No axis value leaves claims out. |
+| `method-lineage-accountable` | 1 | `move is Synthesis`: replacing work is a write, whatever the record. Neutral today (see Open). |
+| `method-ask-while-continuing` | 3 | `primitive is Decision` or `primitive is Escalation`: it applies when a decision is needed or goes to the person. |
+| `method-one-account` | 1 | `move is Synthesis`: a hand-kept register is something an agent writes. Neutral today (see Open). |
+| `method-capture-before-delivery` | 3 | `phase is plan`: the capture comes before committing to deliver. |
+| `method-handoff-packet` | 3 | `phase is learn`: every playbook leaves the packet in its learn cells. |
+| `method-reconcile-on-change` | 3 | `phase is learn`: every playbook reconciles in its learn cells. |
+| `method-improvement-lifecycle` | 3 | `phase is learn`: improvements are proposed in learn. |
+| `method-provisional-foundation-ceiling` | universal (Open) | Its rule covers work that rests on a provisional foundation, which can happen at any phase. It stays universal while whether it is universal or conditioned is Open. |
+
+## Per-word capabilities
+
+Each public record word has one capability, `<word>-method`, composing one playbook of the same name whose subject word is that word (the names are record names, not words). Its cells say how to orient on records of the word (`ia position --word <word>`, `ia read`, `ia vocabulary <word> --schema`), plan them through the word's owning system (re-seating with `ia position --seat` when that is another system), change them (`ia preview`, then `ia author` with the returned digest, then `ia validate`) and learn from the result.
+
+| Owning system | Words |
+| --- | --- |
+| `work-system` | task, plan, milestone, decision, spec |
+| `governance-system` | principle, law, convention (read and apply); playbook |
+| `agent-system` | agent; mandate (read and apply) |
+| `agent-composition-system` | capability, agent-profile, execution-binding, harness, voice |
+| `compliance-system` | contract, case; check (read and apply) |
+| `learning-system` | observation, improvement |
+| `session-system` | run |
+| `authoring-system` | operation, authoring-guide |
+| `hook-authoring-system` | hook |
+| `template-system` | template |
+| floor | schema, system (used, not authored) |
+| `workspace-system` | workspace; distribution (installed, not authored) |
+
+- **Governance words** (law, convention, principle, mandate, check) are read and apply only: their capabilities have the `read` effect, and their cells find the rules at the seat, turn them into constraints on the plan, apply them at every step and report how the work stood against them. Their mechanical checks, the ceiling and the exit evidence of closed tasks, run as advisory reports at the points under Run points and block nothing; other enforcement (gates, verifiers) and judgement-based assessment are not part of this kit and are available with an InventArch subscription.
+- **Systems, workspaces, distributions and kits** are used, installed and read here; authoring new ones is outside this kit. Do it by hand from the public IA documentation, or with an InventArch subscription.
+- **The taxonomy words** (artifact-set, axis, cardinality, category, dimension, intent-shape, kind, lane, move, phase, placement, predicate, primitive, value-type) name the language itself rather than records people author. One capability, `method-vocabulary`, reads them through `ia vocabulary` and `ia position --word`.
+
+The other record words' capabilities have the effects `read` and `local-write`.
+
+## Bindings
+
+The core ships no bindings. A repository that works by the IA methodology binds the kit in its `.ia/bindings.json`, and its lock must install the kit first (see "Reach the kit"); the kit's `bindings.json` recommends:
+
+| Key | Capability |
+| --- | --- |
+| `work.*` | `method-operate` |
+| `work.<word>`, for each of the 30 record words | `<word>-method` |
+| `knowledge.vocabulary` | `method-vocabulary` |
+
+An exact `work.<word>` key wins over `work.*`, so `resolve.mjs --entry work --activity milestone` delivers the `milestone-method` cells and any other Work activity delivers `method-operate`. The activity names are binding keys, not words. From the repository, show what the kit recommends, then install the kit and write the new keys once the person agrees (`kit.mjs bind` installs the kit with `--install` and previews without `--apply`):
+
+```
+node "${CLAUDE_PLUGIN_ROOT}/scripts/bind.mjs" recommend inventarch/ia-method-kit
+node "${CLAUDE_PLUGIN_ROOT}/scripts/kit.mjs" bind ia-method --install --apply
+```
+
+`kit.mjs bind` writes only keys the repository does not bind otherwise, and without `--install` it refuses, naming the install command, when the lock does not install the kit. To bind one key by hand: `node "${CLAUDE_PLUGIN_ROOT}/scripts/bind.mjs" set 'work.*' inventarch/ia-method-kit method-operate`.
+
+Probing a design's open questions with the person, and an independent assessment before calling it complete, are available with an InventArch subscription; this kit's `method-provisional-foundation` playbook and the ceiling remain public.
+
+## Reach the kit
+
+Run IA through `node "${CLAUDE_PLUGIN_ROOT}/scripts/ia.mjs" <command> ...` (written `ia.mjs` below). It runs `IA_CLI_PATH` when set, else the repository's pinned `@inventarch/cli`, else the pinned version through npx; never an `ia` on PATH.
+
+- `node "${CLAUDE_PLUGIN_ROOT}/scripts/kit.mjs" list` lists the kits the core carries, with the keys each recommends.
+- A key the repository binds runs only a kit its own `.ia/distributions.lock.json` installs (a `packages` row or a package entry counts). When the kit is not installed, the core's resolver and checks refuse, naming the install command (the IA door does too), and the session start names the kit; the packet's `envelope.kitRoot` names the kit's folder once it runs. Add `--root <envelope.kitRoot>` only to reads of the kit's own records; that root admits none of the repository's seats.
+- When it is installed, `ia position` in the repository delivers the kit's rules and cells together with the repository's own records.
+
+The two blocking rules, the law `method-provisional-foundation-ceiling` and the principle `method-claims-within-evidence`, arrive in every packet's `rules`. Honour the rules first, then do what the cells say, then follow the pointers. A cell's `address` is its full locator, for example `ia.mjs read governance-system/definition/procedure/method-operate#orient/Attention`; `ia.mjs inspect <identity> --json` returns every section of a record, including a rule's `requires`.
+
+Record identities: principles `governance-system/governance/principle/<name>`, the law `governance-system/governance/law/<name>`, conventions `governance-system/governance/convention/<name>`, playbooks `governance-system/definition/procedure/<name>`, capabilities `agent-composition-system/definition/capability/<name>`, the contract `compliance-system/contract/signature/ia-method`.
+
+## Adopt the kit
+
+The preferred route is `node "${CLAUDE_PLUGIN_ROOT}/scripts/kit.mjs" bind ia-method --install --apply`, which installs the public kits through the public kits package and writes the recommended keys; it needs npm and the registry, and a kit that package does not carry is installed with `kit.mjs add`. Adoption is the vendored route: it installs `inventarch/ia-method-kit` into a repository's IA workspace, so `ia position` there delivers the kit's rules and cells with the repository's own records, and the repository's work can cite them. Ask the person first: it writes files they commit. The repository must be an IA workspace (`.ia/src`; otherwise `ia init` first, which is the person's call), and its pinned `@inventarch/cli` must be the version the release names.
+
+```
+node "${CLAUDE_PLUGIN_ROOT}/scripts/kit.mjs" adopt ia-method <repository> --dry-run
+node "${CLAUDE_PLUGIN_ROOT}/scripts/kit.mjs" adopt ia-method <repository>
+```
+
+`--dry-run` lists what would be written. The real run checks that the archive hashes to the recorded release, copies it and the language base it pins into `vendor/ia/`, and runs `ia install`, which pins it in `.ia/distributions.lock.json`. Commit `vendor/ia/` and `.ia/distributions.lock.json`; `.ia/distributions/` is restored locally (`ia restore`), never committed. `ia validate` should still pass afterwards.
+
+## Kit authoring contract
+
+This release makes no conformance claim against the proposed contract baseline (marketplace pull request 24): that baseline is still a proposal and none of its cases have run. The table records what the kit declares, not what has been evaluated.
+
+| Requirement | Status | Basis |
+| --- | --- | --- |
+| Activation tiers | Declared (not evaluated) | Every governance record declares activation lines on the axes of its tier, or is universal with the reason in the Activation table. The lines do not scope delivery today (IA issue 249). |
+| Subjects | Declared (not evaluated) | Every principle, law, convention and playbook names a public record word as its subject word, and the taxonomy playbook names a taxonomy word. Delivery does not read the subject yet: IA issue 245 |
+| Edges | Declared (not evaluated) | Relationships are declared edges: the contract governs the ceiling law and cites the blocking principle behind the exit evidence, its check enforces the contract, its cases implement its requirements, and every reference names a kit record or a public system. |
+| Supporting context | Declared (not evaluated) | Every file the kit ships beside .ia/ (bindings.json, delivery.json, onwrite.json, handlers.json) is a declared release asset, so the archive carries it and the sources digest covers it. This README is the only document. |
+| Code via executing systems | N/A | The kit ships no script and no checks.json. Its onwrite.json and handlers.json run the core's scripts/method-advise.mjs, and its one check runs the built-in COMP-COVERAGE evaluator. |
+| Requirement evaluation | Declared (not evaluated) | REQ-METHOD-01 and REQ-METHOD-02 are evaluated by the core's reports as advisory output, over the records at the run points. `ia validate` evaluates neither and shows the ceiling law as pending. |
+| Routing per word | Open | The kit ships no routing data. IA cannot carry it in the language yet: there is no routing-profile field (IA issue 248), delivery has no word axis (IA issue 245), and resolvers declare no word, move or artifact-set (IA issue 249). |
+
+## Open
+
+- Tier 1 is not delivered. `method-lineage-accountable` and `method-one-account` declare `move is Synthesis`, but no resolver puts `move` into the coordinate (IA issue 249), so the selector is neutral and the two rules are not narrowed to writes. Until that lands, tier-1 activation is a declaration only.
+- Whether the ceiling law `method-provisional-foundation-ceiling` is universal or conditioned. For universal: it is blocking, and work at any phase can rest on a provisional foundation, so withholding it anywhere lets a second layer start unchecked. For conditioned: it limits building on, authoring from, merging and releasing a layer, which points at tier 1 (`move is Synthesis`) or at the plan and act phases. A tier-1 condition would be neutral today, as above. It stays universal until this is decided.
+- Scoping `method-improvement-lifecycle` to improvement records. An improvement record is the inquiry artifact-set, but a line on that axis beside `phase is learn` would widen the rule, because lines are OR-ed and a selector on an axis the coordinate does not carry is neutral. It needs a word axis in delivery (IA issue 245) and resolvers that declare the word or artifact-set (IA issue 249); until then it declares learn only.
+
+## Maintain the kit
+
+A change to any record here is a new kit release: bump `version` in `.ia/release.json`, record the release from the catalogue root, and run `node --test plugins/ia/tests/kit-method.test.mjs`; with `IA_CORE_TEST_CLI=<@inventarch/cli dist/main.js>` it also restores and validates the kit and repacks it against the recorded digest. A recorded release is never rewritten once published: adopted repositories pin its archive digest.

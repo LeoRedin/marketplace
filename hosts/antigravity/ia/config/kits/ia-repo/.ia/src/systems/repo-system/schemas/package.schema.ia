@@ -1,0 +1,20 @@
+#! ia 1.0
+
+@schema package
+  lowers to definition
+  sections
+    must have meaning
+    must have package
+    may have relationships
+    closed
+  fields
+    must have meaning.says as text
+    may have meaning.answers as text
+    must have package.name as text "Manifest or module name of the package."
+    must have package.path as text "Canonical repository-relative root directory of the package."
+    must have package.layer as ref to layer
+    may have package.kind as id in [host, contract, core, adapter, view, composition, tool]
+    may have package.repository as ref to repository
+  edges
+    may require layer one
+    may require package one-or-more

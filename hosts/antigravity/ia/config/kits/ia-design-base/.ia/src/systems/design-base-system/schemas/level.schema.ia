@@ -1,0 +1,15 @@
+#! ia 1.0
+
+@schema level
+  lowers to definition
+  sections
+    must have meaning
+    must have level
+    may have relationships
+    closed
+  fields
+    must have meaning.says as text
+    may have meaning.answers as text
+    must have level.rank as number "Ascending hierarchy rank (atom < molecule < organism < page-template < page)."
+    must have level.stage as id in [atom, molecule, organism, page-template, page]
+    must have level.title as text "Display title for this atomic design level."

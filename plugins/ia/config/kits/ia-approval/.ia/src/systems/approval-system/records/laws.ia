@@ -1,0 +1,34 @@
+#! ia 1.0
+
+@law approval-seal-target-branch-authority
+  meaning
+    says "The seal check reads who may sign (@approver) and which rules apply (@approval-rule), as well as which pattern records exist for @docket matched claims, exclusively from the target branch, never from unratified edits on the pull request head. A pull request cannot grant itself authority by adding an approver, loosening a rule or planting a pattern in the same change."
+    answers "Which branch decides the approver roster, active rules and trusted patterns during a seal check?"
+  governance
+    severity blocking
+    requires "Evaluate approver keys, approval rules and matched docket patterns solely from the target branch's ratified corpus, never from unratified head changes."
+  subject
+    subject-word approval
+    subject-kind definition
+
+@law approval-seal-exact-statement
+  meaning
+    says "An @approval seal is verified by rebuilding the SealStatement (purpose inventarch-approval, version 1) from the record's fields, serializing it with RFC 8785 JSON Canonicalization Scheme (JCS), and verifying a canonical 64-byte Ed25519 signature (scalar S strictly below group order L) under a 32-byte public key whose SHA-256 base64url digest equals seal.key-id. seal.record-digest is the full compiled graph per-record digest, never a prose-only summary digest; any change to the record, its one-hop depends-on digests, its answered rule digests or (under current-revision rules) the corpus revision invalidates or stales the seal. Neither the kit nor the check ever holds a private key or contacts a network service."
+    answers "What cryptographic statement must an @approval verify against, and what invalidates it?"
+  governance
+    severity blocking
+    requires "Rebuild SealStatement from fields, canonicalize with RFC 8785 JCS, verify strict Ed25519 (S < L) against a target-branch public key matching seal.key-id, bind the full compiled record digest and one-hop dependencies, and run completely offline without private keys."
+  subject
+    subject-word approval
+    subject-kind definition
+
+@law approval-roster-and-rules-person-merge
+  meaning
+    says "Changes to @approver, @approval-rule and already-ratified @docket records are root authority changes: they obey the built-in roster floor regardless of looser rules, cannot merge automatically (demand.merge automatic is refused on root rules), cannot delete the last approver, and require target-branch first-parent history commitments for key revocations and delayed recovery or Slack route notices."
+    answers "How are changes to approvers, approval rules and ratified dockets protected?"
+  governance
+    severity blocking
+    requires "Enforce the built-in roster floor and person-only merge on every @approver, @approval-rule and target-branch @docket change, and refuse automatic merge or deletion of the sole approver."
+  subject
+    subject-word approval-rule
+    subject-kind governance

@@ -1,0 +1,8 @@
+#! ia 1.0
+
+@distribution ia-design-base-distribution
+  meaning
+    says "The release root of the public IA design base kit: design-base-system with the design-token, level, part, slot, pattern and recipe words, their canonical schemas and authoring guides, atomic composition and semantic-token laws, and the offline check-design-patterns verifier."
+    answers "Which records does the IA design base kit release ship?"
+  distribution
+    records [@system design-base-system]

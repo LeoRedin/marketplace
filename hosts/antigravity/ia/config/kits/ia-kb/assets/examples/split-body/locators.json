@@ -1,0 +1,13 @@
+{
+  "format": "ia.document-locators.v1",
+  "documents": [
+    {
+      "documentId": "example-model-api",
+      "specIdentity": "work-system/contract/spec/example-model-api",
+      "repository": "example-app",
+      "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "path": "docs/specs/model-api.md",
+      "sha256": "fab3edf9e31907a4d481a8a6119cae0dcf670be00936e7295eaa37c549ad2103"
+    }
+  ]
+}

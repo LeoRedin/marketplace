@@ -1,0 +1,54 @@
+#! ia 1.0
+# authored in inventarch/ia-authoring-kit 0.1.0: assets/probe-examples/refused.ia; an example to copy into a scratch probe, never a kit record
+
+# A probe built to fail in four instructive ways (verified 2026-10-06 on 1.1.0, re-verified 2026-10-12 on @inventarch/cli 2.0.0,
+# 2026-10-17 on 3.1.1, 2026-10-20 on 3.2.2 and 2026-10-22 on 3.3.0):
+#   1. @template is owned by template-system, which the target system does not directly require
+#   2. governs @system <local system> — every @system record belongs to IA's floor, whose consent rows admit only
+#      `cite schema using *`, so the target side refuses (R2); govern a component, workspace or contract instead
+#   3. check.runs names a made-up evaluator — only built-in COMP-* ids are accepted (3.x ia validate binds it instead,
+#      but capture, host, project and restore refuse it, and so does the probe)
+#   4. the contract has a success case but no failure or refusal case
+# Run:  node probe.mjs --root <ws> --system <a domain system that requires compliance-system> --file refused.ia
+
+@template probe-template
+  meaning
+    says "Probe template."
+    answers "Probe?"
+  template
+    filename "probe.txt"
+    parameters [line]
+    lines ["{{line}}"]
+
+@contract probe-contract
+  version "0.1.0"
+  meaning
+    says "Probe contract."
+    answers "Probe?"
+  invariants
+    REQ-PROBE-01 "A probe requirement."
+  relationships
+    governs @system PROBE_TARGET_SYSTEM
+
+@check probe-gate
+  meaning
+    says "Probe check."
+    answers "Probe?"
+  check
+    runs unavailable-probe-evaluator
+    scope "probe"
+  relationships
+    enforces @contract probe-contract#REQ-PROBE-01
+
+@case probe-ok
+  meaning
+    says "Probe success case."
+    answers "Probe?"
+  scenario
+    kind success
+    given "g"
+    request "r"
+    expected "e"
+    evaluator "probe-gate"
+  relationships
+    implements @contract probe-contract#REQ-PROBE-01

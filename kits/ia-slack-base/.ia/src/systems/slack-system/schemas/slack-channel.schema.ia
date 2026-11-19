@@ -1,0 +1,31 @@
+#! ia 1.0
+
+@schema slack-channel
+  lowers to binding
+  sections
+    must have meaning
+    must have slack
+    may have relationships
+    closed
+  fields
+    must have meaning.says as text
+    may have meaning.answers as text
+    must have slack.label as text "The work name shown per message."
+    may have slack.icon as text "One emoji icon shown with messages in this space."
+    must have slack.channel as text "The Slack channel or conversation name."
+    may have slack.channel-id as text "The bound Slack conversation identifier."
+    must have slack.workspace as ref to workspace
+    must have slack.home as text "Canonical home or repository locator for the bound workspace."
+    must have slack.approver as text "The Slack user identifier (<team-id> <user-id> or <user-id>) who approves checkpoints of this space."
+    must have slack.members as list of text "Slack user identifiers permitted in this space."
+    must have slack.app as id in [organisation, person]
+    must have slack.secret as text "An opaque secret reference name resolved outside records, never a token."
+    may have slack.answers as id in [off, on]
+    may have slack.sources as list of text "Allowed source locators the answering model may read."
+    may have slack.shows as list of text "Allowed record identities or prefixes this space may disclose."
+    may have slack.kind as id in [design-channel, coordination-space, direct]
+    may have slack.form as id in [channel, group, direct]
+    may have slack.asks as list of id in [status, decision, space]
+    may have slack.rate as text "Rate and size cap '<messages-per-hour> <characters-per-message>'."
+    may have slack.creation as id in [app, person]
+    may have slack.disclosure as id in [link-only, content]

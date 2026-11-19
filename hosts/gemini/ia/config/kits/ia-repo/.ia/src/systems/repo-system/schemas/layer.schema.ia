@@ -1,0 +1,19 @@
+#! ia 1.0
+
+@schema layer
+  lowers to definition
+  sections
+    must have meaning
+    must have layer
+    may have relationships
+    closed
+  fields
+    must have meaning.says as text
+    may have meaning.answers as text
+    must have layer.rank as number "Dependency rank: packages and layers depend only downward along lower ranks."
+    must have layer.title as text
+    may have layer.paths as list of text "Repository-relative path prefixes assigned to this layer; omitted on reusable path-less layer profiles."
+    may have layer.policy as text "Summary of what belongs in this layer and what may not enter it."
+    may have layer.repository as ref to repository
+  edges
+    may require layer one-or-more

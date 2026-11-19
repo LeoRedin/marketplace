@@ -4,7 +4,7 @@
 
 > The **IA marketplace** is the plugin catalogue `inventarch` for Claude Code and Codex. It ships one plugin, **`ia`**, which gives a coding agent three lanes: Work, Knowledge and Delivery. Each lane delivers the method a repository binds as one packet the agent follows, instead of a prompt it improvises.
 >
-> This is the **public catalogue**: the `ia` plugin and the three public method kits it carries by default. It is licensed under Apache-2.0 and needs no account. More kits are available with an InventArch account, and they install into your IA home, never into this repository.
+> This is the **public catalogue**: the `ia` plugin, the three public method kits it carries as lane defaults, and the five public base vocabulary kits (`ia-approval`, `ia-repo`, `ia-slack-base`, `ia-design-base`, `ia-product-base`). It is licensed under Apache-2.0 and needs no account. More kits are available with an InventArch account, and they install into your IA home, never into this repository.
 
 ## Why the ia plugin
 
@@ -42,7 +42,21 @@ codex plugin add ia@inventarch
 
 `codex plugin marketplace upgrade` refreshes the Git snapshot. If the plugin's version did not change, Codex keeps its cached copy: run `codex plugin remove` and then `codex plugin add`.
 
-Installing the plugin also gives Claude Code the IA door: the plugin's launcher (`scripts/door.mjs`, run with `node`) starts `npx -y @inventarch/mcp-door@3.8.0`, never through a shell (on Windows it runs npm's `npx-cli.js` with `node`), so the first session in a new environment needs network access to fetch it once.
+Google Antigravity (Antigravity 2.0, Antigravity IDE and `agy`):
+
+```sh
+# Workspace-scoped discovery is pre-wired via .agents/plugins.json -> hosts/antigravity/ia,
+# or copy hosts/antigravity/ia into ~/.gemini/config/plugins/ia for global activation.
+```
+
+Gemini CLI (`@google/gemini-cli`):
+
+```sh
+gemini extensions install https://github.com/inventarch/marketplace --path hosts/gemini/ia
+# or from a local checkout: gemini extensions link ./hosts/gemini/ia
+```
+
+Installing the plugin also gives Claude Code, Google Antigravity and Gemini CLI the IA door: the plugin's launcher (`scripts/door.mjs`, run with `node`) starts `npx -y @inventarch/mcp-door@3.8.0`, never through a shell (on Windows it runs npm's `npx-cli.js` with `node`), so the first session in a new environment needs network access to fetch it once.
 
 ### 2. Set up a repository
 
@@ -79,19 +93,24 @@ This plugin carries the rendered plugin's `init` and `doctor` skills (`ia:init`,
 
 ## 🧰 Kits
 
-The core carries three public kits, one default per lane. Their sources are under [`kits/`](kits/README.md), and [`kits/index.json`](kits/index.json) lists each kit's latest release and the binding keys it offers.
+The core carries eight public kits: three lane defaults and five public base vocabulary kits. Their sources are under [`kits/`](kits/README.md), and [`kits/index.json`](kits/index.json) lists each kit's latest release and the binding keys it offers.
 
-| Kit | Lane | What it gives you |
+| Kit | Role | What it gives you |
 |---|---|---|
-| [`ia-method`](kits/ia-method/README.md) (`inventarch/ia-method-kit`) | Work | The IA operating loop, the ceiling on work that rests on a provisional foundation, and one method capability (a four-cell orient, plan, act, learn playbook) for every public IA record word, plus one over the vocabulary. |
-| [`ia-kb`](kits/ia-kb/README.md) (`inventarch/ia-kb-kit`) | Knowledge | Where knowledge goes and where workspaces live, binding a document to its record, maintenance, checks, migration and review. |
-| [`ia-authoring`](kits/ia-authoring/README.md) (`inventarch/ia-authoring-kit`) | Delivery | One authoring process in three parts: records of existing IA words, host plugins (lower, project, evaluate, qualify), and plugin catalogues. It replaces the retired `inventarch/host-authoring-kit` and `inventarch/catalogue-authoring-kit`. |
+| [`ia-method`](kits/ia-method/README.md) (`inventarch/ia-method-kit`) | Work lane default | The IA operating loop, the ceiling on work that rests on a provisional foundation, and one method capability (a four-cell orient, plan, act, learn playbook) for every public IA record word, plus one over the vocabulary. |
+| [`ia-kb`](kits/ia-kb/README.md) (`inventarch/ia-kb-kit`) | Knowledge lane default | Where knowledge goes and where workspaces live, binding a document to its record, maintenance, checks, migration and review. |
+| [`ia-authoring`](kits/ia-authoring/README.md) (`inventarch/ia-authoring-kit`) | Delivery lane default | One authoring process in three parts: records of existing IA words, host plugins (lower, project, evaluate, qualify), and plugin catalogues. It replaces the retired `inventarch/host-authoring-kit` and `inventarch/catalogue-authoring-kit`. |
+| [`ia-approval`](kits/ia-approval/README.md) (`inventarch/ia-approval-kit`) | Public base vocabulary | `approval-system`: `@approver`, `@approval-rule`, `@docket` and `@approval` schemas, authoring guidance, intake recognition and seal rules, and the offline Ed25519 + RFC 8785 JCS `check-seal` verifier. |
+| [`ia-repo`](kits/ia-repo/README.md) (`inventarch/ia-repo-kit`) | Public base vocabulary | `repo-system`: `@repository`, `@layer`, `@package` and `@area` schemas, authoring guidance, public dependency-role grammar, `@spec` citation consent rows, and the offline `check-layers` verifier. |
+| [`ia-slack-base`](kits/ia-slack-base/README.md) (`inventarch/ia-slack-base-kit`) | Public base vocabulary | `slack-system`: `@slack-channel` schema, authoring guidance, the five public Slack channel governance rules, and the offline `check-slack-channels` verifier. |
+| [`ia-design-base`](kits/ia-design-base/README.md) (`inventarch/ia-design-base-kit`) | Public base vocabulary | `design-base-system`: `@design-token`, `@level`, `@part`, `@slot`, `@pattern` and `@recipe` schemas, authoring guidance, atomic composition and semantic-token laws, and the offline `check-design-patterns` verifier. |
+| [`ia-product-base`](kits/ia-product-base/README.md) (`inventarch/ia-product-base-kit`) | Public base vocabulary | `product-base-system`: `@prd` schema, authoring guidance, consented `@spec`/`@decision`/`@plan`/`@docket`/`@approval` relationships, ratification rules, and the offline `check-prds` verifier. |
 
 Each lane's entry capability is a whole procedure: a request with no specific activity gets all four phases, and `--phase` selects one.
 
 More kits (meetings, governed work, organisation-wide knowledge custody, workspace and system design, and others) are available with an InventArch account. They are served by the InventArch API and installed into your IA home, never into this repository.
 
-The three kits are also published together as the npm package [`@inventarch/public-kits`](packages/public-kits/README.md), for a door or workspace that has no plugin; [docs/public-kits-package.md](docs/public-kits-package.md) describes it.
+All eight carried kits are also published together as the npm package [`@inventarch/public-kits`](packages/public-kits/README.md), for a door or workspace that has no plugin; [docs/public-kits-package.md](docs/public-kits-package.md) describes it.
 
 ### Kit names
 
@@ -208,7 +227,7 @@ Only trusted kits run code, through `handlers.json`, `onwrite.json` or `checks.j
 
 ### Delegating to another model
 
-`/ia:delegate` hands one resolved step to `codex exec` or `claude -p`, with the IA door and the packet, one level deep and with a timeout. It is off until you set `"delegation": true` in `~/.ia/config.json`, and it runs nothing until you confirm the command it shows.
+`/ia:delegate` hands one resolved step to `codex exec`, `claude -p` or `gemini --approval-mode plan -p`, with the IA door and the packet, one level deep and with a timeout. It is off until you set `"delegation": true` in `~/.ia/config.json`, and it runs nothing until you confirm the command it shows.
 
 ### Where workspaces live
 

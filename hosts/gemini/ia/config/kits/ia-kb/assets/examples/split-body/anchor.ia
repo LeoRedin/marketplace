@@ -1,0 +1,11 @@
+#! ia 1.0
+
+@spec example-model-api
+  meaning
+    says "Illustrative organisation discovery anchor for the repository-owned model API design."
+    answers "Where is the canonical model API design?"
+  work
+    title "Example model API"
+    status draft
+    owner "example source owner"
+    source "repo://example-app/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/docs/specs/model-api.md"

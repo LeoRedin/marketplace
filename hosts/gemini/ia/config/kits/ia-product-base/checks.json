@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "checks": {
+    "product-check-validate": {
+      "argv": [
+        "${IA}",
+        "validate",
+        "--json"
+      ],
+      "cwd": "workspace"
+    },
+    "check-prds": {
+      "argv": [
+        "${NODE}",
+        "${KIT}/scripts/check-prds.mjs",
+        "${IA}"
+      ],
+      "cwd": "workspace"
+    }
+  }
+}

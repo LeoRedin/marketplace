@@ -1,0 +1,31 @@
+#! ia 1.0
+
+@convention approval-file-naming
+  meaning
+    says "Store each @approval record in its own file under .ia/src/approvals/<record-name>.<12-digest>.<8-keytag>.ia, where <12-digest> is the first twelve lowercase hex characters of seal.record-digest and <8-keytag> is the first eight lowercase hex characters of sha256(seal.key-id). One file per signer prevents merge conflicts when multiple approvers ratify the same record concurrently, and check-seal treats an @approval file whose name does not carry its own digest prefix and key tag as unattached so a misplaced file fails safe. Reference: assets/approval-vocabulary.md."
+    answers "Where is an @approval record stored, and how is its file named?"
+  governance
+    severity advisory
+    requires "Write each @approval record at .ia/src/approvals/<record-name>.<12-digest>.<8-keytag>.ia so concurrent approvals never collide and unattached files fail safe."
+  subject
+    subject-word approval
+
+@convention approval-piece-recognition
+  meaning
+    says "An intake or producing step records piece recognition in a new @docket record. Each entry in docket.pieces has six space-separated tokens: <record identity> <matched|none|ambiguous> <source kind> <percent-encoded ASCII source reference> <source digest> <pattern record identity or ->. A conversational desk producer has no pattern matcher and may record only none or ambiguous with - as the pattern. A piece counts as unrecognised when marked none or ambiguous, or when marked matched against a pattern record that is not yet on the target branch (the planted-pattern guard). When multiple new dockets classify the same piece differently, the least trusting classification wins (none over ambiguous over matched). Reference: assets/approval-vocabulary.md."
+    answers "How does a producing run record piece recognition, and when does a piece count as unrecognised?"
+  governance
+    severity advisory
+    requires "Record six-token piece lines with percent-encoded ASCII source references, never claim matched from desk, never list a docket as a piece, and treat patterns absent from the target branch as unrecognised."
+  subject
+    subject-word docket
+
+@convention approval-seal-asking-list
+  meaning
+    says "Before requesting a seal on a changed or deleted record, compute the covering @approval-rule set from the target branch's ratified rules, check whether any head @approval-rule names an unminted word (rule-names-unknown-word), gather the record's compiled graph digest and sorted one-hop reference digests, and present the exact SealStatement fields to the signer. Never substitute a draft status, comment or prose note for an @approval record when a covering rule or root change requires a seal. Reference: assets/approval-vocabulary.md."
+    answers "What must be prepared and checked when asking an approver to seal a change?"
+  governance
+    severity advisory
+    requires "Resolve covering rules from the target branch, surface unknown-word warnings on head rules, and sign the compiled record digest with sorted one-hop dependencies and answered rule digests."
+  subject
+    subject-word approval-rule

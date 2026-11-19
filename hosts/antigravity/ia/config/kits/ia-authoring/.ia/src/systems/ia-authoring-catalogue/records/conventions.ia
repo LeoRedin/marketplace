@@ -1,0 +1,91 @@
+#! ia 1.0
+
+@convention catalogue-description-length
+  meaning
+    says "A skill description states what the skill does and when to use it, in at most 400 characters. tools/validate.py requires <= 400 and TRIGGER.search (message: skill description needs what and when) against TRIGGER = re.compile, a pattern that accepts use this, it, when, for, to, after, before, at, in, on, once or as, or the word when."
+    answers "How long may a skill description be, and what must it say?"
+  governance
+    severity blocking
+    requires "Keep every skill description at most 400 characters and include a use-when trigger phrase."
+  subject
+    subject-word capability
+
+@convention catalogue-model-invocable-limit
+  meaning
+    says "A plugin has at most four model-invocable skills. tools/validate.py sets MODEL_INVOCABLE_PER_PLUGIN = 4 and refuses a plugin with more (message: too many model-invocable skills in), naming them; a skill is model-invocable unless its frontmatter carries disable-model-invocation: true, so the stage skills reached by path set it."
+    answers "How many skills of one plugin may a model invoke on its own?"
+  governance
+    severity blocking
+    requires "Give a plugin at most four model-invocable skills; mark every other skill disable-model-invocation: true."
+  subject
+    subject-word capability
+
+@convention catalogue-listing-budget
+  meaning
+    says "The catalogue's skill listing stays within 7,500 characters. tools/validate.py sets LISTING_BUDGET = 7500 as the names plus descriptions of every skill in the catalogue and refuses a catalogue over it (message: skill listing over budget), because Codex ignores disable-model-invocation and lists every skill."
+    answers "How much listing text may all the skills of the catalogue spend together?"
+  governance
+    severity blocking
+    requires "Keep the folder names plus descriptions of all skills in the catalogue within 7,500 characters."
+  subject
+    subject-word capability
+
+@convention catalogue-hidden-description
+  meaning
+    says "A hidden skill, one with disable-model-invocation: true, has a description of at most 160 characters. tools/validate.py sets HIDDEN_DESCRIPTION = 160 because stage skills are reached by path while Codex still lists them, and refuses a longer one (message: hidden skill description over); the entry skill of a plugin named in UNADVERTISED keeps the 400-character budget instead."
+    answers "How long may the description of a hidden skill be?"
+  governance
+    severity blocking
+    requires "Keep the description of every hidden skill at most 160 characters."
+  subject
+    subject-word capability
+
+@convention catalogue-codex-bridge
+  meaning
+    says "Every skill opens its body with the Codex bridge line. tools/validate.py defines CODEX_BRIDGE = re.compile as a line that starts with the bold Codex label and links ../../CODEX.md, and refuses a skill whose first body line does not match it (message: skill must open with the Codex bridge line), because Codex lists every skill and may load a stage skill directly."
+    answers "What must the first body line of every skill be?"
+  governance
+    severity blocking
+    requires "Open every skill body with the Codex bridge line that links ../../CODEX.md."
+  subject
+    subject-word capability
+
+@convention catalogue-qualified-hooks
+  meaning
+    says "Only the plugins listed in QUALIFIED_HOOKS ship hooks, and each ships exactly the qualified set. tools/validate.py names each hook plugin with each event, matcher, script, argument and timeout, and refuses a hooks.json that differs from it (message: hooks differ from the qualified set), so a widened matcher, a rewired or dropped handler, an added event or a changed timeout fails. The runtime files named in RUNTIME_FILES, hooks.json among them, are refused in every other plugin (message: runtime component not admitted), and runtime_keys refuses runtime components in skill and agent frontmatter."
+    answers "Which plugins may carry hooks, and what must those hooks equal?"
+  governance
+    severity blocking
+    requires "Add no hook to a plugin that QUALIFIED_HOOKS does not list, and never change a qualified hook without a decision that updates the set."
+  subject
+    subject-word capability
+
+@convention catalogue-agent-allowlist
+  meaning
+    says "An agent declares a tools allowlist. tools/validate.py refuses an agent whose tools value is empty, * or [], or that sets disallowedTools (message: agent needs a tools allowlist), because a denylist still inherits Agent, PowerShell, Skill and every MCP tool."
+    answers "How must a plugin agent declare the tools it may use?"
+  governance
+    severity blocking
+    requires "Give every agent an explicit tools allowlist; never a wildcard, an empty list or a denylist."
+  subject
+    subject-word capability
+
+@convention catalogue-author-licence
+  meaning
+    says "A plugin manifest names its author as an object with a name, and its license is the catalogue's own licence: Apache-2.0 in a public catalogue. schemas/plugin-manifest.schema.json requires the author property with a required, non-empty name and no other property, and fixes license to the catalogue's licence, so a manifest that names another licence is refused."
+    answers "What author and licence does a plugin manifest carry?"
+  governance
+    severity blocking
+    requires "Write the author as an object with only a name and the license as the catalogue's licence (Apache-2.0 in a public catalogue) in every plugin manifest."
+  subject
+    subject-word capability
+
+@convention catalogue-author-is-not-reviewer
+  meaning
+    says "The author of a plugin change is never its reviewer. A reviewer who wrote any part of the change reviews nothing of it, a finding is confirmed by someone other than the reviewer who raised it before it blocks, and a blocking finding blocks the merge until it is fixed or the catalogue's owner records why it may wait. The catalogue records its review process as a decision in docs/decisions.md."
+    answers "Who may review a plugin change?"
+  governance
+    severity blocking
+    requires "Have every plugin change reviewed by someone other than the person or agent that wrote it."
+  subject
+    subject-word capability

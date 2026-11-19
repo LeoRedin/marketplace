@@ -13,9 +13,35 @@
 // task that is not admitted or is not a task. Exit 1 is never used. --strict is
 // refused (exit 2): this report never blocks, and an ignored flag would let a
 // skipped check stand for a pass.
-import { resolve } from 'node:path';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join, relative, resolve, sep } from 'node:path';
 import { resolveCli, runIa } from './lib/cli.mjs';
 import { describe, exitEvidenceReport, observationFromInspect, shortName, taskFromInspect } from './lib/exit-evidence.mjs';
+
+function indexAuthoredWorkFiles(dir) {
+  const byRecord = new Map();
+  const walk = current => {
+    let entries;
+    try { entries = readdirSync(current, { withFileTypes: true }); } catch { return; }
+    for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+      const full = join(current, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.isFile() && entry.name.endsWith('.ia')) {
+        let text;
+        try { text = readFileSync(full, 'utf8'); } catch { continue; }
+        const rel = relative(dir, full).split(sep).join('/');
+        for (const m of text.matchAll(/^@(task|observation)\s+([A-Za-z][A-Za-z0-9-]*)/gm)) {
+          const key = `${m[1]}:${m[2].toLowerCase()}`;
+          const list = byRecord.get(key) ?? [];
+          if (!list.includes(rel) && list.length < 4) list.push(rel);
+          byRecord.set(key, list);
+        }
+      }
+    }
+  };
+  walk(join(dir, '.ia', 'src'));
+  return byRecord;
+}
 
 const args = process.argv.slice(2);
 const OPTIONS = new Set(['--root', '--plan', '--task']);
@@ -47,14 +73,50 @@ try {
   // A record that inspect does not return is null in the graph, so a task that
   // depends on it reads unknown instead of evidenced.
   const graph = {};
+  const fileIndex = only ? new Map() : indexAuthoredWorkFiles(root);
+  const taskFilesRead = new Set();
+  const obsFilesRead = new Set();
   // A read that fails to run or times out is the same as one that returns
   // nothing: the record is null, and the task reads unknown instead of the
   // whole report aborting.
   const read = args => {
     try { return runIa(root, args, { cli, timeoutMs: READ_TIMEOUT_MS }); } catch { return undefined; }
   };
+  const loadTaskFile = rel => {
+    if (taskFilesRead.has(rel)) return;
+    taskFilesRead.add(rel);
+    obsFilesRead.add(rel);
+    const ran = read(['inspect', '--path', rel, '--edges', 'both']);
+    if (ran?.code === 0 && Array.isArray(ran.json?.records)) {
+      const directed = ran.json.directed ?? [];
+      for (const record of ran.json.records) {
+        if (!record?.identity) continue;
+        if (record.discriminator === 'task') graph[record.identity] = taskFromInspect(record, directed);
+        else if (record.discriminator === 'observation') graph[record.identity] = observationFromInspect(record);
+      }
+    }
+  };
+  const loadObservationFile = rel => {
+    if (obsFilesRead.has(rel)) return;
+    obsFilesRead.add(rel);
+    const ran = read(['inspect', '--path', rel, '--depth', '0']);
+    if (ran?.code === 0 && Array.isArray(ran.json?.records)) {
+      for (const record of ran.json.records) {
+        if (record?.identity && record.discriminator === 'observation') {
+          graph[record.identity] = observationFromInspect(record);
+        }
+      }
+    }
+  };
   const loadTask = identity => {
     if (identity in graph) return graph[identity];
+    const parts = String(identity).split('/');
+    if (parts.length === 4) {
+      for (const rel of fileIndex.get(`task:${parts[3]}`) ?? []) {
+        loadTaskFile(rel);
+        if (identity in graph) return graph[identity];
+      }
+    }
     const ran = read(['inspect', identity, '--edges', 'both']);
     const record = ran?.code === 0 ? ran.json?.records?.find(r => r.identity === identity) : undefined;
     graph[identity] = record ? taskFromInspect(record, ran.json.directed ?? []) : null;
@@ -62,6 +124,13 @@ try {
   };
   const loadObservation = identity => {
     if (identity in graph) return;
+    const parts = String(identity).split('/');
+    if (parts.length === 4) {
+      for (const rel of fileIndex.get(`observation:${parts[3]}`) ?? []) {
+        loadObservationFile(rel);
+        if (identity in graph) return;
+      }
+    }
     const ran = read(['inspect', identity, '--depth', '0']);
     const record = ran?.code === 0 ? ran.json?.records?.find(r => r.identity === identity) : undefined;
     graph[identity] = record ? observationFromInspect(record) : null;

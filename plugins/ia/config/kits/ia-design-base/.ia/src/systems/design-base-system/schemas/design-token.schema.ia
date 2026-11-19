@@ -1,0 +1,22 @@
+#! ia 1.0
+
+@schema design-token
+  lowers to definition
+  sections
+    must have meaning
+    must have token
+    may have relationships
+    closed
+  fields
+    must have meaning.says as text
+    may have meaning.answers as text
+    must have token.name as text "Canonical token identifier."
+    must have token.tier as id in [primitive, semantic, component]
+    must have token.category as id in [color, typography, spacing, size, radius, border, shadow, motion, z-index]
+    may have token.css-var as text "CSS custom property name (for example '--surface-primary')."
+    may have token.classes as list of text "Semantic or component utility classes bound to this token."
+    may have token.value as text "Default resolved value or reference expression."
+    may have token.modes as list of text "Optional mode overrides '<mode>=<value>'."
+    must have token.standing as id in [proposed, active, deprecated, retired]
+  edges
+    may supersede design-token one

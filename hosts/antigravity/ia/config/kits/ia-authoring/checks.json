@@ -1,0 +1,11 @@
+{
+  "format": 1,
+  "checks": {
+    "authoring-workspace-validate": { "argv": ["${IA}", "validate", "--severity", "error", "--json"], "cwd": "workspace" },
+    "authoring-field-lint": { "argv": ["${NODE}", "${KIT}/scripts/field-lint.mjs", "--root", "${WORKSPACE}"], "cwd": "workspace" },
+    "host-validate": { "argv": ["${IA}", "validate"], "cwd": "workspace" },
+    "host-fixed-point": { "argv": ["${IA}", "project", "claude", "--product", "plugin", "--check"], "cwd": "workspace" },
+    "host-trigger-eval": { "argv": ["${NODE}", "${KIT}/scripts/eval-triggers.mjs", "--config", "${WORKSPACE}/.ia/work/trigger-eval.json"], "cwd": "workspace", "timeout": 21600 },
+    "catalogue-validate": { "argv": ["python", "tools/validate.py"], "cwd": "workspace" }
+  }
+}

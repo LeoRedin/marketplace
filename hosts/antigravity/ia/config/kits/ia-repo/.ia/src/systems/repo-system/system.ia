@@ -1,0 +1,76 @@
+#! ia 1.0
+
+@system repo-system
+  provider "local"
+  version "0.1.0"
+  describes "The public base repository structure system (inventarch/ia-repo-kit). It mints four words: repository, a Git repository declaring its canonical URL, structural profile tie and optional organisation knowledge-base pointer; layer, one ranked dependency tier; package, one codebase package assigned to a layer with an optional dependency-role kind; and area, one functional boundary grouping packages across layers. It consents to structural dependencies and spec citations, carries authoring guidance and the public dependency-role grammar, and ships the offline check-layers verifier. It grants no host authority."
+  steward @agent repo-system-steward
+  requires
+    - agent-system
+    - compliance-system
+    - governance-system
+    - work-system
+    - workspace-system
+  discriminators
+    repository lowers to definition
+      category boundary
+      facets [repository]
+      schema @schema repository
+      artifact-set product-definition
+      primitive Attention
+      move Observation
+    layer lowers to definition
+      category boundary
+      facets [layer]
+      schema @schema layer
+      artifact-set product-definition
+      primitive Attention
+      move Observation
+    package lowers to definition
+      category boundary
+      facets [package]
+      schema @schema package
+      artifact-set product-definition
+      primitive Attention
+      move Observation
+    area lowers to definition
+      category boundary
+      facets [area]
+      schema @schema area
+      artifact-set product-definition
+      primitive Attention
+      move Observation
+  edges
+    require layer using package
+    require layer using layer
+    require package using package
+    require area using area
+    cite * using repository
+    cite * using layer
+    cite * using package
+    cite * using area
+    cite repository using layer
+    cite repository using package
+    cite repository using area
+    cite repository using spec
+    cite layer using spec
+    cite package using spec
+    cite area using spec
+
+@agent repo-system-steward
+  meaning
+    says "Accountable owner of repo-system vocabulary, canonical schemas, authoring guidance, relationship consent, dependency-role rules and offline layer check."
+    answers "Who owns the repository, layer, package and area words?"
+  governance
+    applies [repository, layer, package, area, convention, law, contract, check, case, agent, mandate, distribution]
+
+@mandate repo-system-stewardship
+  meaning
+    says "The bounded authority of repo-system-steward over the repo-system folder."
+    answers "Which moves may repo-system-steward make over the repo-system folder?"
+  governance
+    requires "Claim no host permission or execution from this mandate; keep the public repository vocabulary free of private repository names, tenant corpora and hardcoded layer numbers."
+  authority
+    participant @agent repo-system-steward
+    moves [Observation, Verification, Synthesis]
+    covers [".ia/src/systems/repo-system/"]

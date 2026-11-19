@@ -1,6 +1,6 @@
 # The public kits package
 
-`@inventarch/public-kits` carries the three kits the `ia` plugin bundles (`ia-method`, `ia-kb`, `ia-authoring`) to a bare IA door or workspace as one npm package (decision `public-kits-package`; contracts C7 and C7b). npm is transport only: a repository records the package as one entry in its `.ia/distributions.lock.json`, and the IA engine expands each kit from its IA archive into `.ia/distributions/store/`, as an ordinary installed release.
+`@inventarch/public-kits` carries the eight kits the `ia` plugin bundles (`ia-method`, `ia-kb`, `ia-authoring`, `ia-approval`, `ia-repo`, `ia-slack-base`, `ia-design-base`, `ia-product-base`) to a bare IA door or workspace as one npm package (decisions `public-kits-package`, `public-base-kits-approval-and-repo`, `public-base-kits-slack-design-product`; contracts C7 and C7b). npm is transport only: a repository records the package as one entry in its `.ia/distributions.lock.json`, and the IA engine expands each kit from its IA archive into `.ia/distributions/store/`, as an ordinary installed release.
 
 ## How a repository installs it
 

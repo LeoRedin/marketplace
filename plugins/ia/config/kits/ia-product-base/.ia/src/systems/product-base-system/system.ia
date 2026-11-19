@@ -1,0 +1,46 @@
+#! ia 1.0
+
+@system product-base-system
+  provider "local"
+  version "0.1.0"
+  describes "The public base product requirements system (inventarch/ia-product-base-kit). It mints the prd word, one Product Requirement Document record declaring problem statement, goals, non-goals, requirement clauses, lifecycle status and optional source locator and body digest, with consented relationships to @spec, @decision, @plan, @milestone, @task, @docket and @approval. It carries authoring guidance, ratification and decomposition rules, and the offline check-prds verifier. Proprietary PRD-to-spec procedures and external wiki connectors stay outside the public base; it grants no host authority."
+  steward @agent product-base-system-steward
+  requires
+    - agent-system
+    - compliance-system
+    - governance-system
+    - work-system
+    - workspace-system
+  discriminators
+    prd lowers to definition
+      category state
+      facets [prd]
+      schema @schema prd
+      artifact-set product-definition
+      primitive Attention
+      move Observation
+  edges
+    cite * using prd
+    cite prd using *
+    ground spec, plan, milestone, task using prd
+    require decision, milestone, task using prd
+    supersede prd using prd
+    govern prd using law, convention
+
+@agent product-base-system-steward
+  meaning
+    says "Accountable owner of product-base-system vocabulary, canonical schema, authoring guidance, relationship consent, PRD ratification/traceability rules and offline PRD check."
+    answers "Who owns the prd word?"
+  governance
+    applies [prd, convention, law, contract, check, case, agent, mandate, distribution]
+
+@mandate product-base-system-stewardship
+  meaning
+    says "The bounded authority of product-base-system-steward over the product-base-system folder."
+    answers "Which moves may product-base-system-steward make over the product-base-system folder?"
+  governance
+    requires "Claim no host permission or execution from this mandate; keep the public product base structural and free of proprietary decomposition rubrics, external credentials and tenant corpora."
+  authority
+    participant @agent product-base-system-steward
+    moves [Observation, Verification, Synthesis]
+    covers [".ia/src/systems/product-base-system/"]

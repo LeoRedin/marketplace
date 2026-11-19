@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "checks": {
+    "approval-check-validate": {
+      "argv": [
+        "${IA}",
+        "validate",
+        "--json"
+      ],
+      "cwd": "workspace"
+    },
+    "check-seal": {
+      "argv": [
+        "${NODE}",
+        "${KIT}/scripts/check-seal.mjs",
+        "${IA}"
+      ],
+      "cwd": "workspace"
+    }
+  }
+}

@@ -6,7 +6,7 @@
 // workspace with the kit adopted.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -24,7 +24,7 @@ const byName = (report, name) => report.tasks.find(t => t.identity === id('task'
 // A stand-in IA CLI: `next` lists the fixture's tasks, `inspect <id>` returns
 // the fixture's record in the shape ia inspect reports, or exits 3 for an
 // identity listed in `failing`.
-function fakeCli(t, graph, failing = []) {
+function fakeCli(t, graph, failing = [], byPath = {}) {
   const dir = realpathSync.native(mkdtempSync(join(tmpdir(), 'ia-core-ceiling-fakecli-')));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   const records = Object.fromEntries(Object.entries(graph).map(([identity, n]) => [identity, {
@@ -40,15 +40,25 @@ function fakeCli(t, graph, failing = []) {
       ...n.groundedBy.map(target => ({ predicate: 'ground', direction: 'in', target })),
     ],
   }]));
-  writeFileSync(join(dir, 'records.json'), JSON.stringify({ records, failing }));
+  writeFileSync(join(dir, 'records.json'), JSON.stringify({ records, failing, byPath }));
+  writeFileSync(join(dir, 'calls.log'), '');
   const main = join(dir, 'main.mjs');
-  writeFileSync(main, `import { readFileSync } from 'node:fs';
-const { records, failing } = JSON.parse(readFileSync(new URL('./records.json', import.meta.url), 'utf8'));
-const [command, identity] = process.argv.slice(2);
+  writeFileSync(main, `import { appendFileSync, readFileSync } from 'node:fs';
+const { records, failing, byPath } = JSON.parse(readFileSync(new URL('./records.json', import.meta.url), 'utf8'));
+const argv = process.argv.slice(2);
+appendFileSync(new URL('./calls.log', import.meta.url), JSON.stringify(argv) + '\\n');
+const [command, identity] = argv;
+const flag = name => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
 if (command === 'next') {
   const tasks = Object.values(records).filter(r => r.discriminator === 'task').map(r => ({ identity: r.identity }));
   process.stdout.write(JSON.stringify({ ok: true, view: { tasks } }));
 } else if (command === 'inspect') {
+  const pathArg = flag('--path');
+  if (pathArg) {
+    const ids = byPath[pathArg] ?? [];
+    process.stdout.write(JSON.stringify({ records: ids.map(id => records[id]).filter(Boolean), directed: [] }));
+    process.exit(0);
+  }
   if (failing.includes(identity)) { process.stdout.write(JSON.stringify({ ok: false, code: 'IA-DB-SOURCE-UNAVAILABLE' })); process.exit(3); }
   process.stdout.write(JSON.stringify({ records: records[identity] ? [records[identity]] : [] }));
 } else process.exit(2);
@@ -57,7 +67,8 @@ if (command === 'next') {
   mkdirSync(join(root, '.git'), { recursive: true });
   const env = { ...process.env, IA_CLI_PATH: main };
   delete env.IA_METHOD_CLI;
-  return { root, env };
+  const calls = () => readFileSync(join(dir, 'calls.log'), 'utf8').split('\n').filter(Boolean).map(line => JSON.parse(line));
+  return { root, env, calls };
 }
 
 const runScript = (cli, args) => spawnSync(process.execPath, [SCRIPT, '--root', cli.root, ...args], { env: cli.env, encoding: 'utf8' });
@@ -155,6 +166,37 @@ test('nodeFromInspect reads status, choice and the three edge kinds as ia inspec
     ],
   });
   assert.deepEqual(node, { word: 'spec', status: 'draft', choice: false, requires: [], cites: [], groundedBy: [id('decision', 'd')] });
+});
+
+test('demand-driven .ia/src indexing inspects only files holding referenced tasks, decisions and specs', t => {
+  const graph = Object.fromEntries([
+    decision('d-open', false),
+    decision('d-unused', false),
+    task('t1', { requires: [id('decision', 'd-open')] }),
+  ]);
+  const cli = fakeCli(t, graph, [], {
+    '.ia/src/work.ia': [id('task', 't1')],
+    '.ia/src/decisions.ia': [id('decision', 'd-open')],
+    '.ia/src/unused-decisions.ia': [id('decision', 'd-unused')],
+  });
+  mkdirSync(join(cli.root, '.ia', 'src', 'systems'), { recursive: true });
+  for (let i = 0; i < 50; i++) {
+    writeFileSync(join(cli.root, '.ia', 'src', 'systems', `sys-${String(i).padStart(2, '0')}.ia`), `#! ia 1.0\n\n@system sys-${i}\n`);
+  }
+  writeFileSync(join(cli.root, '.ia', 'src', 'unused-decisions.ia'), '#! ia 1.0\n\n@decision d-unused\n');
+  writeFileSync(join(cli.root, '.ia', 'src', 'work.ia'), '#! ia 1.0\n\n@task t1\n');
+  writeFileSync(join(cli.root, '.ia', 'src', 'decisions.ia'), '#! ia 1.0\n\n@decision d-open\n');
+
+  const ran = runScript(cli, ['--json']);
+  assert.equal(ran.status, 0, ran.stdout + ran.stderr);
+  const report = JSON.parse(ran.stdout);
+  assert.equal(byName(report, 't1').position, 'first-layer');
+
+  const inspectCalls = cli.calls().filter(c => c[0] === 'inspect');
+  assert.deepEqual(inspectCalls, [
+    ['inspect', '--path', '.ia/src/work.ia', '--edges', 'both', '--root', cli.root, '--json'],
+    ['inspect', '--path', '.ia/src/decisions.ia', '--edges', 'both', '--root', cli.root, '--json'],
+  ]);
 });
 
 const CLI = process.env.IA_CORE_TEST_CLI;

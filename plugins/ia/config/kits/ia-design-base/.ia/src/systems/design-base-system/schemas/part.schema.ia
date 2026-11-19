@@ -1,0 +1,24 @@
+#! ia 1.0
+
+@schema part
+  lowers to definition
+  sections
+    must have meaning
+    must have part
+    may have relationships
+    closed
+  fields
+    must have meaning.says as text
+    may have meaning.answers as text
+    must have part.name as text "Canonical component or structural part name."
+    must have part.level as ref to level
+    may have part.composes as list of ref to part
+    may have part.slots as list of ref to slot
+    may have part.tokens as list of ref to design-token
+    may have part.variants as list of text "Variant axis declarations '<axis>: <values...>'."
+    may have part.figma-names as list of text "Exact case-sensitive Figma component-set names claimed by this part."
+    may have part.code-export as text "Packaged code export locator '<package>#<ExportName>'."
+    must have part.standing as id in [proposed, active, deprecated, retired]
+    may have part.because as text "Identity of the decision justifying a level above the structural lower bound."
+  edges
+    may supersede part one

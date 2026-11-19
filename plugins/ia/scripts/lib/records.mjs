@@ -8,11 +8,19 @@ export function kitRecordNames(kitDir) {
   const systems = join(kitDir, '.ia', 'src', 'systems');
   const names = [];
   if (!existsSync(systems)) return names;
-  for (const system of readdirSync(systems).sort()) {
-    const dir = join(systems, system);
-    const records = join(dir, 'records');
-    const files = [join(dir, 'system.ia'), ...(existsSync(records) ? readdirSync(records).filter(f => f.endsWith('.ia')).sort().map(f => join(records, f)) : [])].filter(f => existsSync(f));
-    for (const file of files) for (const m of readFileSync(file, 'utf8').matchAll(/^@([a-z][a-z-]*) ([a-z0-9][a-z0-9-]*)/gm)) names.push({ system, word: m[1], name: m[2] });
+  const walk = at => readdirSync(at, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)).flatMap(entry => {
+    const path = join(at, entry.name);
+    if (entry.isSymbolicLink()) throw new Error(`kit record inventory refuses symlink: ${path}`);
+    if (entry.isDirectory()) return walk(path);
+    return entry.isFile() && entry.name.endsWith('.ia') ? [path] : [];
+  });
+  for (const entry of readdirSync(systems, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))) {
+    if (entry.isSymbolicLink()) throw new Error(`kit record inventory refuses symlink: ${join(systems, entry.name)}`);
+    if (!entry.isDirectory()) continue;
+    const system = entry.name;
+    for (const file of walk(join(systems, system))) {
+      for (const m of readFileSync(file, 'utf8').matchAll(/^@([a-z][a-z-]*) ([a-z0-9][a-z0-9-]*)/gm)) names.push({ system, word: m[1], name: m[2] });
+    }
   }
   const key = r => `${r.system}/${r.word}/${r.name}`;
   return names.sort((a, b) => (key(a) < key(b) ? -1 : 1));

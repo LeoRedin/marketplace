@@ -1,0 +1,61 @@
+#! ia 1.0
+
+@convention design-guide-design-token
+  meaning
+    says "Authoring guide for @design-token (default file design-tokens.ia; reference assets/design-vocabulary.md). Select @design-token to register a primitive, semantic or component token with its category (color, typography, spacing, size, radius, border, shadow, motion or z-index), optional CSS custom property, semantic/component utility classes, value, mode overrides and standing. Avoid @design-token for UI parts (@part) or lowering class maps (@recipe). Bind @part and @recipe classes exclusively to semantic or component tokens, never primitive tokens."
+    answers "When and how should an author write a @design-token record?"
+  governance
+    severity advisory
+    requires "Author @design-token with explicit tier and category, keep primitive tokens out of @part and @recipe class maps, and declare utility classes on semantic and component tokens."
+  subject
+    subject-word design-token
+
+@convention design-guide-level
+  meaning
+    says "Authoring guide for @level (default file levels.ia; reference assets/design-vocabulary.md). Select @level to declare the five ranked Atomic Design stages (atom, molecule, organism, page-template and page) with monotonically ascending level.rank numbers so page-template never collides with floor @template. Avoid @level for repository dependency tiers (@layer in ia-repo)."
+    answers "When and how should an author write a @level record?"
+  governance
+    severity advisory
+    requires "Author @level with ascending level.rank values matching atom < molecule < organism < page-template < page."
+  subject
+    subject-word level
+
+@convention design-guide-part
+  meaning
+    says "Authoring guide for @part (default file parts.ia; reference assets/design-vocabulary.md). Select @part to describe one reusable UI component or structural template part assigned to an atomic @level, with optional composed child @part references (at the same or lower atomic stage), @slot references, semantic/component @design-token references, variant axes, exact case-sensitive Figma component-set names (part.figma-names) and packaged code export (<package>#<ExportName>). Avoid @part for node-arrangement matchers (@pattern) or framework code templates (@recipe)."
+    answers "When and how should an author write a @part record?"
+  governance
+    severity advisory
+    requires "Assign every @part to an @level, compose only same-or-lower atomic stages without cycles, reference only semantic or component @design-token records, and keep Figma component-set claims unambiguous."
+  subject
+    subject-word part
+
+@convention design-guide-slot
+  meaning
+    says "Authoring guide for @slot (default file slots.ia; reference assets/design-vocabulary.md). Select @slot to declare a named composition slot owned by a @part (slot.part), optionally restricting accepted child atomic stages (atom, molecule, organism, page-template) and whether filling the slot is required. Remember that a @part instance owns only its own frame while slot contents are planned independently."
+    answers "When and how should an author write a @slot record?"
+  governance
+    severity advisory
+    requires "Bind each @slot to its owning @part with a unique slot.name on that part, and list the @slot in its owner's part.slots."
+  subject
+    subject-word slot
+
+@convention design-guide-pattern
+  meaning
+    says "Authoring guide for @pattern (default file patterns.ia; reference assets/design-vocabulary.md). Select @pattern to capture a recurring structural arrangement of design nodes (pattern.matches), the @part or @level identity it yields (pattern.yields), optional slot mappings (<slot name> <- <node path>), optional @recipe identity, and committed frame-reading digests (<64-hex> <fileKey>#<nodeId> in pattern.evidence). Avoid name-only patterns, coordinate-only rules or unsealed active patterns."
+    answers "When and how should an author write a @pattern record?"
+  governance
+    severity advisory
+    requires "Author @pattern with non-empty structural matches, a resolvable yielded @part or @level, committed reading digests in pattern.evidence, and an @approval seal before setting standing to active."
+  subject
+    subject-word pattern
+
+@convention design-guide-recipe
+  meaning
+    says "Authoring guide for @recipe (default file recipes.ia; reference assets/design-vocabulary.md). Select @recipe to specify how a @part lowers to a code target via mode use (import + props on an exported part, no classes), adapt (import + props + semantic/component token overrides + library gap), compose (template + semantic/component token classes) or define (new component template + classes + output path when the part has no code-export). Never place raw hex values, palette classes, primitive tokens, bracket arbitrary values, !important flags, or adapt layout/spacing/size classes in a recipe, and seal before setting standing to active."
+    answers "When and how should an author write a @recipe record?"
+  governance
+    severity advisory
+    requires "Match recipe fields to recipe.mode, paint exclusively with semantic or component token classes, refuse define over an existing code-export, report scale/layout needs as library gaps on adapt, and seal before setting standing to active."
+  subject
+    subject-word recipe

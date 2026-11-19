@@ -2,11 +2,31 @@
 
 @workspace inventarch-marketplace
   meaning
-    says "The authored source boundary for the public InventArch plugin catalogue: the ia plugin and the public method kits it carries."
+    says "The authored source boundary for the public InventArch plugin catalogue: the ia plugin and the public base and lane kits it carries."
     answers "Which sources and existing systems describe this catalogue?"
   composition
-    systems [@system workspace-system, @system work-system, @system learning-system]
+    systems [@system agent-system, @system workspace-system, @system work-system, @system learning-system]
     sources [".ia/src @authored"]
+    steward @agent inventarch-marketplace-steward
+
+@agent inventarch-marketplace-steward
+  meaning
+    says "Accountable steward of the public InventArch marketplace workspace records."
+    answers "Who stewards the workspace records of inventarch-marketplace?"
+  governance
+    applies [workspace, spec, decision, milestone, plan, task, observation, agent, mandate]
+
+@mandate inventarch-marketplace-stewardship
+  meaning
+    says "The bounded authority of inventarch-marketplace-steward over this catalogue's .ia/src records."
+    answers "Which moves may inventarch-marketplace-steward make in inventarch-marketplace?"
+  governance
+    requires "Claim no host permission or execution from this mandate; never push, publish, invite or change access without operator authorization."
+  authority
+    participant @agent inventarch-marketplace-steward
+    moves [Observation, Verification, Synthesis, Delegation, Execution]
+    scope [@workspace inventarch-marketplace]
+    covers [".ia/src/"]
 
 @spec marketplace-front-door
   meaning
@@ -63,13 +83,14 @@
 
 @spec marketplace-hosts
   meaning
-    says "What each host (Claude Code, Codex) loads from this catalogue, which hooks run where, and what has been qualified on a real host."
+    says "What each host (Claude Code, Codex, Google Antigravity, Gemini CLI, GitHub Copilot) loads from this catalogue, how deterministic host bundles under hosts/ are built, which hooks run where, and what has been qualified on a real host."
     answers "Which hosts does the catalogue support, and what is proven on each?"
   work
     title "Host support"
     status draft
     owner "InventArch maintainers"
     source "docs/hosts.md"
+    covers ["hosts/", ".agents/plugins.json"]
 
 @spec marketplace-public-kits
   meaning

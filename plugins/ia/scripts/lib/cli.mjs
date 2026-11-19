@@ -7,11 +7,85 @@
 // shell: on Windows npx is npm's npx-cli.js run by node, because cmd.exe would
 // expand %VAR% and mangle quoted arguments.
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 
 // The CLI the kits' releases were packed with; adoption needs exactly this one.
 export const PINNED = '3.8.0';
+
+const WINDOWS_PACKAGE_MANAGERS = Object.freeze({
+  npm: ['node_modules/npm/bin/npm-cli.js', '../lib/node_modules/npm/bin/npm-cli.js'],
+  npx: ['node_modules/npm/bin/npx-cli.js', '../lib/node_modules/npm/bin/npx-cli.js'],
+  pnpm: [
+    'node_modules/pnpm/bin/pnpm.cjs',
+    'node_modules/corepack/dist/pnpm.js',
+    '../lib/node_modules/pnpm/bin/pnpm.cjs',
+    '../lib/node_modules/corepack/dist/pnpm.js',
+  ],
+  yarn: [
+    'node_modules/yarn/bin/yarn.js',
+    'node_modules/corepack/dist/yarn.js',
+    '../lib/node_modules/yarn/bin/yarn.js',
+    '../lib/node_modules/corepack/dist/yarn.js',
+  ],
+});
+
+const isRegularFile = path => {
+  try {
+    return statSync(path).isFile();
+  } catch {
+    return false;
+  }
+};
+
+// Resolves a bare Windows package-manager shim (npm, npx, pnpm, yarn) to its
+// native .exe or Node JS entrypoint under execPath so check.mjs keeps shell: false
+// for every argv. Non-Windows platforms and non-shim commands pass through unchanged.
+export function resolveWindowsPackageManager(argv, { platform = process.platform, env = process.env, execPath = process.execPath } = {}) {
+  if (platform !== 'win32' || !Array.isArray(argv) || argv.length === 0 || !Object.hasOwn(WINDOWS_PACKAGE_MANAGERS, argv[0])) {
+    return argv;
+  }
+  const [shim, ...rest] = argv;
+  const candidates = WINDOWS_PACKAGE_MANAGERS[shim];
+  const rawPath = env?.PATH ?? env?.Path ?? env?.path ?? '';
+  const pathDirs = String(rawPath)
+    .split(';')
+    .map(entry => entry.trim().replace(/^"+|"+$/g, ''))
+    .filter(Boolean);
+
+  for (const dir of pathDirs) {
+    const exe = join(dir, `${shim}.exe`);
+    if (isRegularFile(exe)) return [exe, ...rest];
+    const cmd = join(dir, `${shim}.cmd`);
+    if (!isRegularFile(cmd)) continue;
+    for (const rel of candidates) {
+      const script = resolve(dir, rel);
+      if (isRegularFile(script)) return [execPath, script, ...rest];
+    }
+    try {
+      const stat = statSync(cmd);
+      if (stat.size <= 16384) {
+        const text = readFileSync(cmd, 'utf8');
+        const matches = [...text.matchAll(/%(?:~dp0|dp0%)[\\/]([^"%*\r\n]+?\.(?:c|m)?js)/gi)].reverse();
+        for (const match of matches) {
+          const rel = match[1].replaceAll('\\', '/');
+          if (rel.includes('\0')) continue;
+          const script = resolve(dir, rel);
+          if (isRegularFile(script)) return [execPath, script, ...rest];
+        }
+      }
+    } catch {
+      /* ignore unreadable shim and continue */
+    }
+  }
+
+  const home = dirname(execPath);
+  for (const rel of candidates) {
+    const script = resolve(home, rel);
+    if (isRegularFile(script)) return [execPath, script, ...rest];
+  }
+  return argv;
+}
 
 export class CliError extends Error {
   constructor(message, code = 'IA-CORE-CLI') { super(message); this.code = code; }

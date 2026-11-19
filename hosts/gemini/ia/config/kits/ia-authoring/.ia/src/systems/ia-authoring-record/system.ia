@@ -1,0 +1,20 @@
+#! ia 1.0
+
+@system ia-authoring-record
+  provider "local"
+  version "0.1.0"
+  describes "The record-authoring part of the IA authoring kit: how records of existing public IA words are authored correctly in a workspace, and how what IA admits is found out by experiment first. Two stages, each a capability with its playbook: workspace authoring (authoring-workspace-authoring) and probing the IA toolchain (authoring-probing-the-ia-toolchain), the second run by the toolchain prober's profile on the worker mandate; conventions for IA's concepts, the public systems, the toolchain, what goes where, how to author, current authoring, the IA rule sheet, the IA model and probing by hand; laws for the blocking rules; two runnable checks (workspace admission and the governance lint); and a contract over the kit's mechanical guarantees whose cases the kit's own tests evaluate. The probe and the governance lint are kit scripts, and two probe examples kit assets. A new word, system, workspace or kit is out of its scope. This system mints no words and grants no authority."
+  steward @agent ia-authoring-record-steward
+  requires
+    - agent-system
+    - agent-composition-system
+    - workspace-system
+    - governance-system
+    - compliance-system
+
+@agent ia-authoring-record-steward
+  meaning
+    says "Owns the records of the IA authoring kit's record-authoring part and reviews every change to them, among them the rule sheet a probe answer may correct."
+    answers "Who owns the record-authoring part of the IA authoring kit?"
+  governance
+    applies [law, convention, playbook, contract, check, case, capability, agent, agent-profile, mandate]

@@ -556,3 +556,90 @@
     decider "Operator"
     choice "Exactly @inventarch/cli 3.8.0 and @inventarch/mcp-door 3.8.0, in one release. The 3.8.0 CLI carries every published 3.x language base and its newest is 3.3.0; the kits stay locked on inventarch/language 3.2.0 (archive 7b36e4b4), which it carries unchanged, and the qualified runtime cohort names that locked base. Every kit is re-cut with it and declares inventarch/language ^3.0.0, the minimum ia floor --verify proves."
     rationale "One exact CLI keeps every packed archive reproducible. From 3.7.0 a CLI carries every published 3.x base, so a kit can declare the minimum it is proven on without locking its users to one CLI release; the lock row stays on 3.2.0 so CLIs up to 3.6.0 still restore the kits. It supersedes public-cli-3-6-0, which is kept with InventArch's other work records, outside this repository."
+
+@decision public-gemini-and-antigravity-hosts
+  meaning
+    says "Ship deterministic first-class host bundles for Google Antigravity (hosts/antigravity/ia, registered via .agents/plugins.json) and Gemini CLI (hosts/gemini/ia), backed by agy-hook.mjs and gemini-hook.mjs over the core's bootstrap and kit handler runners, with headless gemini --approval-mode plan -p support in delegate.mjs."
+  work
+    title "Support Google Antigravity and Gemini CLI as first-class hosts"
+    status made
+    owner "InventArch maintainers"
+    start "2026-11-15"
+    ended "2026-11-15"
+    source "docs/decisions.md"
+  decision
+    question "How does the public catalogue deliver the ia plugin, its MCP door, its account connector and its lifecycle hooks to Google Antigravity and Gemini CLI without duplicating authored source?"
+    options ["A generate hosts/antigravity/ia and hosts/gemini/ia deterministically from plugins/ia via tools/build-host-plugins.mjs, with host-native manifests, subagent frontmatter and hook adapters", "B hand-maintain separate plugin trees per host", "C ship instructions and MCP snippets only, without native plugins or hooks"]
+    decider "Operator"
+    choice "A generate hosts/antigravity/ia and hosts/gemini/ia deterministically from plugins/ia via tools/build-host-plugins.mjs, with host-native manifests, subagent frontmatter and hook adapters"
+    rationale "Antigravity requires a clean root plugin.json, mcp_config.json, root hooks.json, rules/AGENTS.md and Antigravity subagent tool names, while Gemini CLI requires gemini-extension.json, hooks/hooks.json with millisecond timeouts, GEMINI.md and Gemini CLI tool names. Deterministic generation from plugins/ia keeps one authored source of truth, wires full lifecycle parity (including PostToolUse buffered into PLUGIN_DATA and flushed on PostInvocation in Antigravity, and strict single-JSON stdout in Gemini CLI), and adds --to gemini to scripts/delegate.mjs."
+
+# Public base vocabulary kits and steward hygiene (2026-11-18)
+
+@decision public-base-kits-approval-and-repo
+  meaning
+    says "The public catalogue bundles two Apache-2.0 public base vocabulary kits alongside the three lane defaults and publishes all five in @inventarch/public-kits: inventarch/ia-approval-kit 0.1.0 (approval-system: approver, approval-rule, docket and approval, with the zero-dependency offline Ed25519 + RFC 8785 JCS check-seal verifier) and inventarch/ia-repo-kit 0.1.0 (repo-system: repository, layer, package and area, with the rank-independent dependency-role grammar, spec citation consent rows and offline check-layers verifier)."
+  work
+    title "Ship ia-approval and ia-repo as bundled public base kits"
+    status made
+    owner "InventArch maintainers"
+    start "2026-11-18"
+    ended "2026-11-18"
+    source "docs/decisions.md"
+  decision
+    question "Where do the public approval and repository-structure vocabularies and their offline verifiers ship?"
+    options ["A bundle kits/ia-approval (approval-system) and kits/ia-repo (repo-system) in inventarch/marketplace under Apache-2.0 and @inventarch/public-kits", "B keep approval and repository-structure words in private kits"]
+    decider "Operator"
+    choice "A bundle kits/ia-approval 0.1.0 (inventarch/ia-approval-kit, approval-system) and kits/ia-repo 0.1.0 (inventarch/ia-repo-kit, repo-system) in inventarch/marketplace under Apache-2.0, carry them in plugins/ia/config/kits and @inventarch/public-kits alongside ia-method, ia-kb and ia-authoring, and ship their offline Node built-in checks (check-seal and check-layers) with zero external npm dependencies and zero private corpus material."
+    rationale "Only public kits mint words that customer and hosted workflows share offline. Shipping approval-system and repo-system in inventarch/marketplace and @inventarch/public-kits lets adopting repositories restore, validate and run check-seal and check-layers 100% offline in CI without vended tarballs or credentials, while keeping the three lane default bindings unchanged."
+
+@decision public-system-steward-hygiene
+  meaning
+    says "New public base systems in this catalogue name <system> with a uniform @agent <system>-steward and travelling @mandate <system>-stewardship scoped to the system's folder, and the catalogue's own @workspace inventarch-marketplace composes agent-system with @agent inventarch-marketplace-steward and @mandate inventarch-marketplace-stewardship."
+  work
+    title "Uniform steward and stewardship mandate hygiene"
+    status made
+    owner "InventArch maintainers"
+    start "2026-11-18"
+    ended "2026-11-18"
+    source "docs/decisions.md"
+  decision
+    question "How do new public base systems and the marketplace workspace declare stewardship and bounded mandates?"
+    options ["A declare uniform @agent <system>-steward and @mandate <system>-stewardship on each new base system and steward + mandate on inventarch-marketplace", "B declare steward agents without stewardship mandates"]
+    decider "Operator"
+    choice "A each new public base system (approval-system, repo-system, slack-system, design-base-system, product-base-system) declares steward @agent <system>-steward and @mandate <system>-stewardship with moves [Observation, Verification, Synthesis] and covers ['.ia/src/systems/<system>/'] inside system.ia so stewardship travels in the packed archive without referencing the seat workspace, while @workspace inventarch-marketplace declares steward @agent inventarch-marketplace-steward and @mandate inventarch-marketplace-stewardship."
+    rationale "Paired steward and stewardship mandate records make system ownership and non-execution bounds explicit in every packed base kit and in the catalogue's own workspace without rewriting immutable historical releases of earlier kits."
+
+@decision public-base-kits-slack-design-product
+  meaning
+    says "The public catalogue bundles the remaining three Apache-2.0 public base vocabulary kits alongside ia-approval, ia-repo and the three lane defaults, completing the eight-kit @inventarch/public-kits v1 roster: inventarch/ia-slack-base-kit 0.1.0 (slack-system: slack-channel, the five public channel governance rules and offline check-slack-channels), inventarch/ia-design-base-kit 0.1.0 (design-base-system: design-token, level, part, slot, pattern and recipe without colliding with floor @template, plus offline check-design-patterns) and inventarch/ia-product-base-kit 0.1.0 (product-base-system: prd with consented spec/decision/plan/docket/approval traceability and offline check-prds)."
+  work
+    title "Ship ia-slack-base, ia-design-base and ia-product-base as bundled public base kits"
+    status made
+    owner "InventArch maintainers"
+    start "2026-11-18"
+    ended "2026-11-18"
+    source "docs/decisions.md"
+  decision
+    question "Where do the Slack space settings, Atomic Design pattern/recipe and Product Requirement Document base vocabularies and their offline verifiers ship?"
+    options ["A bundle kits/ia-slack-base, kits/ia-design-base and kits/ia-product-base in inventarch/marketplace under Apache-2.0 and @inventarch/public-kits", "B keep Slack channel settings, pattern/recipe and PRD words in private kits"]
+    decider "Operator"
+    choice "A bundle kits/ia-slack-base 0.1.0 (inventarch/ia-slack-base-kit, slack-system), kits/ia-design-base 0.1.0 (inventarch/ia-design-base-kit, design-base-system) and kits/ia-product-base 0.1.0 (inventarch/ia-product-base-kit, product-base-system) in inventarch/marketplace under Apache-2.0, carry all eight public kits in plugins/ia/config/kits and @inventarch/public-kits, and ship their zero-dependency offline verifiers (check-slack-channels, check-design-patterns and check-prds) with zero live credentials and zero private corpus material."
+    rationale "Completing the eight-kit public base roster lets workspace, design and product repositories restore, validate and verify Slack channel rules, atomic UI hierarchies, sealed pattern/recipe lowering contracts and PRD traceability 100% offline in CI without vended archives or hosted credentials, while keeping live bridges and proprietary multi-step methods outside the public base."
+
+@decision public-check-windows-package-managers
+  meaning
+    says "On Windows, plugins/ia/scripts/check.mjs resolves bare npm, npx, pnpm and yarn argv[0] entries to their native .exe binary or Node JS entrypoint under process.execPath while preserving shell: false for every declared check."
+  work
+    title "Resolve Windows npm, npx, pnpm and yarn check shims without a shell"
+    status made
+    owner "InventArch maintainers"
+    start "2026-11-18"
+    ended "2026-11-18"
+    source "docs/decisions.md"
+  decision
+    question "How should scripts/check.mjs execute declared checks whose argv starts with npm, npx, pnpm or yarn on Windows without weakening the no-shell guarantee?"
+    options ["A resolve bare npm, npx, pnpm and yarn on Windows to their .exe or JS entrypoint under process.execPath with shell: false", "B spawn .cmd shims through cmd.exe with shell: true", "C require every kit to hardcode Node and package-manager install paths"]
+    decider "Maintainers"
+    choice "A when process.platform is win32 and argv[0] is npm, npx, pnpm or yarn, resolve a standalone .exe or the underlying .cmd shim's JS entrypoint (or the entrypoint beside process.execPath) and spawn it directly with process.execPath and shell: false; pass every other command and non-Windows platform through unchanged."
+    rationale "Direct execution under process.execPath fixes spawn ENOENT on Windows (issue #32) while keeping cmd.exe completely out of the execution path so environment-variable expansion and batch quote mangling remain impossible."

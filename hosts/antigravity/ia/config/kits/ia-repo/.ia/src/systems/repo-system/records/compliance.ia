@@ -1,0 +1,180 @@
+#! ia 1.0
+
+@contract repo-system
+  version "0.1.0"
+  meaning
+    says "What the public IA repository structure base kit guarantees mechanically: that its sources admit offline under the pinned CLI with uniform steward and stewardship mandate records and zero private repository or rank-profile material, that its declared checks match checks.json and its shipped assets match .ia/release.json and releases.json, that @repository, @layer, @package (with and without package.kind) and @area records plus @spec citations admit and traverse cleanly while removing any of area's three explicit consent rows is refused by the pinned CLI with IA-LANG-EDGE-UNCONSENTED, and that the offline check-layers verifier accepts arbitrary valid rank profiles and refuses rank inversions, cycles, overlapping paths, credentialed URLs and dependency-role violations. Evaluated by plugins/ia/tests/kit-repo.test.mjs."
+    answers "What does the IA repo kit guarantee, and how is each guarantee checked?"
+  invariants
+    REQ-REPO-01 "A scratch copy of the kit's sources restores its pinned language base offline under the pinned CLI and validates with zero errors, shipping uniform @agent repo-system-steward and @mandate repo-system-stewardship records, all four canonical schemas and authoring guidance conventions, and zero private repository names, private kit ids or hardcoded rank numbers."
+    REQ-REPO-02 "Every gate @check in the kit runs COMP-CHECK with one non-empty fixed command in check.scope that equals its checks.json argv, every listed asset in .ia/release.json exists with an allowed role and no shipped file under assets/ or scripts/ is unlisted, and releases.json format 2 matches the descriptor and sourcesDigest."
+    REQ-REPO-03 "Adopting workspaces author @repository, @layer, @package (with each of the seven package.kind values and with package.kind omitted) and @area records plus cite repository|layer|package|area using spec edges under the pinned CLI, and splicing out any of cite * using area, require area using area or cite area using spec from repo-system refuses the corresponding edge with IA-LANG-EDGE-UNCONSENTED."
+    REQ-REPO-04 "The offline check-layers verifier (scripts/layer-checker.mjs) validates arbitrary numeric layer.rank topologies with zero hardcoded tier numbers, accepting clean layered packages and areas while refusing upward layer or package dependencies, package.layer mismatches, cycles, overlapping or non-canonical paths, empty area.packages, credentialed repository URLs, and contract/core/host/tool/composition role violations."
+    REQ-REPO-05 "Through the core's scripts/check.mjs runner with the pinned CLI, repo-check-validate and check-layers exit 0 on an admitted structurally sound workspace and exit 3 when validation or structural layer rules fail."
+  relationships
+    governs @law repo-single-word-owner
+    governs @law repo-downward-acyclic-dependencies
+    governs @law repo-canonical-paths-and-locators
+    cites @agent repo-system-steward
+
+@check repo-system-coverage
+  meaning
+    says "Checks that every requirement of the repo-system contract has a success case and a failure case."
+    answers "Is every repo-system requirement covered by cases?"
+  check
+    runs COMP-COVERAGE
+    scope "The repo-system requirements and their cases."
+  relationships
+    enforces @contract repo-system
+
+@check repo-check-validate
+  meaning
+    says "Native admission of the workspace under check through the repository's pinned CLI."
+    answers "Does the workspace admit under its pinned CLI?"
+  check
+    runs COMP-CHECK
+    scope "ia validate --json"
+  relationships
+    enforces @contract repo-system
+
+@check check-layers
+  meaning
+    says "Offline structural verification of @repository, @layer, @package and @area records through scripts/layer-checker.mjs: checks downward rank ordering, package.layer consistency, acyclicity, canonical non-overlapping paths, credential-free repository URLs and classified package.kind dependency-role purity."
+    answers "Do the workspace's repository, layer, package and area records satisfy structural and dependency-role invariants?"
+  check
+    runs COMP-CHECK
+    scope "node ${KIT}/scripts/layer-checker.mjs ia"
+  relationships
+    enforces @contract repo-system
+
+@case repo-req-01-success
+  meaning
+    says "A scratch copy of the kit restores its pinned language base offline and admits with zero errors, carrying repo-system-steward, repo-system-stewardship, all four schemas and zero private content."
+    answers "Does the repo kit admit offline with clean public content and steward hygiene?"
+  scenario
+    kind success
+    given "A copy of the kit's .ia folder and assets in a scratch directory, and the pinned @inventarch/cli."
+    request "Scan all kit files for private identifiers or hardcoded rank labels, then run ia restore --apply --yes and ia validate --json."
+    expected "Zero private content findings, restore reports installed, and validate reports status admitted with zero errors."
+    evaluator "plugins/ia/tests/kit-repo.test.mjs :: REQ-REPO-01 success: the kit admits offline with steward hygiene, four word schemas and zero private content"
+  relationships
+    implements @contract repo-system#REQ-REPO-01
+
+@case repo-req-01-failure
+  meaning
+    says "A copy of the kit with an unknown check evaluator or a second system minting a repo-system word is refused by the pinned CLI."
+    answers "Does the pinned CLI refuse an unknown evaluator and duplicate word ownership?"
+  scenario
+    kind failure
+    given "A scratch copy with an unknown evaluator on repo-check-validate, and a workspace composing a second system that mints layer."
+    request "Run ia restore and ia validate under the pinned CLI."
+    expected "The unknown evaluator refuses with IA-COMP-CHECK-UNKNOWN and the duplicate word owner refuses at validation."
+    evaluator "plugins/ia/tests/kit-repo.test.mjs :: REQ-REPO-01 failure: unknown evaluators and duplicate word owners are refused"
+    code IA-COMP-CHECK-UNKNOWN
+  relationships
+    implements @contract repo-system#REQ-REPO-01
+
+@case repo-req-02-success
+  meaning
+    says "Every gate check matches checks.json, every shipped asset matches .ia/release.json, and releases.json format 2 matches sourcesDigest and the source record triples."
+    answers "Are checks, assets and recorded release metadata consistent?"
+  scenario
+    kind success
+    given "The kit's compliance.ia, checks.json, .ia/release.json, releases.json and shipped files."
+    request "Verify check scopes against checks.json, listed assets against disk, and releases.json against sourcesDigest and record triples."
+    expected "Zero structural, asset or release problems."
+    evaluator "plugins/ia/tests/kit-repo.test.mjs :: REQ-REPO-02 success: checks, assets and format 2 release metadata match"
+  relationships
+    implements @contract repo-system#REQ-REPO-02
+
+@case repo-req-02-failure
+  meaning
+    says "An empty check scope, missing or unlisted asset, or drifted release digest fails the structural checks."
+    answers "Are drifted check scopes, assets and releases refused?"
+  scenario
+    kind failure
+    given "Modified copies of the kit with an empty check scope, a missing asset and an edited record without repack."
+    request "Run the structural, asset and release checks over each copy."
+    expected "Each copy reports the exact mismatch and fails."
+    evaluator "plugins/ia/tests/kit-repo.test.mjs :: REQ-REPO-02 failure: drifted checks, assets and releases are refused"
+  relationships
+    implements @contract repo-system#REQ-REPO-02
+
+@case repo-req-03-success
+  meaning
+    says "Workspaces adopting repo-system admit @repository, @layer, @package (all seven kinds plus unclassified) and @area records alongside @spec citations under CLI 3.8.0."
+    answers "Do all four words, all seven package kinds, unclassified packages and spec citations admit under CLI 3.8.0?"
+  scenario
+    kind success
+    given "An adopting workspace declaring @repository, ranked @layer tiers, eight @package records (seven kinds plus unclassified), @area records and @spec citations."
+    request "Pack repo-system, install it in the workspace, and run ia validate --json."
+    expected "Validation admits the workspace with zero errors."
+    evaluator "plugins/ia/tests/kit-repo.test.mjs :: REQ-REPO-03 success: all four words, seven package kinds, unclassified packages and spec citations admit"
+  relationships
+    implements @contract repo-system#REQ-REPO-03
+
+@case repo-req-03-failure
+  meaning
+    says "Removing any of cite * using area, require area using area or cite area using spec from repo-system causes CLI 3.8.0 to refuse that edge with IA-LANG-EDGE-UNCONSENTED."
+    answers "Is each of area's three explicit consent rows load-bearing under CLI 3.8.0?"
+  scenario
+    kind failure
+    given "Three scratch copies of repo-system, each splicing out one of the three area consent rows while keeping an authoring workspace that exercises that edge."
+    request "Pack each modified kit and validate the exercising workspace under CLI 3.8.0."
+    expected "Every one of the three copies is refused with IA-LANG-EDGE-UNCONSENTED."
+    evaluator "plugins/ia/tests/kit-repo.test.mjs :: REQ-REPO-03 failure: splicing out any of the three area consent rows refuses with IA-LANG-EDGE-UNCONSENTED"
+    code IA-LANG-EDGE-UNCONSENTED
+  relationships
+    implements @contract repo-system#REQ-REPO-03
+
+@case repo-req-04-success
+  meaning
+    says "check-layers accepts clean arbitrary-rank topologies (such as ranks 10, 20, 30, 40) with valid contract, core, adapter, view, composition, host and tool dependencies and path-less layer profiles."
+    answers "Does check-layers accept valid arbitrary-rank repository topologies?"
+  scenario
+    kind success
+    given "A snapshot with a credential-free @repository, arbitrary numeric @layer ranks, non-overlapping @package roots honouring role purity, and acyclic @area boundaries."
+    request "Run checkLayers over the snapshot."
+    expected "ok is true with zero findings."
+    evaluator "plugins/ia/tests/kit-repo.test.mjs :: REQ-REPO-04 success: check-layers accepts valid arbitrary-rank topologies and dependency roles"
+  relationships
+    implements @contract repo-system#REQ-REPO-04
+
+@case repo-req-04-failure
+  meaning
+    says "check-layers refuses upward layer or package dependencies, package.layer mismatches, cycles, overlapping or non-canonical paths, empty areas, credentialed repository URLs, and contract/core/host/tool/composition role violations."
+    answers "Does check-layers refuse rank inversions, cycles, bad paths, credentialed URLs and role violations?"
+  scenario
+    kind failure
+    given "Snapshots exercising upward layer require, upward package require, package.layer mismatch, layer/package/area cycles, overlapping package.path, empty area.packages, credentialed repository.url, and each classified role violation."
+    request "Run checkLayers over each faulty snapshot."
+    expected "Each snapshot fails with the specific finding code."
+    evaluator "plugins/ia/tests/kit-repo.test.mjs :: REQ-REPO-04 failure: check-layers refuses rank inversions, cycles, bad paths, credentialed URLs and role violations"
+  relationships
+    implements @contract repo-system#REQ-REPO-04
+
+@case repo-req-05-success
+  meaning
+    says "scripts/check.mjs runs repo-check-validate and check-layers to exit 0 on an admitted workspace with sound @repository, @layer, @package and @area records."
+    answers "Do repo-check-validate and check-layers pass through scripts/check.mjs on a sound workspace?"
+  scenario
+    kind success
+    given "An admitted workspace with installed repo-system and structurally valid @repository, @layer, @package and @area records."
+    request "Run node scripts/check.mjs repo-check-validate and check-layers with --kit inventarch/ia-repo-kit."
+    expected "Both runner invocations exit 0 with exitCode 0."
+    evaluator "plugins/ia/tests/kit-repo.test.mjs :: REQ-REPO-05 success: check.mjs runs repo-check-validate and check-layers to exit 0 on a sound workspace"
+  relationships
+    implements @contract repo-system#REQ-REPO-05
+
+@case repo-req-05-failure
+  meaning
+    says "scripts/check.mjs exits 3 when check-layers finds an upward package dependency or role violation in an otherwise schema-admitted workspace."
+    answers "Does check-layers fail through scripts/check.mjs when structural layer rules are violated?"
+  scenario
+    kind failure
+    given "A schema-admitted workspace whose lower-ranked contract @package requires a higher-ranked adapter @package."
+    request "Run node scripts/check.mjs check-layers --kit inventarch/ia-repo-kit --root <workspace>."
+    expected "The checker exits 1 with findings and check.mjs exits 3."
+    evaluator "plugins/ia/tests/kit-repo.test.mjs :: REQ-REPO-05 failure: check.mjs exits 3 when check-layers detects structural or role violations"
+  relationships
+    implements @contract repo-system#REQ-REPO-05

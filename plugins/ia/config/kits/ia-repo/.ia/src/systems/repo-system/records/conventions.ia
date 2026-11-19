@@ -1,0 +1,21 @@
+#! ia 1.0
+
+@convention repo-package-kind-roles
+  meaning
+    says "Public dependency-role grammar for the seven optional package.kind values (omitting package.kind leaves a package unclassified). Each role is defined purely by dependency responsibility without fixed rank numbers: contract holds shared types, schemas, interfaces and protocol definitions with zero runtime I/O and depends only on contract packages; core holds deterministic domain or algorithmic logic free of host, transport and storage I/O and depends only on core or contract packages; adapter translates between contract/core abstractions and concrete external boundaries such as storage, network, filesystem or SDK clients; view renders user-interface components and state projections without becoming a deployable entrypoint; composition wires core, adapter and view packages for one application slice and never imports sibling composition packages at the same layer rank; host is a deployable runtime entrypoint (server, CLI, worker or desktop shell) that no other package imports; and tool is a build, codegen or verification utility that runtime packages never depend on. Reference: assets/repo-vocabulary.md."
+    answers "What does each package.kind value mean in public dependency-role terms?"
+  governance
+    severity advisory
+    requires "Classify package.kind by dependency role (contract, core, adapter, view, composition, host or tool) without tying the vocabulary to fixed rank numbers, or omit package.kind when unclassified."
+  subject
+    subject-word package
+
+@convention repo-schema-vs-checker-standing
+  meaning
+    says "Distinguish what the IA 1.0 schema enforces at admission, what the offline check-layers verifier enforces mechanically, and what stays repository convention. Schema admission checks required fields, typed references, package.kind enum membership and @system relationship consent rows (including cite repository|layer|package|area using spec and area's three consent rows). check-layers enforces strictly decreasing layer.rank on @layer require edges, package.layer consistency with any @package require @layer edge, non-increasing layer.rank on @package require @package edges, cycle freedom across @layer, @package and @area require graphs, unique non-overlapping canonical package.path roots, non-empty area.packages, credential-free repository.url, and dependency-role purity on classified packages. Multi-area package membership, whether package.kind is mandatory for a repository, and whether an external build-policy file overrides descriptive records remain repository-level conventions. Reference: assets/repo-vocabulary.md."
+    answers "Which repository rules are enforced by schema admission, which by check-layers, and which are conventions?"
+  governance
+    severity advisory
+    requires "State schema-enforced, checker-enforced and convention-only standing explicitly rather than claiming the schema checks rank order, cycles or multi-area exclusivity."
+  subject
+    subject-word layer

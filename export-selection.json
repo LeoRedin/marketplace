@@ -37,7 +37,7 @@
     },
     {
       "path": "plugins/ia/README.md",
-      "sha256": "d4dc5ec98fe756445dca476c242e59fba66a3c4f21e60dbc6889bac9410ad5d6"
+      "sha256": "9750bdf0ce8934e1ed680ee7bc7eb0d2903c3336966c86a2c7aa8082ffb5eb93"
     },
     {
       "path": "plugins/ia/agents/checker.md",
@@ -58,6 +58,82 @@
     {
       "path": "plugins/ia/config/kits/README.md",
       "sha256": "a1fcab56457b3a47ed5dedf4609913947c63d3e1752cf3a10acdf42ab2d814be"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-approval/.ia/distributions.lock.json",
+      "sha256": "439c69ec6e2b78f8e3ff9bfe80e88fabafab084fd1cd06784cdf911350a2b095"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-approval/.ia/release.json",
+      "sha256": "bf4ca4c28007a9eccf9aed8c6f879525d6084083c26c6bd35995023884814b35"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-approval/.ia/src/systems/approval-system/records/authoring-guides.ia",
+      "sha256": "62479551813faa1e59c97c76f668995ccf2b12c10c579a3197e5014d7bf16271"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-approval/.ia/src/systems/approval-system/records/compliance.ia",
+      "sha256": "9cc2139ae55dde01a4607f525e8320e22ee0edf00c7494e3c688b3aa7abab886"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-approval/.ia/src/systems/approval-system/records/conventions.ia",
+      "sha256": "9a405b97b2b54647c97c842d639637754088c3bceaba65d0fc6463c00e9a8b26"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-approval/.ia/src/systems/approval-system/records/distribution.ia",
+      "sha256": "64c265467f1003100c8f62c7945c7866bb06d90d8b1f7f4de1edaf888d3eecb8"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-approval/.ia/src/systems/approval-system/records/laws.ia",
+      "sha256": "ff37eb19dbb42e1f2674d09acc6bf2705bd7b20b195cc0bc91f3a62981f74752"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-approval/.ia/src/systems/approval-system/schemas/approval-rule.schema.ia",
+      "sha256": "3c2e8695c31cc147d1f6d83441d57719ded751de8f33a11b5451949956d9f32e"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-approval/.ia/src/systems/approval-system/schemas/approval.schema.ia",
+      "sha256": "34d398faf35808da2831203d8a638a86254559694714d6607a4ea14063a0de98"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-approval/.ia/src/systems/approval-system/schemas/approver.schema.ia",
+      "sha256": "5f2c6c0fd30696185e05a1b23c1e8b13ac8ec71a51aa371ab0f106ac073aa75a"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-approval/.ia/src/systems/approval-system/schemas/docket.schema.ia",
+      "sha256": "9630e9395ecf127bf6b874630b2fabfb00d6d09769223c535863bdf6ad0280f8"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-approval/.ia/src/systems/approval-system/system.ia",
+      "sha256": "6707432c7c180650a5df2ae0a9c6e64dc38581f59fb7bc38425686b38acfe34b"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-approval/.ia/src/workspace.ia",
+      "sha256": "7f80569ee8c6edae226f94d83943408d2b88259a17a25363e62dc7e2d3066ac2"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-approval/README.md",
+      "sha256": "7a6647cc15f1b338664671a79bc7d8b17752613079158778ce4fbdf04c729324"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-approval/assets/approval-vocabulary.md",
+      "sha256": "702e061a6d59c79e7d7da8c77848a6ad41df9aaa64c056f09afbd3ddcc90c494"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-approval/checks.json",
+      "sha256": "7a84f753d8c5f278eaced47a728a63bc2b215c88974d611a701438dd14dd9691"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-approval/releases/0.1.0.json",
+      "sha256": "4694d3c788b577fe9e196c5a4b8492c016305db831ef1bcf421f465fa1c40b14"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-approval/releases.json",
+      "sha256": "810e4e491c9941fa301eb4f22f6cc680837b49aabcdc1a127019d87a87eb3467"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-approval/scripts/check-seal.mjs",
+      "sha256": "f2f11f340d6336479633c03d53e36748c90c2fcac1d3b927da2565de581a0cba"
     },
     {
       "path": "plugins/ia/config/kits/ia-authoring/.ia/distributions.lock.json",
@@ -238,6 +314,90 @@
     {
       "path": "plugins/ia/config/kits/ia-authoring/scripts/probe.mjs",
       "sha256": "7ff99bc948b52b5b2a7464f493430af847abc0eecfdf6b7e0e2f70561da6f928"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/distributions.lock.json",
+      "sha256": "439c69ec6e2b78f8e3ff9bfe80e88fabafab084fd1cd06784cdf911350a2b095"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/release.json",
+      "sha256": "50849882aca73b70e4d67281f46ee8fbfea77cdf232765ef44db0e132c3f7ad0"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/records/authoring-guides.ia",
+      "sha256": "94aa73e061362553ba3682c06a1b8c517b81214a6f1d3bc61632d9e74825ec16"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/records/compliance.ia",
+      "sha256": "8afb7a85f9e495a1f3c425f2ea6212f243f4105c330868e7cf1e9e1b9f6e54c4"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/records/conventions.ia",
+      "sha256": "b8c29672ee8cddbeed09fda161d88de79fc31083a7e7ed5f290cb24bec4bd380"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/records/distribution.ia",
+      "sha256": "3fab0ca5a10733c64ef0e5f23de0a87a50da083c04345e4700d75cbefed5dda3"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/records/laws.ia",
+      "sha256": "4ab822366ed9072ce2187ecd771f945a79d9161363ba0a99dae727aca27cadaf"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/schemas/design-token.schema.ia",
+      "sha256": "a215d81111fa4f29d010afb501ed6596ba0178394bc04248f74ad35e9945bd17"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/schemas/level.schema.ia",
+      "sha256": "7f74858b9ef10a2674e346c2538cd3ba8572787d60d61a5b5a01c41ae79adb49"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/schemas/part.schema.ia",
+      "sha256": "200a7f5c55d00c267bf9271d8c1e17c26facf9eb30ee2a72cdeb7f6c7eb7e920"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/schemas/pattern.schema.ia",
+      "sha256": "c7326d2ccc44e8f0fbe0c8bc4ded2c854dfbb3a3390242412229f949ad78020e"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/schemas/recipe.schema.ia",
+      "sha256": "949acaab0f60d394ef5f5eae79bd95eeae7d4e6687b4d54dd9e0b0aed7ac71fe"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/schemas/slot.schema.ia",
+      "sha256": "95a5456283e64a407bc5b43c8c361890c44d23ed2c7c4195baa146f9c7d33841"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/systems/design-base-system/system.ia",
+      "sha256": "22428c434dfbd0ed6e3e2c53476b60b457f38eeee678b5fcc5eebc58340e3f9a"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/.ia/src/workspace.ia",
+      "sha256": "1a0e71adbef5ee067e2d9c40017949c5799f5133b55cc129495d27a5bdc1a4f6"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/README.md",
+      "sha256": "1adc11762536550cba43cf37bc214775e86e463f271ce6d6e7258e7e0cafdeff"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/assets/design-vocabulary.md",
+      "sha256": "af57c8925a98558e9b2ce3343d1168d84d03a2897a707555970cd8334e49f9d5"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/checks.json",
+      "sha256": "858f34169d0df2f2f6402348132a1c290f584df3118eb4f0b02280e1eb0b8af6"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/releases/0.1.0.json",
+      "sha256": "332df2830053d118ef036692b0ac0f16fd64bf18872647ec6c1af0dd0c1e9d1c"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/releases.json",
+      "sha256": "cee74a7a5cf15bb1911bc16cd4cffd5260a7093d804843e67a06f2be5fa93e68"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-design-base/scripts/check-design-patterns.mjs",
+      "sha256": "c0de906197865ba9f84f8b3ee66c0533a64b1272d61e240b1206ab3da728c589"
     },
     {
       "path": "plugins/ia/config/kits/ia-kb/.ia/distributions.lock.json",
@@ -568,12 +728,216 @@
       "sha256": "a97f49666944590abfafe032441818ed2549b5471d4ab1026183333be7fef909"
     },
     {
+      "path": "plugins/ia/config/kits/ia-product-base/.ia/distributions.lock.json",
+      "sha256": "439c69ec6e2b78f8e3ff9bfe80e88fabafab084fd1cd06784cdf911350a2b095"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/.ia/release.json",
+      "sha256": "51beaee7eb70b69eddccd73f0f92c5c227e84c3089de3b93d3d4fbb353ce919c"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/.ia/src/systems/product-base-system/records/authoring-guides.ia",
+      "sha256": "4ca970c10c36c6417cb88bc497f30044c41f3dc8d8f36645da1c691d5eeef8e6"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/.ia/src/systems/product-base-system/records/compliance.ia",
+      "sha256": "414a923f8a8cfd99421b5d582a5eb5eec64261441322a335b9d073dc6344f1e4"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/.ia/src/systems/product-base-system/records/conventions.ia",
+      "sha256": "7baa57539ec088b5f7a39a26e4ac3aca261f3fbbf9a4d6d2ff531af91a3e6b98"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/.ia/src/systems/product-base-system/records/distribution.ia",
+      "sha256": "501239f0cdaf8ba0a468dad1213eac243e7078d90972cb04b57731f6e3e997b1"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/.ia/src/systems/product-base-system/records/laws.ia",
+      "sha256": "df28e0a2c4cc6016a877ad7d34a65f6989189fe4d16fae9eaba6f6bef5356d2e"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/.ia/src/systems/product-base-system/schemas/prd.schema.ia",
+      "sha256": "37998c63b032e2928e03a7e4e84ab67d2b0358c5a7d3cc5fcf6354c442db24bb"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/.ia/src/systems/product-base-system/system.ia",
+      "sha256": "bfd0c32e77c4dc1b5f1d19d95ce865c5c6e19132922b14ed36d114b934b44903"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/.ia/src/workspace.ia",
+      "sha256": "ec4a513a417ebba1e1469d6b4501c9349996371d5c4ed9b5eb07e56176cf4cc3"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/README.md",
+      "sha256": "e2186724a8d5bfddf15a92fc8d1f5177be0f5baf70c7dea26e1e87b7db5e5831"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/assets/product-vocabulary.md",
+      "sha256": "e272b5ac206eb183dfc78d3b31725ebe31c854053446f75365b352480985f441"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/checks.json",
+      "sha256": "ba8c541151660d2d908326a84046f5aeac3d396a852c9c76a559efd25c6a706e"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/releases/0.1.0.json",
+      "sha256": "4ca33943fdd891782b77046fbd7aef1971d327d2ab39ba5950e7618e82c49f8c"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/releases.json",
+      "sha256": "d218ed468afc2ca13d4f1ede67469c436593e68582eed3d24797be5bce99d7d4"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-product-base/scripts/check-prds.mjs",
+      "sha256": "477de3a0ad87a164ba569685f916d4e48df636da99d367ff349c9c57a05377ea"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-repo/.ia/distributions.lock.json",
+      "sha256": "439c69ec6e2b78f8e3ff9bfe80e88fabafab084fd1cd06784cdf911350a2b095"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-repo/.ia/release.json",
+      "sha256": "bcb00b1a7e86c612146ef0fd16e122bacb18ba624e8394451f53dca6fc2efd8f"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-repo/.ia/src/systems/repo-system/records/authoring-guides.ia",
+      "sha256": "deb3db4aec309a9503f795175af44e6ea92b9e0a777ef6e241069f74f1ed8914"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-repo/.ia/src/systems/repo-system/records/compliance.ia",
+      "sha256": "4086e863a16687f933ec199fa3734d68da1164f497d9ae9847790f397317f250"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-repo/.ia/src/systems/repo-system/records/conventions.ia",
+      "sha256": "f0940992de7a27edc637f0d2cee02d06a2c7d08d82a9037f515c8d7c023e2c7c"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-repo/.ia/src/systems/repo-system/records/distribution.ia",
+      "sha256": "012d13ae8b78aff90b600369c2ebc2ea4f479f1c3eb58cddbf6125999585ef34"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-repo/.ia/src/systems/repo-system/records/laws.ia",
+      "sha256": "35b1a7edd2f659ed0e1e3456d350439f0cdca0a6f613530fdd378798b645ad26"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-repo/.ia/src/systems/repo-system/schemas/area.schema.ia",
+      "sha256": "0681a0c97906fe5028a7c35ebae479d3cbabd0c549b9900090d33353eff5d726"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-repo/.ia/src/systems/repo-system/schemas/layer.schema.ia",
+      "sha256": "099003606daa63e0828bce233fbe66a208492d160a60aa45a270173a4bf0969f"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-repo/.ia/src/systems/repo-system/schemas/package.schema.ia",
+      "sha256": "79d2cac9e8abffa9c4966190249769d27cbf1ea614165686577a975be830d3f4"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-repo/.ia/src/systems/repo-system/schemas/repository.schema.ia",
+      "sha256": "6f117c75522f4cd836a552cdd191ffc65bdcc7a8e3074bfb50777494bbe83660"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-repo/.ia/src/systems/repo-system/system.ia",
+      "sha256": "9a2e0f344abf6e7a36651c237255c70f0ad99ee1c44290cc2847d9a168ecf700"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-repo/.ia/src/workspace.ia",
+      "sha256": "20e12c2370591813ec9d2addb4ea600c07aa6eca63abd6bfc6135b577c0f7ee6"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-repo/README.md",
+      "sha256": "a6af5057e29c349816cccc6821bf06af183d113627e1afee6e13755493772604"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-repo/assets/repo-vocabulary.md",
+      "sha256": "d5b618b206e96896d8c24dda2db7e6e162e5b3730039911bc62b184b2c6f09dc"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-repo/checks.json",
+      "sha256": "7c94040252fcb0dbec0bdc8451c76fed7f5b3f4d1219dd562d43948a613f8481"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-repo/releases/0.1.0.json",
+      "sha256": "dd3fbc6cec1eff6152dbc83c3b75562d3a5bac6d425f4895b12a8f044d9b79fe"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-repo/releases.json",
+      "sha256": "d1caddd4844e25dc27c4f395f9a08447875e15c6c25fc3e361f26b5b6469517d"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-repo/scripts/layer-checker.mjs",
+      "sha256": "3b37d04937ca157525de5673388dc66326f3e93c1840e3c0fd4b5526558e71bb"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/.ia/distributions.lock.json",
+      "sha256": "439c69ec6e2b78f8e3ff9bfe80e88fabafab084fd1cd06784cdf911350a2b095"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/.ia/release.json",
+      "sha256": "51c66226d3fbc103f251af7b34d3fbd089dd72c16547b4083768b3b66462b795"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/.ia/src/systems/slack-system/records/authoring-guides.ia",
+      "sha256": "4f49fa58cfa82c136bdf7c23fdb0db7eb22bfbaa8b0cfd346f841e716aa6b4c5"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/.ia/src/systems/slack-system/records/compliance.ia",
+      "sha256": "970d4a053c3bc7931bf6dff518f1bd0c69625ec20b5d9200d686934c3c01a7d8"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/.ia/src/systems/slack-system/records/conventions.ia",
+      "sha256": "56df4595826088028a2b5af377fff23ba22782fb79465dc124d6eca2f20e6c25"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/.ia/src/systems/slack-system/records/distribution.ia",
+      "sha256": "5b9895cf21df9913d21e4398b05ae735a97fd11ee1b8ed35edaf82ddec2be0df"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/.ia/src/systems/slack-system/records/laws.ia",
+      "sha256": "ce8ffd5d71ce5e96715ac05f0bd94086459f4b0ed96a858dc8725fe66a86b0d7"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/.ia/src/systems/slack-system/schemas/slack-channel.schema.ia",
+      "sha256": "3dbeb7d4525a8ba21398acabab83f8ba08f2e6a31e34025e4d502e49bf5134c0"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/.ia/src/systems/slack-system/system.ia",
+      "sha256": "ceeca67da71cc99172c42d5ed84e253712d52eb134f32cd9558b78c60aed9f17"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/.ia/src/workspace.ia",
+      "sha256": "5c05ab5bbc7c4aa35be0787f16f47b22c2ce335d0aadd75cffbdfaa5f54636a1"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/README.md",
+      "sha256": "02daf401d5dd5cbaa4653b9a39e7b932e06f75a5d342f2f9172a6014928688bb"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/assets/slack-vocabulary.md",
+      "sha256": "2575aebc5ff447c11ef3fbaac379e836572b955c8e93524783ace1841b7bafa0"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/checks.json",
+      "sha256": "cc26d5d5e0923c349480954dcfa14fa5b2c1c220d5fc2e8b5f61d69174deae0b"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/releases/0.1.0.json",
+      "sha256": "5375ceb41ca297073132fe9253d2fecc221d29e7db9e77928e8c0624908fe9f7"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/releases.json",
+      "sha256": "7c608030845d4829f3a6c7bac378b2a069fc0bc80e9845a912f2c42747335cb4"
+    },
+    {
+      "path": "plugins/ia/config/kits/ia-slack-base/scripts/check-slack-channels.mjs",
+      "sha256": "cc221836790d62f9c4c92814cc8fe70ebb9e5ce7b46a851620f358145bd862b9"
+    },
+    {
       "path": "plugins/ia/config/method-qualification-ia-kb.json",
       "sha256": "26c34723ae53b366b4f0ac9a8b0967fdebecbc6c3a6acc8ce721ce79af85fb92"
     },
     {
       "path": "plugins/ia/config/public-kits.json",
-      "sha256": "783aec936e210a160ef08599ee00a0a03c7013691e49264ceff2dd762347dac5"
+      "sha256": "0b4fdfb8ac8fdfe536d4b517737b0c29c87949863f211048a862e2dcf1363507"
     },
     {
       "path": "plugins/ia/config/qualified-executors.json",
@@ -604,6 +968,10 @@
       "sha256": "66f38969699df996313f95bb0b273dfd53ee76db641b7a3295432d13f12765e6"
     },
     {
+      "path": "plugins/ia/scripts/agy-hook.mjs",
+      "sha256": "d27fdfe2c4006e7e829935bc11b50cba2c1f07ef5e5fb0e69350c3ffe8c7400e"
+    },
+    {
       "path": "plugins/ia/scripts/bind.mjs",
       "sha256": "4681ccd60c6cc9b174310958daf97525059dafe42b4c500ae3d20e7aa07223df"
     },
@@ -613,15 +981,15 @@
     },
     {
       "path": "plugins/ia/scripts/ceiling.mjs",
-      "sha256": "f711d8dc3859823fc0036c2e0235a11411b8caa8fc3fd2ec4f0bb223336219a2"
+      "sha256": "1a124e073977697548f26ec3ce8199d0cdc6d914c27b99ab5d1fbe339b7b14a7"
     },
     {
       "path": "plugins/ia/scripts/check.mjs",
-      "sha256": "58bd985752e663ff94bfe6f7f150b917580d94c31f8327049b05fb92516a594c"
+      "sha256": "605a17ad3ff84dfe3582c31e3ffe0f0640a8906b69f4abd2de6d0e24b2f95c80"
     },
     {
       "path": "plugins/ia/scripts/delegate.mjs",
-      "sha256": "ce9e4dd1ac93e55c74da156e23ae3eea1ff304485f5941b6619ea1924a1328db"
+      "sha256": "709386c8c5c0cc8dc900bb5f93caefe97e8fed3062d4f999854511e548eda086"
     },
     {
       "path": "plugins/ia/scripts/design.mjs",
@@ -629,11 +997,15 @@
     },
     {
       "path": "plugins/ia/scripts/door.mjs",
-      "sha256": "75a3a57c48adc9e3c7f6bc879b3806d946e22b0caf989d40d31ee902b54eb6fb"
+      "sha256": "e078601dbd8f071605ec23ee17ec6ba557d25a4287017761633e8e125dc93da5"
     },
     {
       "path": "plugins/ia/scripts/exit-evidence.mjs",
-      "sha256": "2b4d7cd7b57abe17b0de10becf2d5b0eb1bea41378c55e9c8ee7b7a35dfcfb64"
+      "sha256": "4b241307dc4c47b846e7e3b7a34728bea49d04551b39ae24a317febf48eb317f"
+    },
+    {
+      "path": "plugins/ia/scripts/gemini-hook.mjs",
+      "sha256": "e5e8c6a26e803682fa3db0a29863e643c842e1dfff7f3424d4fe1badb0c03259"
     },
     {
       "path": "plugins/ia/scripts/handlers.mjs",
@@ -661,7 +1033,7 @@
     },
     {
       "path": "plugins/ia/scripts/lib/ceiling.mjs",
-      "sha256": "0099019ee23f3f8b1cfc59415ff5e2a0bf730fe453b4b32946d2a1036a4c033a"
+      "sha256": "373852fdf1da8a839584876ebdc32bcf62d5165c77accf8fcfa32bf72a4396a8"
     },
     {
       "path": "plugins/ia/scripts/lib/check-arguments.mjs",
@@ -673,7 +1045,7 @@
     },
     {
       "path": "plugins/ia/scripts/lib/cli.mjs",
-      "sha256": "2614d77e847aa0ab263940ed33ad48c37ff97494ff68ad5f8eb51442a554de9e"
+      "sha256": "f0928186bcc286d2f614d9f5c73e902639ab1db38b6a8242f0231d2ff251a71b"
     },
     {
       "path": "plugins/ia/scripts/lib/closure-executors.mjs",
@@ -706,6 +1078,10 @@
     {
       "path": "plugins/ia/scripts/lib/home.mjs",
       "sha256": "7df019fcfbc26c3e61d2ef99787a09c78d8a241b110f2335e4d68b278bc35b87"
+    },
+    {
+      "path": "plugins/ia/scripts/lib/host-hook.mjs",
+      "sha256": "b585e7b00234c33a2970fa95c8c4c65ee1943552a38e4b938dbdc4f4d325d7c8"
     },
     {
       "path": "plugins/ia/scripts/lib/hygiene.mjs",
@@ -765,7 +1141,7 @@
     },
     {
       "path": "plugins/ia/scripts/lib/records.mjs",
-      "sha256": "69d013e2ae2118455143b210f846edeff392570645d99901b59319737a938f8c"
+      "sha256": "b10009e3f06f00144fb1ce60646b59cb71c7ba93d7fa5da072bc880407f14ad4"
     },
     {
       "path": "plugins/ia/scripts/lib/releases.mjs",
@@ -789,7 +1165,7 @@
     },
     {
       "path": "plugins/ia/scripts/method-advise.mjs",
-      "sha256": "dac8f35f75c4bc23bea70ac9c9ebd75c48bafcba8861d8c687c41ea1c5d7b94c"
+      "sha256": "2bd829bb0fdadeff7deddfa53e968e307996a47f18ae915be605aab4561cc4f5"
     },
     {
       "path": "plugins/ia/scripts/method-gate.mjs",
@@ -809,7 +1185,7 @@
     },
     {
       "path": "plugins/ia/skills/delegate/SKILL.md",
-      "sha256": "5be16d79df36cd89ed8c06962d4902654dabb8c1a54a677b345b22ce56b3f037"
+      "sha256": "a6ac9e28d9e8a8fc31a143b0b687fa4aead1a1036e2e65db609dee181cb01836"
     },
     {
       "path": "plugins/ia/skills/delivery/SKILL.md",

@@ -11,6 +11,8 @@ review-private/
 # The kits `npm run kits:install` vendors for this checkout (decision public-cli-3-6-0-own-lock).
 vendor/ia/
 node_modules/
+pnpm-lock.yaml
+pnpm-workspace.yaml
 .qualification/
 # The @inventarch/public-kits build (node tools/kit.mjs package --build): generated from plugins/ia/config/kits and
 # kits/index.json, and bound by the committed package.json's digests (decision public-kits-package).
