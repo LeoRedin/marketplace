@@ -1,0 +1,179 @@
+#! ia 1.0
+
+@contract approval-system
+  version "0.1.0"
+  meaning
+    says "What the public IA approval base kit guarantees mechanically: that its sources admit offline under the pinned CLI with uniform steward and stewardship mandate records, that its declared checks match checks.json and its shipped assets match .ia/release.json and releases.json, that check-seal verifies Ed25519 signatures over RFC 8785 JCS canonical SealStatement payloads with strict scalar S < L and SHA-256 key ids, that tampered digests, stale revisions or dependencies, unknown or disallowed signers and unmet multi-signer quorums are refused offline, and that root roster, rule and docket guards hold against target-branch authority alone. Evaluated by plugins/ia/tests/kit-approval.test.mjs."
+    answers "What does the IA approval kit guarantee, and how is each guarantee checked?"
+  invariants
+    REQ-APPROVAL-01 "A scratch copy of the kit's sources restores its pinned language base offline under the pinned CLI and validates with zero errors, shipping uniform @agent approval-system-steward and @mandate approval-system-stewardship records and all four canonical schemas and authoring guidance conventions."
+    REQ-APPROVAL-02 "Every gate @check in the kit runs COMP-CHECK with one non-empty fixed command in check.scope that equals its checks.json argv, every listed asset in .ia/release.json exists with an allowed role and no shipped file under assets/ or scripts/ is unlisted, and releases.json format 2 matches the descriptor and sourcesDigest."
+    REQ-APPROVAL-03 "The offline check-seal verifier canonicalizes SealStatement with RFC 8785 JCS, derives key ids as base64url(sha256(raw32Bytes)), enforces canonical 64-byte Ed25519 signatures with scalar S < L, and accepts valid single-signer and multi-signer quorum approvals while refusing forged signatures, non-canonical scalars, mismatched key ids and wrong or retired/revoked signers."
+    REQ-APPROVAL-04 "check-seal binds seal.record-digest to the full compiled record digest, seal.depends-on to sorted one-hop reference digests, seal.rules to target-branch rule digests and current-revision staleness to the head revision and pinned line endings, refusing tampered records, changed dependencies, unapproved rules and stale revisions."
+    REQ-APPROVAL-05 "check-seal reads approvers, approval rules and trusted docket patterns from the target branch alone, refuses self-vouching or desk-matched dockets and automatic-merge root rules, and runs cleanly through the core's scripts/check.mjs runner over an admitted workspace."
+  relationships
+    governs @law approval-seal-target-branch-authority
+    governs @law approval-seal-exact-statement
+    governs @law approval-roster-and-rules-person-merge
+    cites @agent approval-system-steward
+
+@check approval-system-coverage
+  meaning
+    says "Checks that every requirement of the approval-system contract has a success case and a failure case."
+    answers "Is every approval-system requirement covered by cases?"
+  check
+    runs COMP-COVERAGE
+    scope "The approval-system requirements and their cases."
+  relationships
+    enforces @contract approval-system
+
+@check approval-check-validate
+  meaning
+    says "Native admission of the workspace under check through the repository's pinned CLI."
+    answers "Does the workspace admit under its pinned CLI?"
+  check
+    runs COMP-CHECK
+    scope "ia validate --json"
+  relationships
+    enforces @contract approval-system
+
+@check check-seal
+  meaning
+    says "Offline verification of @approver, @approval-rule, @docket and @approval records through scripts/check-seal.mjs using pure Node node:crypto Ed25519 and RFC 8785 JCS canonicalization, with zero external dependencies and zero network calls."
+    answers "Do the workspace's approval roster, rules, dockets and Ed25519 seals pass offline verification?"
+  check
+    runs COMP-CHECK
+    scope "node ${KIT}/scripts/check-seal.mjs ia"
+  relationships
+    enforces @contract approval-system
+
+@case approval-req-01-success
+  meaning
+    says "A scratch copy of the kit restores its pinned language base offline and admits with zero errors, carrying approval-system-steward, approval-system-stewardship and all four schemas and authoring guidance conventions."
+    answers "Does the approval kit admit offline with its schemas, authoring guidance and steward hygiene?"
+  scenario
+    kind success
+    given "A copy of the kit's .ia folder and assets in a scratch directory, and the pinned @inventarch/cli."
+    request "Run ia restore --apply --yes --root <copy>, then ia validate --root <copy> --json."
+    expected "Restore reports installed and validate reports status admitted with zero errors."
+    evaluator "plugins/ia/tests/kit-approval.test.mjs :: REQ-APPROVAL-01 success: the kit admits offline with steward hygiene and four word schemas"
+  relationships
+    implements @contract approval-system#REQ-APPROVAL-01
+
+@case approval-req-01-failure
+  meaning
+    says "A copy of the kit with an unknown check evaluator is refused at restore with IA-COMP-CHECK-UNKNOWN."
+    answers "Does the pinned CLI refuse an unknown evaluator in the approval kit?"
+  scenario
+    kind failure
+    given "A scratch copy of the kit whose compliance.ia rewrites approval-check-validate to run an unknown evaluator."
+    request "Run ia restore --apply --yes --root <copy>."
+    expected "Restore refuses with IA-DIST-ADMISSION-FAILED carrying IA-COMP-CHECK-UNKNOWN."
+    evaluator "plugins/ia/tests/kit-approval.test.mjs :: REQ-APPROVAL-01 failure: an unknown evaluator is refused"
+    code IA-COMP-CHECK-UNKNOWN
+  relationships
+    implements @contract approval-system#REQ-APPROVAL-01
+
+@case approval-req-02-success
+  meaning
+    says "Every gate check matches checks.json, every shipped asset matches .ia/release.json, and releases.json format 2 matches sourcesDigest and the source record triples."
+    answers "Are checks, assets and recorded release metadata consistent?"
+  scenario
+    kind success
+    given "The kit's compliance.ia, checks.json, .ia/release.json, releases.json and shipped files."
+    request "Verify check scopes against checks.json, listed assets against disk, and releases.json against sourcesDigest and record triples."
+    expected "Zero structural, asset or release problems."
+    evaluator "plugins/ia/tests/kit-approval.test.mjs :: REQ-APPROVAL-02 success: checks, assets and format 2 release metadata match"
+  relationships
+    implements @contract approval-system#REQ-APPROVAL-02
+
+@case approval-req-02-failure
+  meaning
+    says "An empty check scope, missing or unlisted asset, or drifted release digest fails the structural checks."
+    answers "Are drifted check scopes, assets and releases refused?"
+  scenario
+    kind failure
+    given "Modified copies of the kit with an empty check scope, a missing asset and an edited record without repack."
+    request "Run the structural, asset and release checks over each copy."
+    expected "Each copy reports the exact mismatch and fails."
+    evaluator "plugins/ia/tests/kit-approval.test.mjs :: REQ-APPROVAL-02 failure: drifted checks, assets and releases are refused"
+  relationships
+    implements @contract approval-system#REQ-APPROVAL-02
+
+@case approval-req-03-success
+  meaning
+    says "Valid Ed25519 seals over RFC 8785 JCS SealStatement satisfy both single-signer rules and multi-signer distinct-approver quorum rules."
+    answers "Do valid single-signer and multi-signer quorum seals verify offline?"
+  scenario
+    kind success
+    given "Target roster with active Ed25519 approvers, quorum 1 and quorum 2 rules, and changed records sealed by distinct authorized approvers."
+    request "Run checkSeal over single-signer and two-signer quorum changes."
+    expected "Both changes report verdict ratified with zero failing findings."
+    evaluator "plugins/ia/tests/kit-approval.test.mjs :: REQ-APPROVAL-03 success: valid Ed25519 JCS seals and multi-signer quorum pass"
+  relationships
+    implements @contract approval-system#REQ-APPROVAL-03
+
+@case approval-req-03-failure
+  meaning
+    says "Forged signatures, non-canonical Ed25519 scalars (S >= L), unknown or disallowed signers, retired or revoked keys, and duplicate signatures from one approver under quorum 2 are refused."
+    answers "Are forged, non-canonical, unauthorized, retired/revoked and under-quorum seals refused?"
+  scenario
+    kind failure
+    given "Seals with altered bytes, scalar S >= L, unknown key ids, wrong workspace or route, retired/revoked keys, and two keys belonging to one account against quorum 2."
+    request "Run verifyStatement and checkSeal over each case."
+    expected "Each case fails with seal-forged, signer-unknown, signer-not-allowed, key-retired, key-revoked or unratified."
+    evaluator "plugins/ia/tests/kit-approval.test.mjs :: REQ-APPROVAL-03 failure: bad signatures, non-canonical scalars, wrong signers and unmet quorum fail"
+  relationships
+    implements @contract approval-system#REQ-APPROVAL-03
+
+@case approval-req-04-success
+  meaning
+    says "Unchanged record digests, unchanged one-hop dependency digests and matching current-revision seals with pinned LF line endings ratify cleanly."
+    answers "Do seals with intact record digests, dependencies and current revisions pass?"
+  scenario
+    kind success
+    given "A sealed record whose compiled digest, one-hop referenced record digests, rule digests and current-revision corpus revision match the head with * text eol=lf."
+    request "Run checkSeal on the change."
+    expected "The record reports verdict ratified with zero failing findings."
+    evaluator "plugins/ia/tests/kit-approval.test.mjs :: REQ-APPROVAL-04 success: intact record digest, dependsOn and current-revision pass"
+  relationships
+    implements @contract approval-system#REQ-APPROVAL-04
+
+@case approval-req-04-failure
+  meaning
+    says "Editing any compiled field of a sealed record, editing a one-hop dependency, omitting a covering rule or advancing the corpus revision under a current-revision rule invalidates the seal."
+    answers "Are tampered digests, changed dependencies, unapproved rules and stale revisions refused?"
+  scenario
+    kind failure
+    given "Sealed changes where the record was edited after signing, a referenced record changed, a second covering rule was left unanswered, or an unrelated record changed under staleness current-revision."
+    request "Run checkSeal over each scenario."
+    expected "Tampered records fail with seal-wrong-record, changed dependencies and stale revisions fail with stale, and unanswered rules fail with unratified."
+    evaluator "plugins/ia/tests/kit-approval.test.mjs :: REQ-APPROVAL-04 failure: tampered digests, changed dependsOn, unapproved rules and stale revisions fail"
+  relationships
+    implements @contract approval-system#REQ-APPROVAL-04
+
+@case approval-req-05-success
+  meaning
+    says "New producer dockets with target-branch matched patterns pass without unrecognised-piece seals, and check-seal runs cleanly through scripts/check.mjs on a valid workspace."
+    answers "Do valid target-ratified dockets and the check.mjs runner pass?"
+  scenario
+    kind success
+    given "A target pattern record, a valid producer docket matching a piece to it, and an admitted workspace with valid approval records."
+    request "Run checkSeal on the docketed change and run scripts/check.mjs check-seal --kit inventarch/ia-approval-kit."
+    expected "The matched piece needs no unrecognised-piece seal and check.mjs exits 0."
+    evaluator "plugins/ia/tests/kit-approval.test.mjs :: REQ-APPROVAL-05 success: target-branch authority, valid dockets and check.mjs runner pass"
+  relationships
+    implements @contract approval-system#REQ-APPROVAL-05
+
+@case approval-req-05-failure
+  meaning
+    says "Unratified head approvers, planted head patterns, desk-matched or self-vouching dockets, automatic-merge root rules, and invalid workspace seals through scripts/check.mjs are refused."
+    answers "Do target-branch authority, docket guards and check.mjs refuse invalid inputs?"
+  scenario
+    kind failure
+    given "A head-only approver signing a change, a head-planted docket pattern, a desk docket claiming matched, a self-vouching docket, an automatic-merge rule change, and a workspace with a broken seal."
+    request "Run checkSeal on each PR scenario and run scripts/check.mjs check-seal --kit inventarch/ia-approval-kit on the broken workspace."
+    expected "Each PR scenario reports signer-unknown, unratified, desk-docket-matched, docket-self-vouching or root-needs-person, and check.mjs exits 3."
+    evaluator "plugins/ia/tests/kit-approval.test.mjs :: REQ-APPROVAL-05 failure: head-only authority, bad dockets and broken workspace seals fail"
+  relationships
+    implements @contract approval-system#REQ-APPROVAL-05

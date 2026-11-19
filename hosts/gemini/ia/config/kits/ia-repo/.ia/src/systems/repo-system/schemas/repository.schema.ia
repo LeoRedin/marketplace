@@ -1,0 +1,16 @@
+#! ia 1.0
+
+@schema repository
+  lowers to definition
+  sections
+    must have meaning
+    must have repository
+    may have relationships
+    closed
+  fields
+    must have meaning.says as text
+    may have meaning.answers as text
+    must have repository.url as text "Canonical Git repository URL or locator, never carrying embedded credentials."
+    may have repository.profile as text "Identifier or locator of the structural layer profile this repository follows."
+    may have repository.organisation as text "Identity of the organisation workspace when this repository belongs to an organisation."
+    may have repository.knowledge-base as text "Single canonical organisation knowledge-base repository locator or identity; repository visibility is read from the Git host rather than duplicated here."

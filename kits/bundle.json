@@ -2,8 +2,16 @@
   "format": 1,
   "bundles": [
     {
+      "kit": "ia-approval",
+      "into": "plugins/ia/config/kits/ia-approval"
+    },
+    {
       "kit": "ia-authoring",
       "into": "plugins/ia/config/kits/ia-authoring"
+    },
+    {
+      "kit": "ia-design-base",
+      "into": "plugins/ia/config/kits/ia-design-base"
     },
     {
       "kit": "ia-kb",
@@ -12,6 +20,18 @@
     {
       "kit": "ia-method",
       "into": "plugins/ia/config/kits/ia-method"
+    },
+    {
+      "kit": "ia-product-base",
+      "into": "plugins/ia/config/kits/ia-product-base"
+    },
+    {
+      "kit": "ia-repo",
+      "into": "plugins/ia/config/kits/ia-repo"
+    },
+    {
+      "kit": "ia-slack-base",
+      "into": "plugins/ia/config/kits/ia-slack-base"
     }
   ],
   "unbundled": []

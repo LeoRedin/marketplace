@@ -1,0 +1,89 @@
+#! ia 1.0
+
+@system design-base-system
+  provider "local"
+  version "0.1.0"
+  describes "The public base atomic design and pattern-lowering system (inventarch/ia-design-base-kit). It mints six words without colliding with floor @template: design-token, one primitive, semantic or component token; level, one ranked atomic design stage (atom, molecule, organism, page-template, page); part, one UI component part at an atomic level with optional composition, slots, semantic tokens, Figma component-set names and code export; slot, one named composition slot on a part; pattern, one structural arrangement of design nodes yielding a part or level with frame-reading evidence; and recipe, one lowering of a part to code by use, adapt, compose or define using semantic or component tokens only. It carries authoring guides, atomic hierarchy and semantic-token laws, and the offline check-design-patterns verifier. It holds no proprietary design playbooks and grants no host authority."
+  steward @agent design-base-system-steward
+  requires
+    - agent-system
+    - compliance-system
+    - governance-system
+    - work-system
+    - workspace-system
+  discriminators
+    design-token lowers to definition
+      category state
+      facets [design-token]
+      schema @schema design-token
+      artifact-set product-definition
+      primitive Attention
+      move Observation
+    level lowers to definition
+      category boundary
+      facets [level]
+      schema @schema level
+      artifact-set product-definition
+      primitive Attention
+      move Observation
+    part lowers to definition
+      category boundary
+      facets [part]
+      schema @schema part
+      artifact-set product-definition
+      primitive Attention
+      move Observation
+    slot lowers to definition
+      category boundary
+      facets [slot]
+      schema @schema slot
+      artifact-set product-definition
+      primitive Attention
+      move Observation
+    pattern lowers to definition
+      category representation
+      facets [pattern]
+      schema @schema pattern
+      artifact-set product-definition
+      primitive Attention
+      move Observation
+    recipe lowers to definition
+      category representation
+      facets [recipe]
+      schema @schema recipe
+      artifact-set product-definition
+      primitive Attention
+      move Observation
+  edges
+    cite * using design-token, level, part, slot, pattern, recipe
+    cite design-token, level, part, slot, pattern, recipe using *
+    require design-token using design-token, part, recipe
+    require level using level, part, slot, pattern
+    require part using part, slot, pattern, recipe
+    require slot using part, pattern, recipe
+    require pattern using pattern, recipe
+    require decision using part, pattern, recipe
+    ground spec, plan, task using pattern, recipe
+    supersede design-token using design-token
+    supersede part using part
+    supersede pattern using pattern
+    supersede recipe using recipe
+    govern design-token, level, part, slot, pattern, recipe using law, convention
+
+@agent design-base-system-steward
+  meaning
+    says "Accountable owner of design-base-system vocabulary, canonical schemas, authoring guidance, relationship consent, atomic composition rules and offline design-pattern check."
+    answers "Who owns the design-token, level, part, slot, pattern and recipe words?"
+  governance
+    applies [design-token, level, part, slot, pattern, recipe, convention, law, contract, check, case, agent, mandate, distribution]
+
+@mandate design-base-system-stewardship
+  meaning
+    says "The bounded authority of design-base-system-steward over the design-base-system folder."
+    answers "Which moves may design-base-system-steward make over the design-base-system folder?"
+  governance
+    requires "Claim no host permission or execution from this mandate; keep the public design base free of proprietary design rubrics, live Figma write tools and tenant corpora."
+  authority
+    participant @agent design-base-system-steward
+    moves [Observation, Verification, Synthesis]
+    covers [".ia/src/systems/design-base-system/"]

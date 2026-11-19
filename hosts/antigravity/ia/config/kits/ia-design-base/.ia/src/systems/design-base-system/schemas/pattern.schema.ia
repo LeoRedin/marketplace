@@ -1,0 +1,22 @@
+#! ia 1.0
+
+@schema pattern
+  lowers to definition
+  sections
+    must have meaning
+    must have pattern
+    may have relationships
+    closed
+  fields
+    must have meaning.says as text
+    may have meaning.answers as text
+    must have pattern.name as text "Human-readable name of the structural arrangement."
+    must have pattern.yields as text "Identity of the @part or @level this arrangement yields."
+    must have pattern.matches as list of text "Structural node and child entries with constraints, repetition markers (1, ?, *, +) and slot fillers."
+    may have pattern.slots as list of text "Each '<slot name> <- <node path>', mapping arrangement nodes into slots of the yielded part."
+    may have pattern.recipe as text "Optional identity of the @recipe that lowers the yielded part."
+    must have pattern.evidence as list of text "Each '<frame reading digest> <file key>#<node id>' from committed frame readings."
+    must have pattern.standing as id in [proposed, active, deprecated, retired]
+    may have pattern.because as text "Optional identity of the decision that placed the level above its structural lower bound."
+  edges
+    may supersede pattern one

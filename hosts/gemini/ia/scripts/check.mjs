@@ -13,7 +13,9 @@
 // ${PLUGIN}. cwd: "workspace" (default), "kit" or "plugin". An entry may also
 // carry "timeout", a positive integer of seconds (default 600), for long
 // budgeted runs. ${ARG:manifest} is a whole data slot declared as
-// arguments: { manifest: "workspace-file" }, filled by --manifest. No shell.
+// arguments: { manifest: "workspace-file" }, filled by --manifest. No shell
+// (on Windows a bare npm, npx, pnpm or yarn argv[0] resolves to its .exe or
+// JS entrypoint under process.execPath).
 // The check's environment carries IA_CORE_CHECK (its name) and, when --cli is
 // given, IA_CLI_PATH, so a script that resolves the CLI itself uses the same one.
 // Only a kit lib/trust.mjs trusts runs a check (decision public-kit-trust):
@@ -32,7 +34,7 @@ import { spawnSync } from 'node:child_process';
 import { lstatSync, readFileSync, realpathSync } from 'node:fs';
 import { join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { resolveCli } from './lib/cli.mjs';
+import { resolveCli, resolveWindowsPackageManager } from './lib/cli.mjs';
 import { childEnv } from './lib/hygiene.mjs';
 import { kitTrust } from './lib/trust.mjs';
 import { checkArguments } from './lib/check-arguments.mjs';
@@ -152,7 +154,7 @@ async function main() {
   const cwd = { workspace: workspaceRoot, kit: kit.dir, plugin }[spec.cwd];
   if (!cwd) throw new CheckError(`check ${name}: cwd must be workspace, kit or plugin, not ${spec.cwd}`, 'IA-CORE-CHECK-MALFORMED');
   const cli = spec.argv.some(a => a.includes('${IA}')) ? resolveCli(workspaceRoot, { cliPath: options.cli }) : null;
-  const argv = spec.argv.flatMap(a => {
+  const substitutedArgv = spec.argv.flatMap(a => {
     if (Object.hasOwn(argumentsByToken, a)) return [argumentsByToken[a]];
     if (a === '${IA}') return cli.argv;
     const places = { NODE: process.execPath, WORKSPACE: workspaceRoot, KIT: kit.dir, PLUGIN: plugin };
@@ -162,6 +164,7 @@ async function main() {
   const started = Date.now();
   // A script the check runs that resolves its own CLI (lib/scratch.mjs) gets the --cli given here, as IA_CLI_PATH.
   const env = childEnv(process.env, { IA_CORE_CHECK: name, ...(options.cli ? { IA_CLI_PATH: resolve(options.cli) } : {}) });
+  const argv = resolveWindowsPackageManager(substitutedArgv, { platform: process.platform, env, execPath: process.execPath });
   let ran;
   try { ran = await runOrdinaryCheck({ argv, cwd, timeoutSeconds: spec.timeout ?? 600, env }); }
   catch (error) { throw new CheckError(`check ${name} could not retain execution evidence: ${error.message}`, error.code === 'IA-CORE-CHECK-OUTPUT' ? error.code : 'IA-CORE-CHECK-FAILED'); }

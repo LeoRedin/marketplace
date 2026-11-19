@@ -1,0 +1,28 @@
+#! ia 1.0
+
+@workspace ia-slack-base-kit
+  meaning
+    says "The seat workspace that composes the IA Slack base kit's system with the public systems it builds on."
+    answers "Which systems does the IA Slack base kit workspace compose?"
+  composition
+    systems [@system agent-system, @system compliance-system, @system governance-system, @system work-system, @system workspace-system, @system slack-system]
+    sources [".ia/src @authored"]
+    steward @agent ia-slack-base-kit
+
+@agent ia-slack-base-kit
+  meaning
+    says "The IDE agent operating in the IA Slack base kit workspace, any vendor."
+    answers "Which participant acts in the IA Slack base kit workspace?"
+  governance
+    applies []
+
+@mandate ia-slack-base-kit-mandate
+  meaning
+    says "The bounded authority of the participant in the IA Slack base kit workspace."
+    answers "Which moves may the participant make in the IA Slack base kit workspace?"
+  governance
+    requires "Claim no host permission or execution from this mandate."
+  authority
+    participant @agent ia-slack-base-kit
+    moves [Observation, Verification, Synthesis, Delegation, Execution]
+    scope [@workspace ia-slack-base-kit]

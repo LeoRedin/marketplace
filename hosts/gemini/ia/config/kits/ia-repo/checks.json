@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "checks": {
+    "repo-check-validate": {
+      "argv": [
+        "${IA}",
+        "validate",
+        "--json"
+      ],
+      "cwd": "workspace"
+    },
+    "check-layers": {
+      "argv": [
+        "${NODE}",
+        "${KIT}/scripts/layer-checker.mjs",
+        "${IA}"
+      ],
+      "cwd": "workspace"
+    }
+  }
+}

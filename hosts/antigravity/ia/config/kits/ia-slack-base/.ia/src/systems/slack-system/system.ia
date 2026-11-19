@@ -1,0 +1,45 @@
+#! ia 1.0
+
+@system slack-system
+  provider "local"
+  version "0.1.0"
+  describes "The public base Slack space settings system (inventarch/ia-slack-base-kit). It mints the slack-channel word, the settings record of one Slack space for one IA workspace: its display label and icon, channel name and bound conversation identifier, bound workspace reference and home locator, checkpoint approver and allowed member Slack user identifiers, serving app kind, opaque secret name, read allow-list, disclosure posture, allowed asks and rate caps. It carries the authoring guide, the five public channel governance rules, and the offline check-slack-channels verifier. It holds no Slack tokens, runs no network bridge, and grants no host authority."
+  steward @agent slack-system-steward
+  requires
+    - agent-system
+    - compliance-system
+    - governance-system
+    - work-system
+    - workspace-system
+  discriminators
+    slack-channel lowers to binding
+      category capability
+      facets [slack-channel]
+      schema @schema slack-channel
+      artifact-set product-definition
+      primitive Decision
+      move Execution
+  edges
+    cite * using slack-channel
+    cite slack-channel using *
+    require workspace using slack-channel
+    use workspace using slack-channel
+    govern slack-channel using law, convention
+
+@agent slack-system-steward
+  meaning
+    says "Accountable owner of slack-system vocabulary, canonical schema, authoring guidance, relationship consent, channel governance rules and offline channel settings check."
+    answers "Who owns the slack-channel word and its public channel rules?"
+  governance
+    applies [slack-channel, convention, law, contract, check, case, agent, mandate, distribution]
+
+@mandate slack-system-stewardship
+  meaning
+    says "The bounded authority of slack-system-steward over the slack-system folder."
+    answers "Which moves may slack-system-steward make over the slack-system folder?"
+  governance
+    requires "Claim no host permission or execution from this mandate; never store Slack tokens or secret values in records and keep live bridge capabilities out of the public base kit."
+  authority
+    participant @agent slack-system-steward
+    moves [Observation, Verification, Synthesis]
+    covers [".ia/src/systems/slack-system/"]

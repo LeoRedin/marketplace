@@ -1,0 +1,178 @@
+#! ia 1.0
+
+@contract slack-system
+  version "0.1.0"
+  meaning
+    says "What the public IA Slack base kit guarantees mechanically: that its sources admit offline under the pinned CLI with uniform steward and stewardship mandate records, that its declared checks match checks.json and its shipped assets match .ia/release.json and releases.json, that @slack-channel consents to workspace bindings, cross-vocabulary citations and governance laws/conventions, that check-slack-channels refuses embedded tokens, duplicate channel bindings, unresolved workspace ties, malformed Slack user or channel identifiers, person-app posture violations, empty read allow-lists on content or answering spaces, and malformed rate caps, and that both checks run cleanly through scripts/check.mjs. Evaluated by plugins/ia/tests/kit-slack-base.test.mjs."
+    answers "What does the IA Slack base kit guarantee, and how is each guarantee checked?"
+  invariants
+    REQ-SLACK-BASE-01 "A scratch copy of the kit's sources restores its pinned language base offline under the pinned CLI and validates with zero errors, shipping uniform @agent slack-system-steward and @mandate slack-system-stewardship records, the canonical @schema slack-channel, the authoring guide and the five public Slack channel governance rules."
+    REQ-SLACK-BASE-02 "Every gate @check in the kit runs COMP-CHECK with one non-empty fixed command in check.scope that equals its checks.json argv, every listed asset in .ia/release.json exists with an allowed role and no shipped file under assets/ or scripts/ is unlisted, and releases.json format 2 matches the descriptor and sourcesDigest."
+    REQ-SLACK-BASE-03 "The slack-system consent rows admit workspace references and citations on @slack-channel, citations between @slack-channel and @spec/@decision/@workspace records, and governance edges from @law and @convention records."
+    REQ-SLACK-BASE-04 "The offline check-slack-channels verifier accepts well-formed organisation and person @slack-channel records with opaque secret names, unique channel bindings, resolved workspace references and bounded read allow-lists, and refuses embedded tokens or credentials, duplicate channel ids or app-channel names, unresolved workspaces, invalid Slack user/channel identifiers, multi-member or shared person-app spaces, wildcard or empty content/answering allow-lists, and malformed rate caps."
+    REQ-SLACK-BASE-05 "Both slack-check-validate and check-slack-channels run cleanly offline through the core's scripts/check.mjs runner over an admitted adopting workspace and exit 3 when channel rules are violated."
+  relationships
+    governs @law slack-user-bound-before-served
+    governs @law slack-channel-audience-disclosure
+    cites @agent slack-system-steward
+
+@check slack-system-coverage
+  meaning
+    says "Checks that every requirement of the slack-system contract has a success case and a failure case."
+    answers "Is every slack-system requirement covered by cases?"
+  check
+    runs COMP-COVERAGE
+    scope "The slack-system requirements and their cases."
+  relationships
+    enforces @contract slack-system
+
+@check slack-check-validate
+  meaning
+    says "Native admission of the workspace under check through the repository's pinned CLI."
+    answers "Does the workspace admit under its pinned CLI?"
+  check
+    runs COMP-CHECK
+    scope "ia validate --json"
+  relationships
+    enforces @contract slack-system
+
+@check check-slack-channels
+  meaning
+    says "Offline verification of @slack-channel settings records through scripts/check-slack-channels.mjs using Node built-in modules only, with zero external dependencies and zero network calls."
+    answers "Do the workspace's @slack-channel records satisfy secret hygiene, unique bindings, workspace resolution and public channel governance rules?"
+  check
+    runs COMP-CHECK
+    scope "node ${KIT}/scripts/check-slack-channels.mjs ia"
+  relationships
+    enforces @contract slack-system
+
+@case slack-base-req-01-success
+  meaning
+    says "A scratch copy of the kit restores its pinned language base offline and admits with zero errors, carrying slack-system-steward, slack-system-stewardship, the slack-channel schema, authoring guide and all five channel governance rules."
+    answers "Does the Slack base kit admit offline with its schema, authoring guide, five rules and steward hygiene?"
+  scenario
+    kind success
+    given "A copy of the kit's .ia folder and assets in a scratch directory, and the pinned @inventarch/cli."
+    request "Run ia restore --apply --yes --root <copy>, then ia validate --root <copy> --json."
+    expected "Restore reports installed and validate reports status admitted with zero errors."
+    evaluator "plugins/ia/tests/kit-slack-base.test.mjs :: REQ-SLACK-BASE-01 success: the kit admits offline with steward hygiene, schema and five channel rules"
+  relationships
+    implements @contract slack-system#REQ-SLACK-BASE-01
+
+@case slack-base-req-01-failure
+  meaning
+    says "A copy of the kit with an unknown check evaluator is refused at restore with IA-COMP-CHECK-UNKNOWN."
+    answers "Does the pinned CLI refuse an unknown evaluator in the Slack base kit?"
+  scenario
+    kind failure
+    given "A scratch copy of the kit whose compliance.ia rewrites slack-check-validate to run an unknown evaluator."
+    request "Run ia restore --apply --yes --root <copy>."
+    expected "Restore refuses with IA-DIST-ADMISSION-FAILED carrying IA-COMP-CHECK-UNKNOWN."
+    evaluator "plugins/ia/tests/kit-slack-base.test.mjs :: REQ-SLACK-BASE-01 failure: an unknown evaluator is refused"
+    code IA-COMP-CHECK-UNKNOWN
+  relationships
+    implements @contract slack-system#REQ-SLACK-BASE-01
+
+@case slack-base-req-02-success
+  meaning
+    says "Every gate check matches checks.json, every shipped asset matches .ia/release.json, and releases.json format 2 matches sourcesDigest and the source record triples."
+    answers "Are checks, assets and recorded release metadata consistent?"
+  scenario
+    kind success
+    given "The kit's compliance.ia, checks.json, .ia/release.json, releases.json and shipped files."
+    request "Verify check scopes against checks.json, listed assets against disk, and releases.json against sourcesDigest and record triples."
+    expected "Zero structural, asset or release problems."
+    evaluator "plugins/ia/tests/kit-slack-base.test.mjs :: REQ-SLACK-BASE-02 success: checks, assets and format 2 release metadata match"
+  relationships
+    implements @contract slack-system#REQ-SLACK-BASE-02
+
+@case slack-base-req-02-failure
+  meaning
+    says "An empty check scope, missing or unlisted asset, or drifted release digest fails the structural checks."
+    answers "Are drifted check scopes, assets and releases refused?"
+  scenario
+    kind failure
+    given "Modified copies of the kit with an empty check scope, a missing asset and an edited record without repack."
+    request "Run the structural, asset and release checks over each copy."
+    expected "Each copy reports the exact mismatch and fails."
+    evaluator "plugins/ia/tests/kit-slack-base.test.mjs :: REQ-SLACK-BASE-02 failure: drifted checks, assets and releases are refused"
+  relationships
+    implements @contract slack-system#REQ-SLACK-BASE-02
+
+@case slack-base-req-03-success
+  meaning
+    says "Adopting workspaces admit @slack-channel records bound to @workspace records and citing @spec and @decision records with zero errors."
+    answers "Do consented @slack-channel workspace bindings and cross-system citations validate cleanly?"
+  scenario
+    kind success
+    given "An adopting workspace composing slack-system with @workspace, @spec, @decision and @slack-channel records."
+    request "Run ia validate --json on the adopting workspace."
+    expected "Validate reports status admitted with zero errors."
+    evaluator "plugins/ia/tests/kit-slack-base.test.mjs :: REQ-SLACK-BASE-03 success: consented workspace bindings and citations validate"
+  relationships
+    implements @contract slack-system#REQ-SLACK-BASE-03
+
+@case slack-base-req-03-failure
+  meaning
+    says "Removing consent rows or authoring disallowed enum values on @slack-channel is refused by the compiler."
+    answers "Are unconsented edges and disallowed @slack-channel field values refused?"
+  scenario
+    kind failure
+    given "Scratch copies omitting cite consent or setting slack.asks to work."
+    request "Run ia validate --json over each copy."
+    expected "Validate refuses with IA-LANG-EDGE-UNCONSENTED, IA-GRAPH-EDGE-UNCONSENTED or IA-COMP-FIELD-VALUE."
+    evaluator "plugins/ia/tests/kit-slack-base.test.mjs :: REQ-SLACK-BASE-03 failure: unconsented edges and disallowed field values are refused"
+  relationships
+    implements @contract slack-system#REQ-SLACK-BASE-03
+
+@case slack-base-req-04-success
+  meaning
+    says "Valid organisation design/coordination channels and single-owner person direct spaces pass check-slack-channels with zero findings."
+    answers "Do compliant organisation and person @slack-channel records pass offline checking?"
+  scenario
+    kind success
+    given "Admitted @workspace and @slack-channel records with opaque secret names, unique channel ids, valid Slack user ids, bounded read allow-lists and valid rate caps."
+    request "Run checkSlackChannels over the snapshot."
+    expected "Report ok is true with zero findings."
+    evaluator "plugins/ia/tests/kit-slack-base.test.mjs :: REQ-SLACK-BASE-04 success: compliant organisation and person spaces pass check-slack-channels"
+  relationships
+    implements @contract slack-system#REQ-SLACK-BASE-04
+
+@case slack-base-req-04-failure
+  meaning
+    says "Embedded tokens, duplicate channel ids or names, unresolved workspaces, invalid Slack user/channel formats, shared person-app spaces, empty or wildcard allow-lists and bad rate caps fail check-slack-channels."
+    answers "Does check-slack-channels refuse secret leaks, duplicate bindings, unresolved workspaces and channel rule violations?"
+  scenario
+    kind failure
+    given "Records carrying xoxb- secret tokens, duplicate channel ids and names, missing workspaces, invalid user/channel ids, multi-member person spaces, wildcard content disclosure, answers on without sources, and bad rate strings."
+    request "Run checkSlackChannels over the snapshot."
+    expected "Report ok is false with each expected violation code reported."
+    evaluator "plugins/ia/tests/kit-slack-base.test.mjs :: REQ-SLACK-BASE-04 failure: check-slack-channels refuses tokens, duplicates, bad bindings and disclosure violations"
+  relationships
+    implements @contract slack-system#REQ-SLACK-BASE-04
+
+@case slack-base-req-05-success
+  meaning
+    says "scripts/check.mjs runs slack-check-validate and check-slack-channels to exit 0 over a sound adopting workspace."
+    answers "Do both declared checks pass through scripts/check.mjs on a compliant workspace?"
+  scenario
+    kind success
+    given "An initialized workspace adopting inventarch/ia-slack-base-kit with compliant @slack-channel records."
+    request "Run scripts/check.mjs slack-check-validate and check-slack-channels."
+    expected "Both checks exit 0 with complete retained output."
+    evaluator "plugins/ia/tests/kit-slack-base.test.mjs :: REQ-SLACK-BASE-05 success: check.mjs runs slack-check-validate and check-slack-channels to exit 0"
+  relationships
+    implements @contract slack-system#REQ-SLACK-BASE-05
+
+@case slack-base-req-05-failure
+  meaning
+    says "scripts/check.mjs exits 3 when check-slack-channels detects a token leak or channel governance violation in an admitted workspace."
+    answers "Does scripts/check.mjs exit 3 when check-slack-channels finds violations?"
+  scenario
+    kind failure
+    given "An admitted workspace adopting inventarch/ia-slack-base-kit with a @slack-channel carrying a raw xoxb- token and duplicate channel binding."
+    request "Run scripts/check.mjs check-slack-channels."
+    expected "check.mjs exits 3 and reports the violation codes."
+    evaluator "plugins/ia/tests/kit-slack-base.test.mjs :: REQ-SLACK-BASE-05 failure: check.mjs exits 3 when check-slack-channels detects violations"
+  relationships
+    implements @contract slack-system#REQ-SLACK-BASE-05

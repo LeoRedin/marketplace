@@ -1,0 +1,8 @@
+#! ia 1.0
+
+@distribution ia-product-base-distribution
+  meaning
+    says "The release root of the public IA product base kit: product-base-system with the prd word, its canonical schema and authoring guide, ratification and decomposition rules, and the offline check-prds verifier."
+    answers "Which records does the IA product base kit release ship?"
+  distribution
+    records [@system product-base-system]

@@ -1,0 +1,41 @@
+#! ia 1.0
+
+@convention repo-guide-repository
+  meaning
+    says "Authoring guide for @repository (default file repository.ia; reference assets/repo-vocabulary.md). Select @repository to declare a Git repository's canonical credential-free URL (repository.url), optional structural layer profile identifier (repository.profile), optional organisation workspace identity (repository.organisation) and optional single canonical organisation knowledge-base locator (repository.knowledge-base). Avoid @repository for local folder roots (@workspace) or individual workspace packages (@package). Never embed credentials in repository.url, and never duplicate Git host visibility as a mutable record field."
+    answers "When and how should an author write a @repository record?"
+  governance
+    severity advisory
+    requires "Author @repository with a credential-free canonical Git URL, optional profile and single organisation knowledge-base pointer, and no mutable visibility claim."
+  subject
+    subject-word repository
+
+@convention repo-guide-layer
+  meaning
+    says "Authoring guide for @layer (default file layers.ia; reference assets/repo-vocabulary.md). Select @layer to declare one ranked dependency tier with numeric layer.rank, layer.title, optional repository-relative layer.paths, optional layer.policy and downward-only require @layer edges. Avoid @layer for functional feature slices across tiers (@area) or individual buildable units (@package). Reusable layer profiles omit layer.paths so adopting repositories author concrete paths beside their code; check-layers verifies that every required layer has a strictly lower layer.rank and no cycle."
+    answers "When and how should an author write a @layer record?"
+  governance
+    severity advisory
+    requires "Author @layer with a numeric rank, clear title, downward-only require @layer edges, and repository-relative paths only in concrete repository workspaces."
+  subject
+    subject-word layer
+
+@convention repo-guide-package
+  meaning
+    says "Authoring guide for @package (default file packages.ia; reference assets/repo-vocabulary.md). Select @package to declare one codebase package with package.name, canonical repository-relative package.path, package.layer (@layer reference), optional package.kind (host, contract, core, adapter, view, composition or tool; omitted means unclassified), optional package.repository and inter-package require @package edges. Avoid @package for ranked tiers (@layer) or multi-package product domains (@area). Keep package.path unique and non-overlapping, align any require @layer edge with package.layer, and keep dependencies within equal or lower layer.rank."
+    answers "When and how should an author write a @package record?"
+  governance
+    severity advisory
+    requires "Author @package with a unique canonical package.path, an assigned @layer matching any require @layer edge, downward-or-equal layer dependencies, and optional dependency-role classification."
+  subject
+    subject-word package
+
+@convention repo-guide-area
+  meaning
+    says "Authoring guide for @area (default file areas.ia; reference assets/repo-vocabulary.md). Select @area to group one or more @package records across layers into a functional boundary (area.packages and area.purpose), with optional acyclic require @area dependencies and @spec citations (cite area using spec). Avoid @area for dependency tiers (@layer) or single packages (@package). List at least one @package in area.packages and express cross-area dependencies without cycles."
+    answers "When and how should an author write an @area record?"
+  governance
+    severity advisory
+    requires "Author @area with at least one @package reference, a clear functional area.purpose, and acyclic require @area edges."
+  subject
+    subject-word area

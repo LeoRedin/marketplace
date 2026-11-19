@@ -1,0 +1,28 @@
+#! ia 1.0
+
+@workspace ia-repo-kit
+  meaning
+    says "The seat workspace that composes the IA repository structure base kit's system with the public systems it builds on."
+    answers "Which systems does the IA repo kit workspace compose?"
+  composition
+    systems [@system agent-system, @system compliance-system, @system governance-system, @system work-system, @system workspace-system, @system repo-system]
+    sources [".ia/src @authored"]
+    steward @agent ia-repo-kit
+
+@agent ia-repo-kit
+  meaning
+    says "The IDE agent operating in the IA repo kit workspace, any vendor."
+    answers "Which participant acts in the IA repo kit workspace?"
+  governance
+    applies []
+
+@mandate ia-repo-kit-mandate
+  meaning
+    says "The bounded authority of the participant in the IA repo kit workspace."
+    answers "Which moves may the participant make in the IA repo kit workspace?"
+  governance
+    requires "Claim no host permission or execution from this mandate."
+  authority
+    participant @agent ia-repo-kit
+    moves [Observation, Verification, Synthesis, Delegation, Execution]
+    scope [@workspace ia-repo-kit]

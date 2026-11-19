@@ -39,15 +39,39 @@ test('every kit profile\'s step budget (limit-steps) fits the maxTurns of the co
   assert.ok(profiles >= 4, `${profiles} profiles with a role and a step budget`);
 });
 
-test('the plugin carries exactly the public lane defaults, each with a whole entry capability bound to its lane', () => {
+test('the plugin carries the three lane defaults and the public base vocabulary kits, each under Apache-2.0 and format 2 releases', () => {
   const kits = listKits();
-  assert.deepEqual(kits.map(k => k.folder), ['ia-authoring', 'ia-kb', 'ia-method']);
+  assert.deepEqual(kits.map(k => k.folder), [
+    'ia-approval',
+    'ia-authoring',
+    'ia-design-base',
+    'ia-kb',
+    'ia-method',
+    'ia-product-base',
+    'ia-repo',
+    'ia-slack-base',
+  ]);
   const entries = { 'ia-authoring': ['delivery.*', 'authoring-deliver'], 'ia-kb': ['knowledge.*', 'kb-knowledge'], 'ia-method': ['work.*', 'method-operate'] };
+  const baseKits = {
+    'ia-approval': ['approval-system', 'check-seal'],
+    'ia-design-base': ['design-base-system', 'check-design-patterns'],
+    'ia-product-base': ['product-base-system', 'check-prds'],
+    'ia-repo': ['repo-system', 'check-layers'],
+    'ia-slack-base': ['slack-system', 'check-slack-channels'],
+  };
   for (const kit of kits) {
     assert.equal(kit.id, `inventarch/${kit.folder}-kit`, 'kit ids follow inventarch/ia-<name>-kit');
-    const [key, capability] = entries[kit.folder];
-    assert.equal(JSON.parse(readFileSync(join(kit.dir, 'bindings.json'), 'utf8')).recommend[key].capability, capability, `${kit.id} binds ${key}`);
-    assert.ok(JSON.parse(readFileSync(join(kit.dir, 'delivery.json'), 'utf8')).whole.includes(capability), `${kit.id}: ${capability} is whole`);
+    if (kit.folder in entries) {
+      const [key, capability] = entries[kit.folder];
+      assert.equal(JSON.parse(readFileSync(join(kit.dir, 'bindings.json'), 'utf8')).recommend[key].capability, capability, `${kit.id} binds ${key}`);
+      assert.ok(JSON.parse(readFileSync(join(kit.dir, 'delivery.json'), 'utf8')).whole.includes(capability), `${kit.id}: ${capability} is whole`);
+    } else {
+      const [system, gateCheck] = baseKits[kit.folder];
+      assert.ok(Object.hasOwn(JSON.parse(readFileSync(join(kit.dir, 'checks.json'), 'utf8')).checks, gateCheck), `${kit.id} declares ${gateCheck}`);
+      const systemSource = readFileSync(join(kit.dir, '.ia', 'src', 'systems', system, 'system.ia'), 'utf8');
+      assert.match(systemSource, new RegExp(`^@agent ${system}-steward\\b`, 'm'), `${kit.id}: ${system}-steward`);
+      assert.match(systemSource, new RegExp(`^@mandate ${system}-stewardship\\b`, 'm'), `${kit.id}: ${system}-stewardship`);
+    }
     assert.equal(JSON.parse(readFileSync(join(kit.dir, '.ia', 'release.json'), 'utf8')).license, 'Apache-2.0');
     assert.equal(JSON.parse(readFileSync(join(kit.dir, 'releases.json'), 'utf8')).format, 2, `${kit.id}: releases format 2`);
   }

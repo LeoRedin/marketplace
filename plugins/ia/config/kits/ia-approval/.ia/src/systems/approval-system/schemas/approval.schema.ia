@@ -1,0 +1,31 @@
+#! ia 1.0
+
+@schema approval
+  lowers to definition
+  sections
+    must have meaning
+    must have seal
+    may have relationships
+    closed
+  fields
+    must have meaning.says as text
+    must have meaning.answers as text
+    must have seal.action as id in [approve, delete]
+    must have seal.organisation as text "The organisation workspace identity, shown and signed so a seal from another organisation never applies."
+    must have seal.workspace as text "The identity of the workspace that seats the record."
+    must have seal.record as text "The identity of the approved record."
+    must have seal.record-digest as text "The graph per-record digest (64 lowercase hex), covering the full compiled record."
+    must have seal.depends-on as list of text "Each '<identity> <digest>', sorted by identity: the records the approved record references, one hop."
+    must have seal.rules as list of text "Each '<rule identity> <rule digest>', sorted by identity: every approval rule on the chain that this approval answers."
+    must have seal.revision as text "The authored corpus revision at signing, 64 lowercase hex."
+    must have seal.language-version as text "The IA language toolchain version the digests were computed under."
+    must have seal.system-versions as list of text "Each '<system> <version>', sorted by system."
+    must have seal.base-commit as text "The git commit id the change branched from, recorded for audit and history ancestry."
+    must have seal.signer as text "The approver's account identifier."
+    must have seal.key-id as text "The key identifier in the approver record."
+    must have seal.key-kind as id in [service-held, person-held]
+    must have seal.via as id in [desk, slack]
+    must have seal.request as text "The signing request identifier, for audit."
+    must have seal.signed-at as text "RFC 3339 UTC timestamp, set by the signer and never used to accept or refuse a seal."
+    must have seal.algorithm as id in [ed25519]
+    must have seal.signature as text "Base64url without padding of the 64 Ed25519 signature bytes."

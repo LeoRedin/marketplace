@@ -1,0 +1,69 @@
+#! ia 1.0
+
+@system approval-system
+  provider "local"
+  version "0.1.0"
+  describes "The public base approval system (inventarch/ia-approval-kit). It mints four words: approver, an account with workspace ratification scope and Ed25519 public keys; approval-rule, which records demand approvals, quorum, entry routes and staleness rules; docket, what an intake or producing run records about piece recognition; and approval, one Ed25519 signature over the RFC 8785 canonical SealStatement for one record's graph digest, one-hop dependencies, answered rules and corpus revision. It carries the authoring guides, intake recognition and seal rules, and the offline check-seal verifier. It holds no private keys and grants no host authority."
+  steward @agent approval-system-steward
+  requires
+    - agent-system
+    - compliance-system
+    - governance-system
+    - work-system
+    - workspace-system
+  discriminators
+    approval lowers to definition
+      category evidence
+      facets [approval]
+      schema @schema approval
+      artifact-set product-definition
+      primitive Attention
+      move Observation
+    approver lowers to definition
+      category boundary
+      facets [approver]
+      schema @schema approver
+      artifact-set product-definition
+      primitive Attention
+      move Observation
+    docket lowers to definition
+      category evidence
+      facets [docket]
+      schema @schema docket
+      artifact-set product-definition
+      primitive Attention
+      move Observation
+    approval-rule lowers to governance
+      category rule
+      facets [approval-rule]
+      schema @schema approval-rule
+      artifact-set principle
+      primitive Inference
+      move Verification
+  edges
+    cite * using approval
+    cite * using approver
+    cite * using approval-rule
+    cite * using docket
+    cite approval using *
+    cite approver using *
+    cite approval-rule using *
+    cite docket using *
+
+@agent approval-system-steward
+  meaning
+    says "Accountable owner of approval-system vocabulary, canonical schemas, authoring guidance, relationship consent, rules and offline seal check."
+    answers "Who owns the approval, approval-rule, approver and docket words?"
+  governance
+    applies [approval, approval-rule, approver, docket, convention, law, contract, check, case, agent, mandate, distribution]
+
+@mandate approval-system-stewardship
+  meaning
+    says "The bounded authority of approval-system-steward over the approval-system folder."
+    answers "Which moves may approval-system-steward make over the approval-system folder?"
+  governance
+    requires "Claim no host permission or execution from this mandate; hold no private keys and never let a seal check trust unratified roster or rule changes from the head under review."
+  authority
+    participant @agent approval-system-steward
+    moves [Observation, Verification, Synthesis]
+    covers [".ia/src/systems/approval-system/"]

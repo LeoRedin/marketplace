@@ -1,6 +1,6 @@
 # `@inventarch/public-kits`
 
-The public InventArch method kits as one npm package: `inventarch/ia-method-kit`, `inventarch/ia-kb-kit` and `inventarch/ia-authoring-kit`, the kits the `ia` plugin carries as its lane defaults. A repository that uses the package records it as one entry in its `.ia/distributions.lock.json`; the IA engine then expands each kit from its archive, so npm only carries the bytes (contract C7b).
+The public InventArch kits as one npm package: the lane defaults `inventarch/ia-method-kit`, `inventarch/ia-kb-kit` and `inventarch/ia-authoring-kit`, plus the five public base vocabulary kits `inventarch/ia-approval-kit`, `inventarch/ia-repo-kit`, `inventarch/ia-slack-base-kit`, `inventarch/ia-design-base-kit` and `inventarch/ia-product-base-kit`, matching the eight kits the `ia` plugin carries. A repository that uses the package records it as one entry in its `.ia/distributions.lock.json`; the IA engine then expands each kit from its archive, so npm only carries the bytes (contract C7b).
 
 ## What it holds
 

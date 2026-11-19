@@ -1,0 +1,16 @@
+#! ia 1.0
+
+@schema slot
+  lowers to definition
+  sections
+    must have meaning
+    must have slot
+    may have relationships
+    closed
+  fields
+    must have meaning.says as text
+    may have meaning.answers as text
+    must have slot.name as text "Slot identifier within its owning @part."
+    must have slot.part as ref to part
+    may have slot.accepts as list of id in [atom, molecule, organism, page-template]
+    may have slot.required as flag

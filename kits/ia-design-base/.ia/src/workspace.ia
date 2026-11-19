@@ -1,0 +1,28 @@
+#! ia 1.0
+
+@workspace ia-design-base-kit
+  meaning
+    says "The seat workspace that composes the IA design base kit's system with the public systems it builds on."
+    answers "Which systems does the IA design base kit workspace compose?"
+  composition
+    systems [@system agent-system, @system compliance-system, @system governance-system, @system work-system, @system workspace-system, @system design-base-system]
+    sources [".ia/src @authored"]
+    steward @agent ia-design-base-kit
+
+@agent ia-design-base-kit
+  meaning
+    says "The IDE agent operating in the IA design base kit workspace, any vendor."
+    answers "Which participant acts in the IA design base kit workspace?"
+  governance
+    applies []
+
+@mandate ia-design-base-kit-mandate
+  meaning
+    says "The bounded authority of the participant in the IA design base kit workspace."
+    answers "Which moves may the participant make in the IA design base kit workspace?"
+  governance
+    requires "Claim no host permission or execution from this mandate."
+  authority
+    participant @agent ia-design-base-kit
+    moves [Observation, Verification, Synthesis, Delegation, Execution]
+    scope [@workspace ia-design-base-kit]

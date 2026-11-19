@@ -1,0 +1,26 @@
+#! ia 1.0
+
+@schema recipe
+  lowers to definition
+  sections
+    must have meaning
+    must have recipe
+    may have relationships
+    closed
+  fields
+    must have meaning.says as text
+    may have meaning.answers as text
+    must have recipe.name as text "Human-readable name of this code-lowering recipe."
+    must have recipe.part as text "Identity of the @part this recipe lowers."
+    must have recipe.target as text "Code target identifier (for example 'react-tailwind-shadcn')."
+    must have recipe.mode as id in [use, adapt, compose, define]
+    may have recipe.template as text "Template file path; required for compose and define, absent for use and adapt."
+    must have recipe.props as list of text "Each '<figma property> -> <code prop>', mapping variants and slots to code props."
+    may have recipe.variants as list of text "Each '<figma property>=<figma value> -> <code prop>=<code value>'."
+    may have recipe.overrides as list of text "Each '<node role> -> <class list>' of semantic or component token classes; required for adapt, absent otherwise."
+    may have recipe.gap as text "Component library gap covered by an adapt recipe; required for adapt."
+    may have recipe.classes as list of text "Each '<node role> -> <class list>' of semantic or component token classes; required for compose and define, absent for use and adapt."
+    must have recipe.standing as id in [proposed, active, deprecated, retired]
+    may have recipe.output as text "Optional workspace-relative target path; never overwrites packaged component sources, CI, configuration or .ia paths."
+  edges
+    may supersede recipe one

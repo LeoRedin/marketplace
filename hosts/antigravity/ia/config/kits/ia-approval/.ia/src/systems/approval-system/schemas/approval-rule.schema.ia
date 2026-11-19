@@ -1,0 +1,22 @@
+#! ia 1.0
+
+@schema approval-rule
+  lowers to governance
+  sections
+    must have meaning
+    must have demand
+    may have relationships
+    closed
+  fields
+    must have meaning.says as text
+    must have meaning.answers as text
+    may have demand.words as list of id "The words of the records covered."
+    may have demand.kinds as list of id in [governance, contract, definition, template, check, policy, binding]
+    may have demand.paths as list of text "Repository-relative source-path prefixes."
+    may have demand.pieces as id in [unrecognised]
+    must have demand.quorum as number "Distinct approvers needed, at least 1."
+    may have demand.from as list of text "Account identifiers; absent means the approvers of the record's workspace and of its ancestors."
+    may have demand.via as list of id in [desk, slack]
+    may have demand.key-kind as id in [service-held, person-held]
+    may have demand.staleness as id in [unchanged-inputs, current-revision]
+    may have demand.merge as id in [person, automatic]
