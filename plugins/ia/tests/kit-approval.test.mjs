@@ -1886,12 +1886,12 @@ test('REQ-APPROVAL-10: real Git + CLI 3.8.0 current-revision seals pass and re-f
     join(repo, '.ia', 'src', 'extra.ia'),
     `#! ia 1.0
 
-@task post-seal-task
+@spec post-seal-spec
   meaning
     says "Added after current-revision seal was signed."
   work
-    title "Post-seal task"
-    status open
+    title "Post-seal spec"
+    status draft
 `,
   );
   gitRun(['add', '.']);

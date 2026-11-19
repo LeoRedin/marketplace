@@ -58,7 +58,7 @@ const HEX64_RE = /^[0-9a-f]{64}$/;
 const COMMIT_RE = /^[0-9a-f]{40}([0-9a-f]{24})?$/;
 const APPROVAL_FILE_RE = /^([a-z0-9-]+)\.([0-9a-f]{12})\.([0-9a-f]{8})\.ia$/;
 const RFC3339_UTC_RE = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/;
-const LF_PIN_RE = /^\*[ \t]+(?:\S+[ \t]+)*text[ \t]+(?:\S+[ \t]+)*eol=lf[ \t]*$/m;
+const LF_PIN_RE = /^(?:\*|\*\.ia)[ \t]+(?:\S+[ \t]+)*text(?:=auto)?[ \t]+(?:\S+[ \t]+)*eol=lf[ \t]*$/m;
 const KEY_KIND_STRENGTH = { 'service-held': 0, 'person-held': 1 };
 
 export function isSafeRecipeOutput(value) {

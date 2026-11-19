@@ -46,7 +46,7 @@ const RFC3339_UTC = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z
 const PRINTABLE_ASCII = /^[\x21-\x7e]+$/;
 const BAD_ESCAPE = /%(?![0-9A-Fa-f]{2})/;
 const SAFE_REF = /^[A-Za-z0-9_./@~^{}:+-]+$/;
-const LF_PIN_RE = /^\*[ \t]+(?:\S+[ \t]+)*text[ \t]+(?:\S+[ \t]+)*eol=lf[ \t]*$/m;
+const LF_PIN_RE = /^(?:\*|\*\.ia)[ \t]+(?:\S+[ \t]+)*text(?:=auto)?[ \t]+(?:\S+[ \t]+)*eol=lf[ \t]*$/m;
 const MAX_BUFFER = 256 * 1024 * 1024;
 
 const KEY_KINDS = ['service-held', 'person-held'];
@@ -2023,9 +2023,17 @@ export class IaCli {
   }
 
   restore(root) {
-    if (existsSync(join(root, '.ia', 'distributions.lock.json')) && !existsSync(join(root, '.ia', 'distributions'))) {
-      const catalogArgs = existsSync(join(root, 'vendor', 'ia', 'catalog.json')) ? ['--catalog', 'vendor/ia/catalog.json'] : [];
-      this.run(root, ['restore', ...catalogArgs, '--apply', '--yes']);
+    if (existsSync(join(root, '.ia', 'distributions.lock.json')) && !existsSync(join(root, '.ia', 'distributions', 'active.json'))) {
+      const catalogRel = buildOfflineCatalog(root);
+      if (catalogRel !== null) {
+        try {
+          this.run(root, ['restore', '--catalog', catalogRel, '--apply', '--yes']);
+          return;
+        } catch {
+          // Fall back to default restore when lock only needs built-in floor language
+        }
+      }
+      this.run(root, ['restore', '--apply', '--yes']);
     }
   }
 
@@ -2348,12 +2356,64 @@ export function lineEndingsPinned(git, ref) {
   return LF_PIN_RE.test(git.readFileAt(ref, '.gitattributes') ?? '');
 }
 
+function buildOfflineCatalog(root) {
+  const entries = [];
+  const seenNames = new Set();
+  for (const relDir of ['.ia/distributions/cache', 'vendor/ia']) {
+    const absDir = join(root, relDir);
+    if (!existsSync(absDir)) continue;
+    for (const name of readdirSync(absDir).sort()) {
+      if (!name.endsWith('.ia.tgz') || seenNames.has(name)) continue;
+      seenNames.add(name);
+      entries.push({ path: `${relDir}/${name}`, withdrawn: false });
+    }
+  }
+  if (entries.length === 0) return null;
+  const catalogRel = '.ia/work/offline-catalog.json';
+  const catalogAbs = join(root, '.ia', 'work', 'offline-catalog.json');
+  mkdirSync(dirname(catalogAbs), { recursive: true });
+  writeFileSync(catalogAbs, `${JSON.stringify(entries, null, 2)}\n`);
+  return catalogRel;
+}
+
+function seedOfflineDistributionCache(targetRoot, donorRoots) {
+  const cacheDir = join(targetRoot, '.ia', 'distributions', 'cache');
+  const sources = [];
+  for (const donor of donorRoots) {
+    for (const sub of [join(donor, '.ia', 'distributions', 'cache'), join(donor, 'vendor', 'ia')]) {
+      if (existsSync(sub)) sources.push(sub);
+    }
+  }
+  if (sources.length === 0) return;
+  mkdirSync(cacheDir, { recursive: true });
+  for (const srcDir of sources) {
+    for (const name of readdirSync(srcDir)) {
+      if (!name.endsWith('.ia.tgz')) continue;
+      const dst = join(cacheDir, name);
+      if (!existsSync(dst)) cpSync(join(srcDir, name), dst);
+    }
+  }
+}
+
 export function corpusAt(git, cli, ref, scratch, targetView = null) {
   const label = ref.replace(/[^A-Za-z0-9._-]/g, '_');
   const directory = join(scratch, label);
   git.exportTree(ref, directory);
-  if (!existsSync(join(directory, 'vendor', 'ia', 'catalog.json')) && existsSync(join(git.repository, 'vendor', 'ia', 'catalog.json'))) {
-    cpSync(join(git.repository, 'vendor', 'ia'), join(directory, 'vendor', 'ia'), { recursive: true });
+  const targetLockPath = join(directory, '.ia', 'distributions.lock.json');
+  const repoLockPath = join(git.repository, '.ia', 'distributions.lock.json');
+  const repoDistDir = join(git.repository, '.ia', 'distributions');
+  if (
+    existsSync(targetLockPath) &&
+    existsSync(repoLockPath) &&
+    existsSync(join(repoDistDir, 'active.json')) &&
+    readFileSync(targetLockPath, 'utf8') === readFileSync(repoLockPath, 'utf8')
+  ) {
+    cpSync(repoDistDir, join(directory, '.ia', 'distributions'), { recursive: true });
+  } else {
+    seedOfflineDistributionCache(directory, [directory, git.repository, ...(cli.env?.IA_HOME ? [cli.env.IA_HOME] : [])]);
+    if (!existsSync(join(directory, 'vendor', 'ia', 'catalog.json')) && existsSync(join(git.repository, 'vendor', 'ia', 'catalog.json'))) {
+      cpSync(join(git.repository, 'vendor', 'ia'), join(directory, 'vendor', 'ia'), { recursive: true });
+    }
   }
   cli.restore(directory);
   cli.validateAdmitted(directory);
@@ -2419,6 +2479,7 @@ function copyWorkspaceSourcesForAudit(root, copy) {
     }
   };
   walkCopy(root, copy);
+  seedOfflineDistributionCache(copy, [root]);
   if (existsSync(join(root, 'vendor', 'ia', 'catalog.json'))) {
     cpSync(join(root, 'vendor', 'ia'), join(copy, 'vendor', 'ia'), { recursive: true });
   }
